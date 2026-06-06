@@ -13,7 +13,7 @@ use std::thread;
 use std::time::Duration;
 
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
-use cpal::{FromSample, SizedSample};
+use cpal::{FromSample, Sample, SizedSample};
 use crossbeam_channel::Sender;
 
 use super::Source;
@@ -41,7 +41,8 @@ pub(super) fn capture_loop(
         .default_input_config()
         .map_err(|e| AppError::Audio(format!("default input config ({source:?}): {e}")))?;
     let sample_format = supported.sample_format();
-    let in_rate = supported.sample_rate().0;
+    // cpal 0.17: SampleRate is a plain u32 alias (no newtype field).
+    let in_rate = supported.sample_rate();
     let channels = supported.channels() as usize;
     let config: cpal::StreamConfig = supported.into();
 
@@ -50,13 +51,13 @@ pub(super) fn capture_loop(
     // callback runs on CoreAudio's own thread.
     let stream = match sample_format {
         cpal::SampleFormat::F32 => {
-            build_stream::<f32>(&device, &config, channels, in_rate, tx, source)?
+            build_stream::<f32>(&device, config, channels, in_rate, tx, source)?
         }
         cpal::SampleFormat::I16 => {
-            build_stream::<i16>(&device, &config, channels, in_rate, tx, source)?
+            build_stream::<i16>(&device, config, channels, in_rate, tx, source)?
         }
         cpal::SampleFormat::U16 => {
-            build_stream::<u16>(&device, &config, channels, in_rate, tx, source)?
+            build_stream::<u16>(&device, config, channels, in_rate, tx, source)?
         }
         other => {
             return Err(AppError::Audio(format!(
@@ -77,6 +78,10 @@ pub(super) fn capture_loop(
     Ok(())
 }
 
+// cpal 0.17 deprecates `Device::name()` in favor of `id()`/`description()`; we
+// still match on the friendly name (see devices/macos.rs). TODO: migrate to the
+// stable `id()` as the device identifier.
+#[allow(deprecated)]
 fn find_input_by_name(host: &cpal::Host, name: &str) -> AppResult<cpal::Device> {
     let devices = host
         .input_devices()
@@ -91,7 +96,7 @@ fn find_input_by_name(host: &cpal::Host, name: &str) -> AppResult<cpal::Device> 
 
 fn build_stream<T>(
     device: &cpal::Device,
-    config: &cpal::StreamConfig,
+    config: cpal::StreamConfig,
     channels: usize,
     in_rate: u32,
     tx: Sender<Vec<i16>>,
@@ -115,7 +120,7 @@ where
     };
     let err_fn = move |e| eprintln!("[audio] cpal stream error ({source:?}): {e}");
     device
-        .build_input_stream(config, data_fn, err_fn, None)
+        .build_input_stream(&config, data_fn, err_fn, None)
         .map_err(|e| AppError::Audio(format!("build input stream ({source:?}): {e}")))
 }
 

@@ -6,6 +6,9 @@ use cpal::traits::{DeviceTrait, HostTrait};
 use super::DeviceInfo;
 use crate::error::{AppError, AppResult};
 
+// cpal 0.17 deprecates `Device::name()`; we still use it as both the display
+// name and the id. TODO: migrate to the stable `id()` + `description()`.
+#[allow(deprecated)]
 fn list_inputs() -> AppResult<Vec<DeviceInfo>> {
     let host = cpal::default_host();
     let default_name = host.default_input_device().and_then(|d| d.name().ok());
