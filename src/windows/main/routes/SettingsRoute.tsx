@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { HugeiconsIcon } from '@hugeicons/react';
+import { openUrl } from '@tauri-apps/plugin-opener';
 import {
   getSummaryLanguage,
   hasApiKey,
@@ -14,6 +15,8 @@ import {
   IconAppearance,
   IconCheck,
   IconDevices,
+  IconExternal,
+  IconGift,
   IconKey,
   IconLanguage,
   IconMic,
@@ -36,6 +39,16 @@ const H3 =
   'mb-3 inline-flex items-center gap-2 text-[12px] uppercase tracking-[0.06em] text-fg-faint';
 const FIELD = 'mb-3.5 flex flex-col gap-1.5';
 const FIELD_LABEL = 'text-[13px] text-fg-dim';
+
+// Open external links in the system browser (Tauri), with a plain-web fallback
+// so the links still work under `vite dev` outside the Tauri webview.
+async function openExternal(url: string) {
+  try {
+    await openUrl(url);
+  } catch {
+    window.open(url, '_blank', 'noopener,noreferrer');
+  }
+}
 
 export default function SettingsRoute() {
   const [devices, setDeviceLists] = useState<DeviceLists | null>(null);
@@ -154,6 +167,33 @@ export default function SettingsRoute() {
             </button>
           </div>
         </label>
+        {/* How to get a Deepgram key + the free-credit nudge */}
+        <div className="-mt-1 mb-3.5 flex flex-col gap-1.5 rounded-sm border border-[rgba(110,168,254,0.28)] bg-[rgba(110,168,254,0.08)] px-3 py-2.5">
+          <span className="inline-flex items-start gap-1.5 text-[12px] leading-[1.5] text-fg-dim">
+            <HugeiconsIcon
+              icon={IconGift}
+              size={14}
+              strokeWidth={1.8}
+              className="mt-px shrink-0 text-accent"
+              aria-hidden={true}
+            />
+            <span>
+              New Deepgram accounts get <b className="text-fg">$200 in free credit</b> (~45,000
+              minutes) — no credit card required.
+            </span>
+          </span>
+          <button
+            type="button"
+            className="inline-flex w-fit cursor-pointer items-center gap-1.5 text-[12.5px] text-accent hover:underline"
+            onClick={() => void openExternal('https://console.deepgram.com/signup')}
+          >
+            Get a free Deepgram API key
+            <HugeiconsIcon icon={IconExternal} size={13} strokeWidth={1.8} aria-hidden={true} />
+          </button>
+          <span className="text-[11px] leading-[1.5] text-fg-faint">
+            Sign up, create an API key in the Deepgram console, then paste it above.
+          </span>
+        </div>
         <label className={FIELD}>
           <span className={FIELD_LABEL}>
             OpenAI API Key{' '}
@@ -177,6 +217,14 @@ export default function SettingsRoute() {
             </button>
           </div>
         </label>
+        <button
+          type="button"
+          className="mb-1 inline-flex w-fit cursor-pointer items-center gap-1.5 text-[12px] text-fg-dim hover:text-accent hover:underline"
+          onClick={() => void openExternal('https://platform.openai.com/api-keys')}
+        >
+          Get an OpenAI API key (optional — for AI summaries)
+          <HugeiconsIcon icon={IconExternal} size={12} strokeWidth={1.8} aria-hidden={true} />
+        </button>
         <p className="mt-2 text-[12px] leading-[1.5] text-fg-faint">
           Keys are stored securely in Windows Credential Manager and are never sent to the frontend.
         </p>

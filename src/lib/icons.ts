@@ -54,4 +54,6 @@ export {
   InformationCircleIcon as IconAbout,
   GithubIcon as IconGithub,
   StarIcon as IconStar,
+  ExternalLinkIcon as IconExternal,
+  GiftIcon as IconGift,
 } from '@hugeicons/core-free-icons';
