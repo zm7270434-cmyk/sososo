@@ -30,8 +30,9 @@
   --radius-md: 12px;
   --radius-lg: 16px;
 
-  /* subtle button depth (de-glossed: no bright top highlight) */
-  --shadow-liquid: 0 1px 3px rgb(0 0 0 / 0.18);
+  /* glossy "liquid glass" edge for buttons: bright top highlight + soft depth */
+  --shadow-liquid:
+    inset 0 1px 0 rgb(255 255 255 / 0.6), 0 0 9px rgb(0 0 0 / 0.2), 0 3px 8px rgb(0 0 0 / 0.15);
 
   /* type */
   --font-sans: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
@@ -54,22 +55,25 @@
 
 /* ============================================================
    Liquid-glass material (custom utility — still utility-first).
-   Flat translucent glass: a tinted fill + a faint hairline border
-   for definition, plus an optional backdrop blur. The fill alpha
-   (--glass-alpha) and blur radius (--glass-blur) are user-controllable
-   (Settings → Appearance) and set as :root vars by MainApp; defaults
-   reproduce the prior transparent look. The glossy sheen + bright
-   highlights were removed on request (they read as distracting). Note:
-   over a transparent window backdrop-blur can't frost the desktop, so
-   the blur mostly affects overlapping in-app layers. Pair with a
-   `rounded-*` utility.
+   Translucent fill + a bright glassy edge (white border + inset top
+   highlight + soft inner glow) — the edge is what reads as "liquid
+   glass", so it stays. Only the distracting diagonal specular SHEEN
+   over the background (former ::before/::after) was removed. The fill
+   alpha (--glass-alpha) and an optional CSS backdrop blur (--glass-blur)
+   are user-controllable (Settings → Appearance), set as :root vars by
+   MainApp; defaults reproduce the prior look. Real desktop frosting is
+   done natively (window-vibrancy acrylic) when Background blur > 0.
+   Pair with a `rounded-*` utility.
    ============================================================ */
 @utility liquid-glass {
   position: relative;
-  border: 1px solid var(--color-glass-border);
+  border: 1px solid rgb(255 255 255 / 0.35);
   background: rgb(28 28 34 / var(--glass-alpha, 0.58));
   -webkit-backdrop-filter: blur(var(--glass-blur, 0px));
   backdrop-filter: blur(var(--glass-blur, 0px));
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.6),
+    inset 0 0 18px rgb(255 255 255 / 0.05);
 }
 
 /* ============================================================
