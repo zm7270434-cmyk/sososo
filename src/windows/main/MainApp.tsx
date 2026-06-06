@@ -4,7 +4,6 @@ import { useTranscriptStream } from '../../hooks/useTranscriptStream';
 import { useSessionStore } from '../../state/sessionStore';
 import { useTranscriptStore } from '../../state/transcriptStore';
 import { useConfigStore } from '../../state/configStore';
-import { setWindowBlur } from '../../lib/ipc';
 import Titlebar from './Titlebar';
 import SessionSidebar from './SessionSidebar';
 import RecordingView from './RecordingView';
@@ -18,7 +17,6 @@ export default function MainApp() {
   const sessionId = useSessionStore((s) => s.sessionId);
   const uiScale = useConfigStore((s) => s.uiScale);
   const glassOpacity = useConfigStore((s) => s.glassOpacity);
-  const backgroundBlur = useConfigStore((s) => s.backgroundBlur);
   const navigate = useNavigate();
   const prev = useRef(state);
 
@@ -39,18 +37,12 @@ export default function MainApp() {
     prev.current = state;
   }, [state, sessionId, navigate]);
 
-  // Apply the glass appearance prefs as :root CSS vars so every liquid-glass
+  // Apply the glass transparency pref as a :root CSS var so every liquid-glass
   // surface (shell + the recording widget) reacts live. Runs even while
   // recording — these hooks execute before the in-session early return below.
   useEffect(() => {
-    const root = document.documentElement;
-    root.style.setProperty('--glass-alpha', String(glassOpacity));
-    root.style.setProperty('--glass-blur', `${backgroundBlur}px`);
-    // Real desktop frosting (CSS backdrop-filter can't do it over a transparent
-    // window): native Windows acrylic, on when Background blur > 0, with a tint
-    // opacity that follows the transparency pref.
-    void setWindowBlur(backgroundBlur > 0, Math.round(glassOpacity * 255)).catch(() => {});
-  }, [glassOpacity, backgroundBlur]);
+    document.documentElement.style.setProperty('--glass-alpha', String(glassOpacity));
+  }, [glassOpacity]);
 
   // While a session is active the whole window becomes the floating
   // transcription widget (its own root, no titlebar/sidebar). The floating

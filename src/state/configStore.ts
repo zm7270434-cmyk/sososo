@@ -20,8 +20,6 @@ interface ConfigStore {
   transcriptScale: number;
   /** Liquid-glass panel fill opacity (alpha 0..1). Lower = more transparent. Default 0.58. */
   glassOpacity: number;
-  /** Backdrop blur radius (px) applied to glass panels. 0 = none (default). */
-  backgroundBlur: number;
   /** Live-translate finalized transcript lines via OpenAI (off by default). */
   translateEnabled: boolean;
   /** Target language code for live translation (display name resolved via
@@ -34,7 +32,6 @@ interface ConfigStore {
   setUiScale: (v: number) => void;
   setTranscriptScale: (v: number) => void;
   setGlassOpacity: (v: number) => void;
-  setBackgroundBlur: (v: number) => void;
   setTranslateEnabled: (v: boolean) => void;
   setTargetLanguage: (l: LanguageCode) => void;
 }
@@ -46,8 +43,6 @@ export const TRANSCRIPT_SCALE_MIN = 0.8;
 export const TRANSCRIPT_SCALE_MAX = 1.6;
 export const GLASS_OPACITY_MIN = 0.15;
 export const GLASS_OPACITY_MAX = 0.95;
-export const BACKGROUND_BLUR_MIN = 0;
-export const BACKGROUND_BLUR_MAX = 24;
 
 export const useConfigStore = create<ConfigStore>()(
   persist(
@@ -59,7 +54,6 @@ export const useConfigStore = create<ConfigStore>()(
       uiScale: 1,
       transcriptScale: 1,
       glassOpacity: 0.58,
-      backgroundBlur: 0,
       translateEnabled: false,
       targetLanguage: 'en',
       setLanguage: (language) => set({ language }),
@@ -69,7 +63,6 @@ export const useConfigStore = create<ConfigStore>()(
       setUiScale: (uiScale) => set({ uiScale }),
       setTranscriptScale: (transcriptScale) => set({ transcriptScale }),
       setGlassOpacity: (glassOpacity) => set({ glassOpacity }),
-      setBackgroundBlur: (backgroundBlur) => set({ backgroundBlur }),
       setTranslateEnabled: (translateEnabled) => set({ translateEnabled }),
       setTargetLanguage: (targetLanguage) => set({ targetLanguage }),
     }),
@@ -81,7 +74,6 @@ export const useConfigStore = create<ConfigStore>()(
         uiScale: s.uiScale,
         transcriptScale: s.transcriptScale,
         glassOpacity: s.glassOpacity,
-        backgroundBlur: s.backgroundBlur,
         translateEnabled: s.translateEnabled,
         targetLanguage: s.targetLanguage,
       }),

@@ -17,8 +17,6 @@ import {
   UI_SCALE_MAX,
   TRANSCRIPT_SCALE_MIN,
   TRANSCRIPT_SCALE_MAX,
-  BACKGROUND_BLUR_MIN,
-  BACKGROUND_BLUR_MAX,
 } from '../../../state/configStore';
 import type { DeviceLists } from '../../../types/domain';
 
@@ -47,11 +45,9 @@ export default function SettingsRoute() {
   const uiScale = useConfigStore((s) => s.uiScale);
   const transcriptScale = useConfigStore((s) => s.transcriptScale);
   const glassOpacity = useConfigStore((s) => s.glassOpacity);
-  const backgroundBlur = useConfigStore((s) => s.backgroundBlur);
   const setUiScale = useConfigStore((s) => s.setUiScale);
   const setTranscriptScale = useConfigStore((s) => s.setTranscriptScale);
   const setGlassOpacity = useConfigStore((s) => s.setGlassOpacity);
-  const setBackgroundBlur = useConfigStore((s) => s.setBackgroundBlur);
 
   useEffect(() => {
     listDevices()
@@ -292,26 +288,6 @@ export default function SettingsRoute() {
           />
           <span className="text-[11.5px] leading-[1.4] text-fg-faint">
             Higher = more see-through; the desktop behind shows through more.
-          </span>
-        </div>
-
-        <div className={FIELD}>
-          <span className={FIELD_LABEL}>
-            Background blur
-            <em className="ml-1.5 text-[11.5px] text-fg-faint not-italic">{backgroundBlur}px</em>
-          </span>
-          <input
-            type="range"
-            min={BACKGROUND_BLUR_MIN}
-            max={BACKGROUND_BLUR_MAX}
-            step={1}
-            value={backgroundBlur}
-            onChange={(e) => setBackgroundBlur(Number(e.target.value))}
-            className="w-full cursor-pointer accent-accent"
-          />
-          <span className="text-[11.5px] leading-[1.4] text-fg-faint">
-            Frosts content behind the glass panels. Over the transparent desktop the effect is
-            subtle.
           </span>
         </div>
       </section>

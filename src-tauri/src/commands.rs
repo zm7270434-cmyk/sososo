@@ -119,29 +119,6 @@ pub fn set_paused(state: State<'_, AppState>, paused: bool) -> AppResult<()> {
     }
 }
 
-/// Apply or clear the native Windows **acrylic** (frosted-glass) effect on the
-/// invoking window. Unlike CSS `backdrop-filter`, acrylic actually frosts the
-/// desktop behind the transparent window. `alpha` is the tint opacity (0..=255),
-/// wired to the Appearance transparency pref. No-op on non-Windows.
-#[tauri::command]
-pub fn set_window_blur(window: tauri::WebviewWindow, enabled: bool, alpha: u8) -> AppResult<()> {
-    #[cfg(target_os = "windows")]
-    {
-        use window_vibrancy::{apply_acrylic, clear_acrylic};
-        let res = if enabled {
-            apply_acrylic(&window, Some((20, 20, 28, alpha)))
-        } else {
-            clear_acrylic(&window)
-        };
-        res.map_err(|e| AppError::Config(format!("window blur: {e}")))?;
-    }
-    #[cfg(not(target_os = "windows"))]
-    {
-        let _ = (&window, enabled, alpha);
-    }
-    Ok(())
-}
-
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct StopResult {

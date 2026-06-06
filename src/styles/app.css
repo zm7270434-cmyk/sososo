@@ -59,18 +59,16 @@
    highlight + soft inner glow) — the edge is what reads as "liquid
    glass", so it stays. Only the distracting diagonal specular SHEEN
    over the background (former ::before/::after) was removed. The fill
-   alpha (--glass-alpha) and an optional CSS backdrop blur (--glass-blur)
-   are user-controllable (Settings → Appearance), set as :root vars by
-   MainApp; defaults reproduce the prior look. Real desktop frosting is
-   done natively (window-vibrancy acrylic) when Background blur > 0.
-   Pair with a `rounded-*` utility.
+   alpha (--glass-alpha) is user-controllable (Settings → Appearance →
+   Background transparency), set as a :root var by MainApp; the default
+   reproduces the prior look. No window blur — CSS backdrop-filter can't
+   frost the desktop behind a transparent window (native acrylic was
+   tried and removed). Pair with a `rounded-*` utility.
    ============================================================ */
 @utility liquid-glass {
   position: relative;
   border: 1px solid rgb(255 255 255 / 0.35);
   background: rgb(28 28 34 / var(--glass-alpha, 0.58));
-  -webkit-backdrop-filter: blur(var(--glass-blur, 0px));
-  backdrop-filter: blur(var(--glass-blur, 0px));
   box-shadow:
     inset 0 1px 0 rgb(255 255 255 / 0.6),
     inset 0 0 18px rgb(255 255 255 / 0.05);

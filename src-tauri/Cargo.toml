@@ -52,13 +52,6 @@ rusqlite = { version = "0.32", features = ["bundled"] }  # embedded SQLite (sess
 # false` + the `rustls` backend to avoid pulling native-tls/OpenSSL on Windows.
 reqwest = { version = "0.13", default-features = false, features = ["json", "rustls"] }
 
-# --- window appearance ---
-# Optional native Windows acrylic (frosted-glass behind the transparent window),
-# toggled at runtime from Settings → Appearance. CSS backdrop-filter cannot frost
-# the desktop behind a transparent window, so this is the only way to actually
-# blur the background.
-window-vibrancy = "0.5"
-
 [dev-dependencies]
 hound = "3"                # WAV writer for the audio_probe verification example
 
