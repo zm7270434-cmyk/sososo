@@ -134,10 +134,10 @@ export default function RecordingView() {
         </div>
 
         {translateEnabled && (
-          <div className="flex items-center gap-1.5 border-b border-glass-border px-3.5 py-1.5">
-            <span className="shrink-0 text-[11px] text-fg-faint">Translate to</span>
+          <div className="flex items-center gap-2 border-b border-glass-border px-3.5 py-2">
+            <span className="shrink-0 text-[12px] text-fg-faint">Translate to</span>
             <select
-              className="max-w-[170px] flex-1 cursor-pointer truncate rounded-[6px] border border-glass-border bg-[rgba(255,255,255,0.06)] px-1.5 py-[3px] text-[11px] text-fg-dim outline-none focus:border-accent"
+              className="flex-1 cursor-pointer truncate rounded-sm border border-glass-border bg-[rgba(255,255,255,0.06)] px-2.5 py-[7px] text-[13px] text-fg outline-none focus:border-accent"
               value={targetLanguage}
               onChange={(e) => setTargetLanguage(e.target.value)}
               title="Translate to"
