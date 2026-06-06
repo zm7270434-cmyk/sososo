@@ -1,7 +1,7 @@
 [package]
 name = "sososo"
 version = "0.2.0"
-description = "Real-time meeting & audio transcription for Windows (system audio + mic) with AI summaries."
+description = "Real-time meeting & audio transcription (system audio + mic) with AI summaries."
 authors = ["Yusup Supriyadi"]
 edition = "2021"
 license = "MIT"
@@ -27,12 +27,12 @@ serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 
 # --- audio capture (Milestone B) ---
-wasapi = "0.23"            # WASAPI loopback (Render device + Capture init) + mic, polled
 crossbeam-channel = "0.5"  # lock-free bridge from realtime audio threads
 thiserror = "1"            # error enum
 
-# NOTE: WASAPI `autoconvert: true` lets us request 16 kHz/16-bit/mono directly,
-# so rubato resampling is not needed in v1.
+# Per-OS audio backends live in the [target.*] tables below: WASAPI (Windows) and
+# cpal/CoreAudio (macOS). Both yield 16 kHz/16-bit/mono i16 — Windows via WASAPI
+# `autoconvert`, macOS via downmix + resample in src/audio/capture/macos.rs.
 
 # --- live STT + session (Milestone C) ---
 deepgram = "0.10"          # live streaming WS: stream_request_with_options(...).stream(audio)
@@ -41,7 +41,6 @@ tokio = { version = "1", features = ["rt-multi-thread", "macros", "sync", "time"
 tokio-util = "0.7"         # CancellationToken for graceful session stop
 futures = "0.3"            # StreamExt/SinkExt for the audio + results streams
 chrono = { version = "0.4", features = ["serde"] }  # ISO-8601 timestamps
-keyring = { version = "3", features = ["windows-native"] }  # API keys in Windows Credential Manager
 
 # --- persistence (Milestone D) ---
 rusqlite = { version = "0.32", features = ["bundled"] }  # embedded SQLite (sessions + transcript history)
@@ -51,6 +50,15 @@ rusqlite = { version = "0.32", features = ["bundled"] }  # embedded SQLite (sess
 # the tree (via deepgram) using rustls, so we reuse it with `default-features =
 # false` + the `rustls` backend to avoid pulling native-tls/OpenSSL on Windows.
 reqwest = { version = "0.13", default-features = false, features = ["json", "rustls"] }
+
+# --- platform-specific audio backend + OS keychain ---
+[target.'cfg(target_os = "windows")'.dependencies]
+wasapi = "0.23"                                             # WASAPI loopback + mic, polled
+keyring = { version = "3", features = ["windows-native"] }  # Windows Credential Manager
+
+[target.'cfg(target_os = "macos")'.dependencies]
+cpal = "0.17"                                             # CoreAudio capture (mic + BlackHole)
+keyring = { version = "3", features = ["apple-native"] }  # macOS Keychain
 
 [dev-dependencies]
 hound = "3"                # WAV writer for the audio_probe verification example

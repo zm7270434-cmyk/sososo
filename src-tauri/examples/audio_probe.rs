@@ -25,8 +25,6 @@ fn main() {
         .and_then(|s| s.parse().ok())
         .unwrap_or(6);
 
-    let _ = wasapi::initialize_mta();
-
     println!("== Input (microphone) devices ==");
     for d in devices::list_input_devices().expect("list inputs") {
         println!("  {} {}", if d.is_default { "*" } else { " " }, d.name);
