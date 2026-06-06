@@ -6,7 +6,7 @@
 </p>
 
 <p align="center">
-  <b>Real-time meeting &amp; audio transcription for Windows</b><br />
+  <b>Real-time meeting &amp; audio transcription for Windows &amp; macOS</b><br />
   Live captions from your system audio <b>and</b> microphone, with AI summaries.
 </p>
 
@@ -18,18 +18,21 @@
   <a href="https://openai.com"><img alt="AI summaries by OpenAI" src="https://img.shields.io/badge/AI%20summaries-OpenAI-412991.svg?logo=openai&logoColor=white" /></a>
 </p>
 
-`sososo` captures what you hear (system audio via WASAPI loopback) and what you
-say (microphone), streams both to [Deepgram](https://deepgram.com) for live
-speech-to-text, and shows captions in a translucent "liquid glass" window. When
-a session ends it can generate an AI summary via [OpenAI](https://openai.com).
+`sososo` captures what you hear (system audio) and what you say (microphone),
+streams both to [Deepgram](https://deepgram.com) for live speech-to-text, and
+shows captions in a translucent "liquid glass" window. When a session ends it
+can generate an AI summary via [OpenAI](https://openai.com).
 
 It is a **bring-your-own-key** app: you use your own Deepgram and OpenAI API
-keys, stored securely in the Windows Credential Manager. There is no backend,
-no account, and no telemetry.
+keys, stored securely in the OS keychain (Windows Credential Manager / macOS
+Keychain). There is no backend, no account, and no telemetry.
 
 > [!IMPORTANT]
-> **Platform:** Windows 10/11 only. Audio capture relies on Windows WASAPI, so
-> the app does not function on macOS or Linux.
+> **Platforms:** Windows 10/11 and macOS 11+. System audio capture differs per
+> OS: Windows uses WASAPI loopback (no setup); macOS has no built-in loopback,
+> so you route system audio through a free virtual device like
+> [BlackHole](https://github.com/ExistentialAudio/BlackHole) — see
+> [macOS system audio setup](#macos-system-audio-setup). Linux is not supported.
 
 <p align="center">
   <a href="https://youtu.be/al1_YU_ILXs">
@@ -50,8 +53,8 @@ no account, and no telemetry.
 - 🪟 **Compact recording widget** — a small always-on-top pill (pause / finish)
   while recording; full library, history, and settings views when idle.
 - 🧠 **AI summaries** — optional end-of-session summary generated with OpenAI.
-- 🔒 **Private by design** — keys in the OS Credential Manager; no server, no
-  telemetry. (See [PRIVACY.md](./PRIVACY.md) for what leaves your machine.)
+- 🔒 **Private by design** — keys in the OS keychain; no server, no telemetry.
+  (See [PRIVACY.md](./PRIVACY.md) for what leaves your machine.)
 
 ## Privacy at a glance
 
@@ -61,19 +64,22 @@ This app sends audio and text to third-party services **you** configure:
 - **Transcript → OpenAI** (only if you trigger a summary).
 
 Your API keys never leave your machine except as auth headers to those
-services, and are stored in the Windows Credential Manager — never in the repo
-or in plaintext config. Full details in [PRIVACY.md](./PRIVACY.md).
+services, and are stored in the OS keychain (Windows Credential Manager / macOS
+Keychain) — never in the repo or in plaintext config. Full details in
+[PRIVACY.md](./PRIVACY.md).
 
 ## Install
 
 ### Download a release (recommended)
 
-Grab the latest Windows installer from the
-[Releases page](https://github.com/yusupsupriyadi/sososo/releases).
+Grab the latest build for your OS from the
+[Releases page](https://github.com/yusupsupriyadi/sososo/releases) — a Windows
+installer (`.exe` / `.msi`) or a macOS disk image (`.dmg`, universal).
 
 > [!NOTE]
-> Builds are not yet code-signed, so Windows SmartScreen may warn on first run
-> ("More info" → "Run anyway"). Signed builds are planned.
+> Builds are not yet code-signed. On Windows, SmartScreen may warn on first run
+> ("More info" → "Run anyway"); on macOS, Gatekeeper may block it, so right-click
+> the app and choose **Open**. Signed builds are planned.
 
 ### Build from source
 
@@ -81,8 +87,9 @@ Grab the latest Windows installer from the
 
 - [Bun](https://bun.sh) (package manager — do not use npm/yarn/pnpm)
 - [Rust](https://rustup.rs) (stable toolchain)
-- Windows 10/11 with [WebView2](https://developer.microsoft.com/microsoft-edge/webview2/)
-  (preinstalled on current Windows)
+- **Windows 10/11** with [WebView2](https://developer.microsoft.com/microsoft-edge/webview2/)
+  (preinstalled on current Windows), or **macOS 11+** with Xcode Command Line
+  Tools (`xcode-select --install`)
 
 ```sh
 bun install
@@ -95,11 +102,30 @@ bun run tauri build   # produce an installer in src-tauri/target/release/bundle
 1. Launch the app and open **Settings**.
 2. Paste your **Deepgram** API key (required for transcription) and, optionally,
    your **OpenAI** API key (for summaries).
-3. Keys are saved to the Windows Credential Manager. The app only ever checks
-   _whether_ a key exists — it never reads keys back into the UI.
+3. Keys are saved to the OS keychain (Windows Credential Manager / macOS
+   Keychain). The app only ever checks _whether_ a key exists — it never reads
+   keys back into the UI.
 
 Get keys from the [Deepgram console](https://console.deepgram.com) and the
 [OpenAI dashboard](https://platform.openai.com/api-keys).
+
+## macOS system audio setup
+
+macOS has no built-in way to capture system audio, so route your output through
+a free virtual audio device:
+
+1. Install [BlackHole](https://github.com/ExistentialAudio/BlackHole)
+   (`brew install blackhole-2ch`), or any equivalent loopback device.
+2. Open **Audio MIDI Setup** and create a **Multi-Output Device** that includes
+   both your speakers/headphones **and** "BlackHole 2ch"; set it as the system
+   output so you still hear audio while it is also routed to BlackHole.
+3. In sososo, open **Settings → Audio Devices**, pick your microphone, and
+   choose **BlackHole 2ch** as the _system audio source_.
+4. On the first recording, macOS prompts for **microphone** access — allow it.
+
+> [!NOTE]
+> On Windows none of this is needed — WASAPI loopback captures the chosen output
+> device directly.
 
 ## Development
 
@@ -120,8 +146,8 @@ web files and rustfmt on Rust). See [CONTRIBUTING.md](./CONTRIBUTING.md).
 
 ## Tech stack
 
-- **Backend:** Tauri 2 (Rust) — WASAPI capture, Deepgram WS streaming, SQLite
-  persistence, OpenAI summaries.
+- **Backend:** Tauri 2 (Rust) — audio capture (WASAPI on Windows, CoreAudio via
+  cpal on macOS), Deepgram WS streaming, SQLite persistence, OpenAI summaries.
 - **Frontend:** React 19 · React Router 7 · Zustand 5 · Vite 7 · Tailwind CSS v4
   (TypeScript).
 
