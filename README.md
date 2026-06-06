@@ -1,11 +1,20 @@
-# sososo
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="public/sososo_brand_logo_white.png" />
+    <img alt="sososo" src="public/sososo_brand_logo.png" width="440" />
+  </picture>
+</p>
 
-> Real-time meeting & audio transcription for Windows — live captions from your
-> system audio **and** microphone, with AI summaries.
+<p align="center">
+  <b>Real-time meeting &amp; audio transcription for Windows</b><br />
+  Live captions from your system audio <b>and</b> microphone, with AI summaries.
+</p>
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
-[![CI](https://github.com/yusupsupriyadi/sososo/actions/workflows/ci.yml/badge.svg)](https://github.com/yusupsupriyadi/sososo/actions/workflows/ci.yml)
-[![Built with Tauri](https://img.shields.io/badge/built%20with-Tauri%202-24C8DB.svg)](https://tauri.app)
+<p align="center">
+  <a href="./LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-yellow.svg" /></a>
+  <a href="https://github.com/yusupsupriyadi/sososo/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/yusupsupriyadi/sososo/actions/workflows/ci.yml/badge.svg" /></a>
+  <a href="https://tauri.app"><img alt="Built with Tauri 2" src="https://img.shields.io/badge/built%20with-Tauri%202-24C8DB.svg" /></a>
+</p>
 
 `sososo` captures what you hear (system audio via WASAPI loopback) and what you
 say (microphone), streams both to [Deepgram](https://deepgram.com) for live
