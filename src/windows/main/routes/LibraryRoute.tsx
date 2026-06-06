@@ -96,7 +96,7 @@ export default function LibraryRoute() {
   }
 
   return (
-    <div className="flex h-full items-center justify-center p-6">
+    <div className="flex min-h-full items-center justify-center p-6">
       <div className="max-w-[440px] text-center text-fg-dim">
         <div className="mb-2 flex justify-center text-accent">
           <HugeiconsIcon icon={IconMic} size={46} strokeWidth={1.5} aria-hidden={true} />
