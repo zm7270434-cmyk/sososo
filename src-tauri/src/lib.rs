@@ -31,6 +31,8 @@ pub fn run() {
             commands::rename_speaker,
             commands::get_summary_language,
             commands::set_summary_language,
+            commands::get_ai_provider,
+            commands::set_ai_provider,
             commands::summarize_session,
             commands::translate_segment,
         ])

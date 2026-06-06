@@ -158,7 +158,7 @@ pub fn set_transcription_options(
     Ok(())
 }
 
-/// `service` = "deepgram" | "openai". Stored in the OS keychain; never returned.
+/// `service` = "deepgram" | "openai" | "gemini". Stored in the OS keychain; never returned.
 #[tauri::command]
 pub fn set_api_key(service: String, value: String) -> AppResult<()> {
     keys::set_api_key(&service, &value)
@@ -217,6 +217,46 @@ pub fn rename_speaker(
 /// `app_settings` key for the persisted AI-summary output-language preference.
 const SUMMARY_LANGUAGE_KEY: &str = "summary_language";
 
+/// `app_settings` key for the active AI provider ("openai" | "gemini").
+const AI_PROVIDER_KEY: &str = "ai_provider";
+
+/// Read the persisted AI provider ("openai" | "gemini"). Defaults to "openai"
+/// when never set. Used by Settings to populate the provider dropdown.
+#[tauri::command]
+pub fn get_ai_provider(db: State<'_, Db>) -> AppResult<String> {
+    Ok(db
+        .get_setting(AI_PROVIDER_KEY)?
+        .unwrap_or_else(|| "openai".to_string()))
+}
+
+/// Persist the active AI provider. Only "openai" or "gemini" are accepted.
+#[tauri::command]
+pub fn set_ai_provider(db: State<'_, Db>, provider: String) -> AppResult<()> {
+    let normalized = match provider.trim().to_ascii_lowercase().as_str() {
+        "gemini" => "gemini",
+        "openai" => "openai",
+        other => return Err(AppError::Config(format!("unknown AI provider: {other}"))),
+    };
+    db.set_setting(AI_PROVIDER_KEY, normalized)
+}
+
+/// Resolve the active AI provider and its API key (from the keychain). Reads the
+/// persisted setting synchronously — the returned key is owned, so callers never
+/// hold the DB lock across a network `await`.
+fn resolve_ai_provider(db: &Db) -> AppResult<(ai::Provider, String)> {
+    let setting = db
+        .get_setting(AI_PROVIDER_KEY)?
+        .unwrap_or_else(|| "openai".to_string());
+    let provider = ai::Provider::from_setting(&setting);
+    let key = keys::get_api_key(provider.key_service())?.ok_or_else(|| {
+        AppError::Config(format!(
+            "{} API key is not set (open Settings)",
+            provider.label()
+        ))
+    })?;
+    Ok((provider, key))
+}
+
 /// Read the persisted AI-summary output language (a Deepgram language code or the
 /// literal `"auto"`). Defaults to `"auto"` when never set. Used by Settings to
 /// populate the dropdown.
@@ -233,8 +273,9 @@ pub fn set_summary_language(db: State<'_, Db>, language: String) -> AppResult<()
     db.set_setting(SUMMARY_LANGUAGE_KEY, &language)
 }
 
-/// Generate (and persist) an AI summary for a recorded session via OpenAI, then
-/// return the Markdown summary. Requires the OpenAI key to be set in Settings.
+/// Generate (and persist) an AI summary for a recorded session via the active AI
+/// provider (OpenAI or Gemini), then return the Markdown summary. Requires that
+/// provider's API key to be set in Settings.
 ///
 /// `summary_language` is the desired output language: the literal `"auto"` (match
 /// the transcript) or a human-readable language name (e.g. `"Indonesian"`). The
@@ -255,10 +296,10 @@ pub async fn summarize_session(
         return Err(AppError::Session("no transcript to summarize yet".into()));
     }
 
-    let key = keys::get_api_key("openai")?
-        .ok_or_else(|| AppError::Config("OpenAI API key is not set (open Settings)".into()))?;
+    let (provider, key) = resolve_ai_provider(&db)?;
 
     let (summary, model) = ai::summarize(
+        provider,
         &key,
         &detail.session.title,
         &detail.session.language,
@@ -272,17 +313,17 @@ pub async fn summarize_session(
     Ok(summary)
 }
 
-// --- Live translation (OpenAI) ---
+// --- Live translation (active AI provider) ---
 
-/// Translate one finalized transcript line via OpenAI into `target_lang` (a
-/// human-readable language name like "English") and persist it on the segment
-/// row, returning the translated text.
+/// Translate one finalized transcript line via the active AI provider (OpenAI or
+/// Gemini) into `target_lang` (a human-readable language name like "English") and
+/// persist it on the segment row, returning the translated text.
 ///
 /// Idempotent: if the row already has a translation for the same language it is
-/// returned without calling OpenAI, so a line is never translated twice. The
+/// returned without calling the provider, so a line is never translated twice. The
 /// frontend additionally caches per segment, so this is the defensive backstop.
-/// Requires the OpenAI key (Settings). Like `summarize_session`, the DB mutex is
-/// only held for the synchronous steps — never across the network `await`.
+/// Requires the active provider's key (Settings). Like `summarize_session`, the DB
+/// mutex is only held for the synchronous steps — never across the network `await`.
 #[tauri::command]
 pub async fn translate_segment(
     db: State<'_, Db>,
@@ -297,10 +338,9 @@ pub async fn translate_segment(
         }
     }
 
-    let key = keys::get_api_key("openai")?
-        .ok_or_else(|| AppError::Config("OpenAI API key is not set (open Settings)".into()))?;
+    let (provider, key) = resolve_ai_provider(&db)?;
 
-    let translated = ai::translate(&key, &text, &target_lang).await?;
+    let translated = ai::translate(provider, &key, &text, &target_lang).await?;
     db.save_translation(session_id, &segment_id, &translated, &target_lang)?;
     Ok(translated)
 }

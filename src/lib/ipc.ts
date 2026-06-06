@@ -1,5 +1,6 @@
 import { invoke } from '@tauri-apps/api/core';
 import type {
+  AiProvider,
   ApiService,
   DeviceLists,
   SessionDetail,
@@ -63,6 +64,14 @@ export const getSummaryLanguage = (): Promise<string> => invoke('get_summary_lan
 /** Persist the AI-summary output language (a language code or "auto"). */
 export const setSummaryLanguage = (language: string): Promise<void> =>
   invoke('set_summary_language', { language });
+
+/** Read the active AI provider ("openai" | "gemini"). Defaults to "openai". */
+export const getAiProvider = (): Promise<AiProvider> => invoke('get_ai_provider');
+
+/** Persist the active AI provider ("openai" | "gemini"). Governs both session
+ *  summaries and live translation. */
+export const setAiProvider = (provider: AiProvider): Promise<void> =>
+  invoke('set_ai_provider', { provider });
 
 /** Generate + persist an AI summary for a session; resolves to the Markdown text.
  *  `summaryLanguage` is the literal "auto" (match the transcript) or a

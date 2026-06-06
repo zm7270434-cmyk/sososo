@@ -2,9 +2,11 @@ import { useEffect, useState } from 'react';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { openUrl } from '@tauri-apps/plugin-opener';
 import {
+  getAiProvider,
   getSummaryLanguage,
   hasApiKey,
   listDevices,
+  setAiProvider,
   setApiKey,
   setDevices,
   setSummaryLanguage,
@@ -29,7 +31,7 @@ import {
   TRANSCRIPT_SCALE_MIN,
   TRANSCRIPT_SCALE_MAX,
 } from '../../../state/configStore';
-import type { DeviceLists } from '../../../types/domain';
+import type { AiProvider, ApiService, DeviceLists } from '../../../types/domain';
 
 const FIELD_CTRL =
   'w-full flex-1 rounded-sm border border-glass-border bg-[rgba(255,255,255,0.05)] px-[11px] py-[9px] text-[13px] text-fg outline-none focus:border-accent';
@@ -54,11 +56,15 @@ export default function SettingsRoute() {
   const [devices, setDeviceLists] = useState<DeviceLists | null>(null);
   const [dgKey, setDgKey] = useState('');
   const [oaKey, setOaKey] = useState('');
+  const [gmKey, setGmKey] = useState('');
   const [dgSaved, setDgSaved] = useState(false);
   const [oaSaved, setOaSaved] = useState(false);
+  const [gmSaved, setGmSaved] = useState(false);
   const [status, setStatus] = useState('');
   // AI-summary output language ("auto" or a language code), persisted in the DB.
   const [summaryLang, setSummaryLang] = useState('auto');
+  // Active AI provider ("openai" | "gemini") for summaries + live translation, persisted in the DB.
+  const [aiProvider, setAiProviderState] = useState<AiProvider>('openai');
 
   // Device selection is shared with the Start-transcription screen via the config store.
   const inputDevice = useConfigStore((s) => s.inputDevice);
@@ -93,8 +99,14 @@ export default function SettingsRoute() {
     hasApiKey('openai')
       .then(setOaSaved)
       .catch(() => {});
+    hasApiKey('gemini')
+      .then(setGmSaved)
+      .catch(() => {});
     getSummaryLanguage()
       .then(setSummaryLang)
+      .catch(() => {});
+    getAiProvider()
+      .then(setAiProviderState)
       .catch(() => {});
   }, [setInputDevice, setOutputDevice]);
 
@@ -117,17 +129,30 @@ export default function SettingsRoute() {
     }
   }
 
-  async function saveKey(service: 'deepgram' | 'openai') {
-    const value = (service === 'deepgram' ? dgKey : oaKey).trim();
+  async function saveAiProvider(provider: AiProvider) {
+    setAiProviderState(provider);
+    try {
+      await setAiProvider(provider);
+      setStatus('AI provider saved.');
+    } catch (e) {
+      setStatus(`Error: ${e}`);
+    }
+  }
+
+  async function saveKey(service: ApiService) {
+    const value = (service === 'deepgram' ? dgKey : service === 'openai' ? oaKey : gmKey).trim();
     if (!value) return;
     try {
       await setApiKey(service, value);
       if (service === 'deepgram') {
         setDgKey('');
         setDgSaved(true);
-      } else {
+      } else if (service === 'openai') {
         setOaKey('');
         setOaSaved(true);
+      } else {
+        setGmKey('');
+        setGmSaved(true);
       }
       setStatus(`${service} API key saved.`);
     } catch (e) {
@@ -225,6 +250,51 @@ export default function SettingsRoute() {
           Get an OpenAI API key (optional — for AI summaries)
           <HugeiconsIcon icon={IconExternal} size={12} strokeWidth={1.8} aria-hidden={true} />
         </button>
+        <label className={FIELD}>
+          <span className={FIELD_LABEL}>
+            Gemini API Key{' '}
+            {gmSaved && (
+              <em className="ml-1.5 inline-flex items-center gap-1 text-[11.5px] text-ok not-italic">
+                <HugeiconsIcon icon={IconCheck} size={13} strokeWidth={2} aria-hidden={true} />
+                saved
+              </em>
+            )}
+          </span>
+          <div className="flex gap-2">
+            <input
+              className={FIELD_CTRL}
+              type="password"
+              value={gmKey}
+              onChange={(e) => setGmKey(e.target.value)}
+              placeholder={gmSaved ? '••••••••••••' : 'AIza…'}
+            />
+            <button className={BTN} onClick={() => void saveKey('gemini')}>
+              Save
+            </button>
+          </div>
+        </label>
+        <button
+          type="button"
+          className="mb-1 inline-flex w-fit cursor-pointer items-center gap-1.5 text-[12px] text-fg-dim hover:text-accent hover:underline"
+          onClick={() => void openExternal('https://aistudio.google.com/app/apikey')}
+        >
+          Get a Gemini API key (optional — for AI summaries)
+          <HugeiconsIcon icon={IconExternal} size={12} strokeWidth={1.8} aria-hidden={true} />
+        </button>
+        <label className={FIELD}>
+          <span className={FIELD_LABEL}>Active AI provider</span>
+          <select
+            className={FIELD_CTRL}
+            value={aiProvider}
+            onChange={(e) => void saveAiProvider(e.target.value as AiProvider)}
+          >
+            <option value="openai">OpenAI</option>
+            <option value="gemini">Gemini</option>
+          </select>
+          <span className="text-[11.5px] leading-[1.4] text-fg-faint">
+            Powers AI session summaries and live translation. Set the matching API key above.
+          </span>
+        </label>
         <p className="mt-2 text-[12px] leading-[1.5] text-fg-faint">
           Keys are stored securely in Windows Credential Manager and are never sent to the frontend.
         </p>

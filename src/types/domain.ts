@@ -49,7 +49,10 @@ export interface StopResult {
   endedAt: string;
 }
 
-export type ApiService = 'deepgram' | 'openai';
+export type ApiService = 'deepgram' | 'openai' | 'gemini';
+
+/** Which AI backend powers session summaries + live translation. */
+export type AiProvider = 'openai' | 'gemini';
 
 // --- Session history (persisted) ---
 

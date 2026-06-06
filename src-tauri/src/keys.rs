@@ -11,7 +11,7 @@ fn entry(name: &str) -> AppResult<Entry> {
     Entry::new(SERVICE, name).map_err(|e| AppError::Config(format!("keyring open: {e}")))
 }
 
-/// `service` is "deepgram" or "openai".
+/// `service` is "deepgram", "openai", or "gemini".
 pub fn set_api_key(service: &str, value: &str) -> AppResult<()> {
     entry(service)?
         .set_password(value)
