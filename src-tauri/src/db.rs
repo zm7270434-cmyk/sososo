@@ -298,6 +298,25 @@ impl Db {
         Ok(())
     }
 
+    /// Rename a speaker label across one session's transcript. `from` is the
+    /// stored `speaker` value to match (`None` matches the un-diarized `NULL`
+    /// group); every matching row's label becomes `to`. `source` is never
+    /// touched, so the mic/remote icon and the reserved "You" colour are kept.
+    /// Returns the number of rows changed.
+    pub fn rename_speaker(
+        &self,
+        session_id: i64,
+        from: Option<&str>,
+        to: &str,
+    ) -> AppResult<usize> {
+        let conn = self.0.lock().unwrap();
+        let changed = conn.execute(
+            "UPDATE segments SET speaker = ?1 WHERE session_id = ?2 AND speaker IS ?3",
+            rusqlite::params![to, session_id, from],
+        )?;
+        Ok(changed)
+    }
+
     /// Store (or replace) the AI-generated summary for a session (Milestone E).
     pub fn save_summary(&self, id: i64, summary: &str, model: &str, at: &str) -> AppResult<()> {
         let conn = self.0.lock().unwrap();

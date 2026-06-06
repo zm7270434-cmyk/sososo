@@ -195,6 +195,23 @@ pub fn rename_session(db: State<'_, Db>, id: i64, title: String) -> AppResult<()
     db.rename_session(id, &title)
 }
 
+/// Rename a speaker label across a saved session's transcript (history view).
+/// `from` is the current stored label (`null`/`None` = the un-diarized group);
+/// `to` is the new name. An empty `to` is rejected. Returns rows changed.
+#[tauri::command]
+pub fn rename_speaker(
+    db: State<'_, Db>,
+    session_id: i64,
+    from: Option<String>,
+    to: String,
+) -> AppResult<usize> {
+    let to = to.trim();
+    if to.is_empty() {
+        return Err(AppError::Session("Speaker name cannot be empty".into()));
+    }
+    db.rename_speaker(session_id, from.as_deref(), to)
+}
+
 // --- AI summary (Milestone E) ---
 
 /// `app_settings` key for the persisted AI-summary output-language preference.
