@@ -13,8 +13,15 @@ concurrency:
 
 jobs:
   check:
-    # Windows-only: audio capture uses WASAPI, and the app bundles for Windows.
-    runs-on: windows-latest
+    # Build on both targets: WASAPI (Windows) and cpal/CoreAudio (macOS) audio
+    # backends are cfg-gated, so each only compiles on its own OS — clippy here is
+    # how the macOS backend is verified (it can't be cross-compiled from Windows).
+    name: check (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
 

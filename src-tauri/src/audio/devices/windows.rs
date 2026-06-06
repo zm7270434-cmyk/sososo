@@ -1,15 +1,10 @@
-use serde::Serialize;
+//! Windows device enumeration (WASAPI). Capture endpoints = microphones / line-in;
+//! render endpoints = speakers / outputs (the sources we loopback-capture).
+
 use wasapi::{DeviceEnumerator, Direction};
 
+use super::DeviceInfo;
 use crate::error::{AppError, AppResult};
-
-#[derive(Debug, Clone, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct DeviceInfo {
-    pub id: String,
-    pub name: String,
-    pub is_default: bool,
-}
 
 fn list_for(direction: Direction) -> AppResult<Vec<DeviceInfo>> {
     // COM must be initialized on the calling thread; best-effort (already-init is fine).
@@ -43,12 +38,10 @@ fn list_for(direction: Direction) -> AppResult<Vec<DeviceInfo>> {
     Ok(out)
 }
 
-/// Microphones / line-in (WASAPI capture endpoints).
-pub fn list_input_devices() -> AppResult<Vec<DeviceInfo>> {
+pub(super) fn list_input_devices() -> AppResult<Vec<DeviceInfo>> {
     list_for(Direction::Capture)
 }
 
-/// Speakers / output endpoints — these are the sources we loopback-capture.
-pub fn list_output_devices() -> AppResult<Vec<DeviceInfo>> {
+pub(super) fn list_output_devices() -> AppResult<Vec<DeviceInfo>> {
     list_for(Direction::Render)
 }

@@ -34,8 +34,9 @@
   --shadow-liquid:
     inset 0 1px 0 rgb(255 255 255 / 0.6), 0 0 9px rgb(0 0 0 / 0.2), 0 3px 8px rgb(0 0 0 / 0.15);
 
-  /* type */
-  --font-sans: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  /* type — system-ui resolves to the native UI font per OS (Segoe UI on
+     Windows, San Francisco on macOS); explicit names are fallbacks */
+  --font-sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 
   /* animation → `animate-rec-pulse` */
   --animate-rec-pulse: rec-pulse 1.4s infinite;

@@ -1,8 +1,8 @@
 name: Release
 
 # Tag a version to publish, e.g. `git tag v0.1.0 && git push origin v0.1.0`.
-# A draft GitHub Release is created with the Windows installer attached;
-# review it and click "Publish".
+# A draft GitHub Release is created with the Windows installer and the macOS
+# (universal .dmg/.app) bundle attached; review it and click "Publish".
 on:
   push:
     tags: ['v*']
@@ -13,7 +13,16 @@ permissions:
 
 jobs:
   release:
-    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            args: ''
+          - os: macos-latest
+            # Universal binary so the .dmg runs on both Apple Silicon and Intel.
+            args: '--target universal-apple-darwin'
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
 
@@ -22,6 +31,10 @@ jobs:
 
       - name: Setup Rust toolchain
         uses: dtolnay/rust-toolchain@stable
+
+      - name: Add Apple universal targets
+        if: matrix.os == 'macos-latest'
+        run: rustup target add aarch64-apple-darwin x86_64-apple-darwin
 
       - name: Rust cache
         uses: Swatinem/rust-cache@v2
@@ -35,14 +48,15 @@ jobs:
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # Code signing (optional): https://v2.tauri.app/distribute/sign/windows/
-          # Configure a certificate in tauri.conf.json and add the secrets here.
+          # Code signing (optional): Windows https://v2.tauri.app/distribute/sign/windows/
+          # and macOS https://v2.tauri.app/distribute/sign/macos/ — add the secrets here.
         with:
           # Empty on workflow_dispatch -> builds without creating a release.
           tagName: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || '' }}
           releaseName: ${{ startsWith(github.ref, 'refs/tags/') && format('sososo {0}', github.ref_name) || '' }}
-          releaseBody: 'See the assets below to download and install. Builds are not code-signed yet, so Windows SmartScreen may warn on first run.'
+          releaseBody: 'See the assets below to download and install. Builds are not code-signed yet, so the OS may warn on first run (Windows SmartScreen / macOS Gatekeeper — on macOS, right-click the app and choose Open).'
           releaseDraft: true
           prerelease: false
           tauriScript: bun run tauri
+          args: ${{ matrix.args }}
           uploadWorkflowArtifacts: true

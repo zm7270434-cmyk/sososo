@@ -1,89 +1,20 @@
+//! Windows capture backend (WASAPI). Loopback captures a *render* (output) device
+//! in capture mode; the mic captures an *input* device. Both use polling mode —
+//! the loopback stream flag is incompatible with the event-callback flag, so we
+//! keep a single polling code path. Runs on a dedicated MTA-COM thread.
+
 use std::collections::VecDeque;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
-use std::thread::{self, JoinHandle};
+use std::thread;
 use std::time::Duration;
 
-use crossbeam_channel::{bounded, Receiver, Sender};
+use crossbeam_channel::Sender;
 use wasapi::{DeviceEnumerator, Direction, SampleType, StreamMode, WaveFormat};
 
+use super::Source;
 use crate::audio::{TARGET_CHANNELS, TARGET_SAMPLE_RATE};
 use crate::error::{AppError, AppResult};
-
-/// A running capture of one source, delivering 16 kHz / 16-bit / mono PCM as
-/// `Vec<i16>` chunks over `rx`. The realtime WASAPI work runs on its own thread.
-pub struct CaptureHandle {
-    pub rx: Receiver<Vec<i16>>,
-    stop: Arc<AtomicBool>,
-    join: Option<JoinHandle<()>>,
-}
-
-impl CaptureHandle {
-    /// Signal the capture thread to stop and wait for it to finish.
-    pub fn stop(mut self) {
-        self.stop.store(true, Ordering::Relaxed);
-        if let Some(j) = self.join.take() {
-            let _ = j.join();
-        }
-    }
-}
-
-impl Drop for CaptureHandle {
-    fn drop(&mut self) {
-        self.stop.store(true, Ordering::Relaxed);
-        if let Some(j) = self.join.take() {
-            let _ = j.join();
-        }
-    }
-}
-
-#[derive(Clone, Copy, Debug)]
-enum Source {
-    /// System output (what you hear) — captured via WASAPI loopback.
-    Loopback,
-    /// Microphone / default input.
-    Mic,
-}
-
-/// Start capturing system audio (loopback). `device_id` selects the output device
-/// to loopback, or `None` for the system default.
-pub fn start_loopback_capture(device_id: Option<String>) -> AppResult<CaptureHandle> {
-    start_capture(Source::Loopback, device_id)
-}
-
-/// Start capturing the microphone. `device_id` selects the input device, or `None`
-/// for the system default.
-pub fn start_mic_capture(device_id: Option<String>) -> AppResult<CaptureHandle> {
-    start_capture(Source::Mic, device_id)
-}
-
-fn start_capture(source: Source, device_id: Option<String>) -> AppResult<CaptureHandle> {
-    // Small bounded channel: if the consumer lags we drop fresh chunks rather
-    // than let latency grow unbounded.
-    let (tx, rx) = bounded::<Vec<i16>>(64);
-    let stop = Arc::new(AtomicBool::new(false));
-    let stop_thread = stop.clone();
-
-    let name = match source {
-        Source::Loopback => "cap-loopback",
-        Source::Mic => "cap-mic",
-    };
-
-    let join = thread::Builder::new()
-        .name(name.to_string())
-        .spawn(move || {
-            if let Err(e) = capture_thread(source, device_id, tx, stop_thread) {
-                eprintln!("[audio] {source:?} capture stopped: {e}");
-            }
-        })
-        .map_err(|e| AppError::Audio(format!("spawn capture thread: {e}")))?;
-
-    Ok(CaptureHandle {
-        rx,
-        stop,
-        join: Some(join),
-    })
-}
 
 fn find_device_by_id(
     enumerator: &DeviceEnumerator,
@@ -102,7 +33,7 @@ fn find_device_by_id(
     Err(AppError::Audio(format!("device id not found: {id}")))
 }
 
-fn capture_thread(
+pub(super) fn capture_loop(
     source: Source,
     device_id: Option<String>,
     tx: Sender<Vec<i16>>,

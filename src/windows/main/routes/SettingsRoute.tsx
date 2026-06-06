@@ -12,6 +12,7 @@ import {
   setSummaryLanguage,
 } from '../../../lib/ipc';
 import { SUMMARY_LANGUAGES } from '../../../lib/languages';
+import { isMacOS } from '../../../lib/platform';
 import {
   IconAlert,
   IconAppearance,
@@ -296,7 +297,9 @@ export default function SettingsRoute() {
           </span>
         </label>
         <p className="mt-2 text-[12px] leading-[1.5] text-fg-faint">
-          Keys are stored securely in Windows Credential Manager and are never sent to the frontend.
+          Keys are stored securely in{' '}
+          {isMacOS ? 'the macOS Keychain' : 'Windows Credential Manager'} and are never sent to the
+          frontend.
         </p>
       </section>
 
@@ -326,7 +329,7 @@ export default function SettingsRoute() {
         <label className={FIELD}>
           <span className={`${FIELD_LABEL} inline-flex items-center gap-1.5`}>
             <HugeiconsIcon icon={IconSpeaker} size={13} strokeWidth={1.8} aria-hidden={true} />
-            System audio source (the output to loop back)
+            {isMacOS ? 'System audio source' : 'System audio source (the output to loop back)'}
           </span>
           <select
             className={FIELD_CTRL}
@@ -340,6 +343,13 @@ export default function SettingsRoute() {
               </option>
             ))}
           </select>
+          {isMacOS && (
+            <span className="text-[11.5px] leading-[1.4] text-fg-faint">
+              macOS can&apos;t capture speakers directly. Install a virtual audio device like{' '}
+              <b className="text-fg-dim">BlackHole</b>, route your output into it via a Multi-Output
+              Device, then select it here.
+            </span>
+          )}
         </label>
         <button
           className="mt-1 cursor-pointer rounded-sm border border-[rgba(255,255,255,0.3)] bg-[rgba(110,168,254,0.24)] px-4 py-[9px] text-[13px] whitespace-nowrap text-[#dbe8ff] shadow-liquid hover:bg-[rgba(110,168,254,0.34)]"
