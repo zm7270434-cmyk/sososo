@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-06-06
+
+### Added
+
+- **macOS support (experimental / alpha).** The app now builds and runs on
+  macOS 11+. System audio is captured via cpal/CoreAudio using a virtual device
+  such as BlackHole (see the README setup), with native traffic-light window
+  controls. The macOS build is published as **"sososo Alpha"** while it is
+  validated on real hardware; the Windows build is unchanged.
+- Gemini as a selectable AI provider alongside OpenAI, for session summaries and
+  live translation (Settings → Active AI provider).
+- Settings: a Deepgram API-key help link and a note about the $200 of free
+  credit for new accounts.
+
+### Fixed
+
+- The start-transcription screen now scrolls when its content is taller than the
+  window (e.g. with live-translate expanded or a larger UI scale).
+
 ## [0.2.0] - 2026-06-06
 
 ### Added
@@ -45,6 +64,7 @@ First public release. **Windows only** — macOS and Linux are not yet tested.
 - Formatting SOP — Prettier (with Tailwind class sorting) + rustfmt, enforced by
   a Husky pre-commit hook — plus CI and a Windows release workflow.
 
-[unreleased]: https://github.com/yusupsupriyadi/sososo/compare/v0.2.0...HEAD
+[unreleased]: https://github.com/yusupsupriyadi/sososo/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/yusupsupriyadi/sososo/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/yusupsupriyadi/sososo/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/yusupsupriyadi/sososo/releases/tag/v0.1.0
