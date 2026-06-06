@@ -3,7 +3,14 @@ import { NavLink } from 'react-router-dom';
 import clsx from 'clsx';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { listSessions } from '../../lib/ipc';
-import { IconAdd, IconHistory, IconInbox, IconSettings, IconTranscript } from '../../lib/icons';
+import {
+  IconAbout,
+  IconAdd,
+  IconHistory,
+  IconInbox,
+  IconSettings,
+  IconTranscript,
+} from '../../lib/icons';
 import { useSessionStore } from '../../state/sessionStore';
 import { useLibraryStore } from '../../state/libraryStore';
 import { formatDateTime } from '../../lib/format';
@@ -86,6 +93,18 @@ export default function SessionSidebar() {
       >
         <HugeiconsIcon icon={IconSettings} size={16} strokeWidth={1.8} aria-hidden={true} />
         Settings
+      </NavLink>
+      <NavLink
+        to="/main/about"
+        className={({ isActive }) =>
+          clsx(
+            'flex cursor-pointer items-center gap-2 rounded-sm border border-glass-border px-2.5 py-[9px] text-left text-[13px] no-underline hover:bg-hover hover:text-fg',
+            isActive ? 'bg-hover text-fg' : 'bg-[rgba(255,255,255,0.04)] text-fg-dim',
+          )
+        }
+      >
+        <HugeiconsIcon icon={IconAbout} size={16} strokeWidth={1.8} aria-hidden={true} />
+        About
       </NavLink>
     </aside>
   );

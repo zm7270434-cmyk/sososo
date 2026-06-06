@@ -50,4 +50,8 @@ export {
   Alert02Icon as IconAlert,
   InboxIcon as IconInbox,
   CaptionsOffIcon as IconNoTranscript,
+  // About page & external links
+  InformationCircleIcon as IconAbout,
+  GithubIcon as IconGithub,
+  StarIcon as IconStar,
 } from '@hugeicons/core-free-icons';
