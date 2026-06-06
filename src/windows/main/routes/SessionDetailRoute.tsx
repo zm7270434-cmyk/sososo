@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { HugeiconsIcon } from '@hugeicons/react';
 import {
@@ -22,6 +22,7 @@ import {
   getSession,
   getSummaryLanguage,
   renameSession,
+  renameSpeaker,
   summarizeSession,
 } from '../../../lib/ipc';
 import { formatDateTime } from '../../../lib/format';
@@ -29,7 +30,7 @@ import { speakerColor } from '../../../lib/speaker';
 import { languageLabel } from '../../../lib/languages';
 import { useLibraryStore } from '../../../state/libraryStore';
 import { useConfigStore } from '../../../state/configStore';
-import type { SessionDetail } from '../../../types/domain';
+import type { SessionDetail, Source, StoredSegment } from '../../../types/domain';
 
 const ACTION_BTN =
   'inline-flex items-center gap-1.5 cursor-pointer rounded-sm border border-[rgba(255,255,255,0.25)] bg-[rgba(255,255,255,0.08)] px-[11px] py-1.5 text-[12.5px] text-fg-dim whitespace-nowrap shadow-liquid hover:bg-hover hover:text-fg';
@@ -47,7 +48,11 @@ export default function SessionDetailRoute() {
   const [titleDraft, setTitleDraft] = useState('');
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [summarizing, setSummarizing] = useState(false);
+  const [editingSpeaker, setEditingSpeaker] = useState<number | null>(null);
+  const [speakerDraft, setSpeakerDraft] = useState('');
   const [err, setErr] = useState('');
+
+  const speakers = useMemo(() => distinctSpeakers(detail?.segments ?? []), [detail]);
 
   useEffect(() => {
     let alive = true;
@@ -55,6 +60,7 @@ export default function SessionDetailRoute() {
     setEditing(false);
     setConfirmDelete(false);
     setSummarizing(false);
+    setEditingSpeaker(null);
     setErr('');
     getSession(sessionId)
       .then((d) => {
@@ -80,6 +86,25 @@ export default function SessionDetailRoute() {
       await renameSession(sessionId, next);
       setDetail({ ...detail, session: { ...detail.session, title: next } });
       refreshLibrary(); // sidebar shows the new title without a remount
+    } catch (e) {
+      setErr(String(e));
+    }
+  }
+
+  // Rename a speaker label across the whole session, then optimistically rewrite
+  // the matching segments so the panel + transcript update without a refetch.
+  async function saveSpeaker(entry: SpeakerEntry) {
+    const next = speakerDraft.trim();
+    setEditingSpeaker(null);
+    if (!detail || !next || next === entry.display) return;
+    try {
+      await renameSpeaker(sessionId, entry.stored, next);
+      setDetail({
+        ...detail,
+        segments: detail.segments.map((s) =>
+          (s.speaker ?? null) === entry.stored ? { ...s, speaker: next } : s,
+        ),
+      });
     } catch (e) {
       setErr(String(e));
     }
@@ -294,6 +319,62 @@ export default function SessionDetailRoute() {
         </section>
       )}
 
+      {segments.length > 0 && (
+        <section className="mb-4 rounded-md border border-glass-border bg-[rgba(255,255,255,0.04)] px-[18px] py-3.5">
+          <h3 className="mb-2.5 inline-flex items-center gap-1.5 text-[12px] tracking-[0.06em] text-fg-faint uppercase">
+            <HugeiconsIcon icon={IconSpeaker} size={14} strokeWidth={1.8} aria-hidden={true} />
+            Speakers
+          </h3>
+          <div className="flex flex-wrap gap-2">
+            {speakers.map((sp, i) => (
+              <div
+                key={i}
+                className="inline-flex items-center gap-2 rounded-full border border-glass-border bg-[rgba(255,255,255,0.06)] py-1 pr-1.5 pl-2.5"
+              >
+                {editingSpeaker === i ? (
+                  <input
+                    className="w-[120px] rounded-sm border border-accent bg-[rgba(255,255,255,0.06)] px-1.5 py-0.5 text-[12.5px] text-fg outline-none"
+                    value={speakerDraft}
+                    autoFocus
+                    onChange={(e) => setSpeakerDraft(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') void saveSpeaker(sp);
+                      if (e.key === 'Escape') setEditingSpeaker(null);
+                    }}
+                    onBlur={() => void saveSpeaker(sp)}
+                  />
+                ) : (
+                  <>
+                    <span
+                      className="inline-block h-2 w-2 shrink-0 rounded-full"
+                      style={{ backgroundColor: speakerColor(sp.source, sp.display) }}
+                      aria-hidden={true}
+                    />
+                    <span className="text-[12.5px] font-medium text-fg">{sp.display}</span>
+                    <span className="text-[11px] text-fg-faint">{sp.count}</span>
+                    <button
+                      className="inline-flex cursor-pointer items-center rounded-full p-1 text-fg-faint hover:bg-hover hover:text-fg"
+                      aria-label={`Rename ${sp.display}`}
+                      onClick={() => {
+                        setSpeakerDraft(sp.display);
+                        setEditingSpeaker(i);
+                      }}
+                    >
+                      <HugeiconsIcon
+                        icon={IconRename}
+                        size={13}
+                        strokeWidth={1.8}
+                        aria-hidden={true}
+                      />
+                    </button>
+                  </>
+                )}
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
       {segments.length === 0 ? (
         <div className="flex flex-col items-center gap-2 py-10 text-fg-faint">
           <HugeiconsIcon icon={IconNoTranscript} size={32} strokeWidth={1.5} aria-hidden={true} />
@@ -403,4 +484,35 @@ function SummaryView({ text }: { text: string }) {
 /** Strip basic inline Markdown emphasis (**bold**, `code`) for plain rendering. */
 function stripInline(s: string): string {
   return s.replace(/\*\*(.+?)\*\*/g, '$1').replace(/`(.+?)`/g, '$1');
+}
+
+/** One distinct speaker in a session: the raw stored label (null = un-diarized),
+ *  its display name, the source (for icon/colour), and how many lines it has. */
+interface SpeakerEntry {
+  stored: string | null;
+  display: string;
+  source: Source;
+  count: number;
+}
+
+/** Distinct speakers in first-appearance order. Lines sharing one stored label
+ *  group together; a remote line with no diarization (`speaker == null`) becomes
+ *  the "Speaker" group. */
+function distinctSpeakers(segments: StoredSegment[]): SpeakerEntry[] {
+  const byKey = new Map<string, SpeakerEntry>();
+  for (const s of segments) {
+    const key = s.speaker ?? ' ';
+    const existing = byKey.get(key);
+    if (existing) {
+      existing.count += 1;
+    } else {
+      byKey.set(key, {
+        stored: s.speaker ?? null,
+        display: s.speaker ?? (s.source === 'you' ? 'You' : 'Speaker'),
+        source: s.source,
+        count: 1,
+      });
+    }
+  }
+  return [...byKey.values()];
 }

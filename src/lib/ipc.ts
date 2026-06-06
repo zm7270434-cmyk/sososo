@@ -46,6 +46,15 @@ export const deleteSession = (id: number): Promise<void> => invoke('delete_sessi
 export const renameSession = (id: number, title: string): Promise<void> =>
   invoke('rename_session', { id, title });
 
+/** Rename a speaker label across one session's transcript. `from` is the current
+ *  stored label (null = the un-diarized group); `to` is the new name. Resolves to
+ *  the number of transcript lines updated. */
+export const renameSpeaker = (
+  sessionId: number,
+  from: string | null,
+  to: string,
+): Promise<number> => invoke('rename_speaker', { sessionId, from, to });
+
 // --- AI summary ---
 
 /** Read the persisted AI-summary output language (a language code or "auto"). */
