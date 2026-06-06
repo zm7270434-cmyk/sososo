@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-06-06
+
+### Added
+
+- About page: app overview, version, a link to the GitHub repository, and a
+  request to star the project.
+- Configurable AI summary output language, persisted across sessions.
+- Rename speaker labels from a session's history (applied across the session).
+- Adjustable background transparency for the glass UI (Settings → Appearance).
+
+### Changed
+
+- New brand identity: the sososo bullseye app icon (window, taskbar, and
+  installer) plus the wordmark logo in the titlebar; README and favicon updated
+  to match.
+
 ## [0.1.0] - 2026-06-06
 
 First public release. **Windows only** — macOS and Linux are not yet tested.
@@ -29,5 +45,6 @@ First public release. **Windows only** — macOS and Linux are not yet tested.
 - Formatting SOP — Prettier (with Tailwind class sorting) + rustfmt, enforced by
   a Husky pre-commit hook — plus CI and a Windows release workflow.
 
-[unreleased]: https://github.com/yusupsupriyadi/sososo/compare/v0.1.0...HEAD
+[unreleased]: https://github.com/yusupsupriyadi/sososo/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/yusupsupriyadi/sososo/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/yusupsupriyadi/sososo/releases/tag/v0.1.0
