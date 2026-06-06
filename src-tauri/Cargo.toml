@@ -1,0 +1,54 @@
+[package]
+name = "sososo"
+version = "0.1.0"
+description = "A Tauri App"
+authors = ["you"]
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+# The `_lib` suffix may seem redundant but it is necessary
+# to make the lib name unique and wouldn't conflict with the bin name.
+# This seems to be only an issue on Windows, see https://github.com/rust-lang/cargo/issues/8519
+name = "sososo_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = ["macos-private-api"] }
+tauri-plugin-opener = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# --- audio capture (Milestone B) ---
+wasapi = "0.23"            # WASAPI loopback (Render device + Capture init) + mic, polled
+crossbeam-channel = "0.5"  # lock-free bridge from realtime audio threads
+thiserror = "1"            # error enum
+
+# NOTE: WASAPI `autoconvert: true` lets us request 16 kHz/16-bit/mono directly,
+# so rubato resampling is not needed in v1.
+
+# --- live STT + session (Milestone C) ---
+deepgram = "0.10"          # live streaming WS: stream_request_with_options(...).stream(audio)
+bytes = "1"                # Bytes for the audio stream items
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "sync", "time"] }
+tokio-util = "0.7"         # CancellationToken for graceful session stop
+futures = "0.3"            # StreamExt/SinkExt for the audio + results streams
+chrono = { version = "0.4", features = ["serde"] }  # ISO-8601 timestamps
+keyring = { version = "3", features = ["windows-native"] }  # API keys in Windows Credential Manager
+
+# --- persistence (Milestone D) ---
+rusqlite = { version = "0.32", features = ["bundled"] }  # embedded SQLite (sessions + transcript history)
+
+# --- AI summary (Milestone E) ---
+# Call the OpenAI Chat Completions API directly over HTTP. reqwest is already in
+# the tree (via deepgram) using rustls, so we reuse it with `default-features =
+# false` + the `rustls` backend to avoid pulling native-tls/OpenSSL on Windows.
+reqwest = { version = "0.13", default-features = false, features = ["json", "rustls"] }
+
+[dev-dependencies]
+hound = "3"                # WAV writer for the audio_probe verification example
+
