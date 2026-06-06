@@ -31,7 +31,13 @@ no account, and no telemetry.
 > **Platform:** Windows 10/11 only. Audio capture relies on Windows WASAPI, so
 > the app does not function on macOS or Linux.
 
-<!-- TODO: add a screenshot / GIF of the glass window + live transcript here. -->
+<p align="center">
+  <a href="https://youtu.be/al1_YU_ILXs">
+    <img alt="Watch the sososo demo on YouTube" src="https://img.youtube.com/vi/al1_YU_ILXs/maxresdefault.jpg" width="640" />
+  </a>
+  <br />
+  <a href="https://youtu.be/al1_YU_ILXs"><b>▶ Watch the demo on YouTube</b></a>
+</p>
 
 ## Features
 
