@@ -16,6 +16,8 @@ export default function MainApp() {
   const state = useSessionStore((s) => s.state);
   const sessionId = useSessionStore((s) => s.sessionId);
   const uiScale = useConfigStore((s) => s.uiScale);
+  const glassOpacity = useConfigStore((s) => s.glassOpacity);
+  const backgroundBlur = useConfigStore((s) => s.backgroundBlur);
   const navigate = useNavigate();
   const prev = useRef(state);
 
@@ -35,6 +37,15 @@ export default function MainApp() {
     }
     prev.current = state;
   }, [state, sessionId, navigate]);
+
+  // Apply the glass appearance prefs as :root CSS vars so every liquid-glass
+  // surface (shell + the recording widget) reacts live. Runs even while
+  // recording — these hooks execute before the in-session early return below.
+  useEffect(() => {
+    const root = document.documentElement;
+    root.style.setProperty('--glass-alpha', String(glassOpacity));
+    root.style.setProperty('--glass-blur', `${backgroundBlur}px`);
+  }, [glassOpacity, backgroundBlur]);
 
   // While a session is active the whole window becomes the floating
   // transcription widget (its own root, no titlebar/sidebar). The floating
