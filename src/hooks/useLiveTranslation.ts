@@ -50,9 +50,10 @@ export function useLiveTranslation(): void {
       const { sessionId, segmentId } = seg;
       translateSegment(sessionId, segmentId, text, targetName)
         .then((translated) => {
-          // Ignore a stale response if a newer text superseded this request.
+          // Ignore a stale response if a newer text/language superseded this
+          // request (or the session was reset).
           const cur = useTranscriptStore.getState().translations[segmentId];
-          if (cur && cur.forText !== text) return;
+          if (!cur || cur.forText !== text || cur.lang !== targetName) return;
           useTranscriptStore.getState().setTranslation(segmentId, {
             status: 'done',
             text: translated,
@@ -62,7 +63,7 @@ export function useLiveTranslation(): void {
         })
         .catch(() => {
           const cur = useTranscriptStore.getState().translations[segmentId];
-          if (cur && cur.forText !== text) return;
+          if (!cur || cur.forText !== text || cur.lang !== targetName) return;
           useTranscriptStore
             .getState()
             .setTranslation(segmentId, { status: 'error', forText: text, lang: targetName });

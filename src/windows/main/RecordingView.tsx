@@ -17,7 +17,7 @@ import { speakerColor } from '../../lib/speaker';
 import { useElapsedLabel } from '../../hooks/useElapsedTimer';
 import { useTranscriptStore, type TranslationEntry } from '../../state/transcriptStore';
 import { useConfigStore } from '../../state/configStore';
-import { languageLabel } from '../../lib/languages';
+import { languageLabel, TRANSLATE_TARGETS } from '../../lib/languages';
 import { enterRecordingWindow, exitRecordingWindow } from '../../lib/window';
 
 const PILL_BTN =
@@ -38,6 +38,7 @@ export default function RecordingView() {
   const translateEnabled = useConfigStore((s) => s.translateEnabled);
   const setTranslateEnabled = useConfigStore((s) => s.setTranslateEnabled);
   const targetLanguage = useConfigStore((s) => s.targetLanguage);
+  const setTargetLanguage = useConfigStore((s) => s.setTargetLanguage);
   const endRef = useRef<HTMLDivElement>(null);
   const last = segments[segments.length - 1];
 
@@ -132,6 +133,25 @@ export default function RecordingView() {
           <span className="ml-auto text-[12px] text-fg-dim tabular-nums">{elapsed}</span>
         </div>
 
+        {translateEnabled && (
+          <div className="flex items-center gap-1.5 border-b border-glass-border px-3.5 py-1.5">
+            <span className="shrink-0 text-[11px] text-fg-faint">Translate to</span>
+            <select
+              className="max-w-[170px] flex-1 cursor-pointer truncate rounded-[6px] border border-glass-border bg-[rgba(255,255,255,0.06)] px-1.5 py-[3px] text-[11px] text-fg-dim outline-none focus:border-accent"
+              value={targetLanguage}
+              onChange={(e) => setTargetLanguage(e.target.value)}
+              title="Translate to"
+              aria-label="Translation target language"
+            >
+              {TRANSLATE_TARGETS.map((l) => (
+                <option key={l.code} value={l.code}>
+                  {l.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
         <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto p-[14px]">
           {segments.length === 0 ? (
             <p className="m-auto px-4 text-center text-[13px] text-fg-faint italic">
@@ -191,7 +211,7 @@ export default function RecordingView() {
 
 /**
  * Renders a segment's live translation beneath the original line (never
- * replacing it): a dim, accent-bordered line when done, a faint "Translating…"
+ * replacing it): an amber (yellow→orange) line when done, a faint "Translating…"
  * placeholder while pending, and nothing on error.
  */
 function TranslationLine({ entry, scale }: { entry?: TranslationEntry; scale: number }) {
@@ -199,7 +219,7 @@ function TranslationLine({ entry, scale }: { entry?: TranslationEntry; scale: nu
   if (entry.status === 'pending') {
     return (
       <span
-        className="border-l-2 border-[rgba(255,255,255,0.18)] pl-2 text-fg-faint italic"
+        className="border-l-2 border-[rgba(255,192,77,0.35)] pl-2 text-fg-faint italic"
         style={{ fontSize: `${12 * scale}px` }}
       >
         Translating…
@@ -209,7 +229,7 @@ function TranslationLine({ entry, scale }: { entry?: TranslationEntry; scale: nu
   if (entry.status === 'done' && entry.text) {
     return (
       <span
-        className="border-l-2 border-[rgba(110,168,254,0.4)] pl-2 text-fg-dim"
+        className="border-l-2 border-[rgba(255,192,77,0.55)] pl-2 text-[#ffc04d]"
         style={{ fontSize: `${13 * scale}px` }}
       >
         {entry.text}
