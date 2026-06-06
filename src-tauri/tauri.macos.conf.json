@@ -1,0 +1,23 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "app": {
+    "windows": [
+      {
+        "label": "main",
+        "title": "sososo",
+        "url": "index.html#/main",
+        "width": 1040,
+        "height": 720,
+        "minWidth": 380,
+        "minHeight": 420,
+        "resizable": true,
+        "transparent": true,
+        "shadow": true,
+        "center": true,
+        "decorations": true,
+        "titleBarStyle": "Overlay",
+        "hiddenTitle": true
+      }
+    ]
+  }
+}
