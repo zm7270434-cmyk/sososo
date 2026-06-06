@@ -49,22 +49,25 @@ small `minWidth`/`minHeight` in `tauri.conf.json`). Otherwise `MainApp` renders 
 (titlebar + session sidebar + library/settings/session-detail routes). When a session ends it
 navigates to the session detail (where the AI summary lives) if anything was transcribed, else home.
 
-Transparent glass (**optional CSS backdrop-blur**) = `transparent:true` + `decorations:false` window with **no**
-native acrylic/vibrancy; the desktop behind shows through sharply. Styling is **Tailwind CSS v4**
+Transparent glass (**optional native acrylic blur**) = `transparent:true` + `decorations:false` window; by
+default the desktop shows through sharply, but the user can opt into a real frosted background (native
+Windows acrylic, see the glass note below). Styling is **Tailwind CSS v4**
 (`@tailwindcss/vite`, no config file) and **utility-first**: all component styling is inline utility
 classes in JSX. The single `src/styles/app.css` holds only `@import "tailwindcss"`, the `@theme` design
 tokens (colors, radii, `--font-sans`, `--shadow-liquid`, `--animate-rec-pulse`), the `rec-pulse`
 `@keyframes`, one custom `@utility liquid-glass`, and an `@layer base` reset (transparent bg, fonts,
 scrollbar, dark `<option>`, drag-region cursor). There is no `@layer components`.
 
-The **"liquid glass"** look is now **flat** translucent glass (CSS-only, no window blur; the glossy
-sheen/highlights were removed on request). `@utility liquid-glass` (panels, sidebar, titlebar, pill,
-recording panel) = a tinted fill `rgb(28 28 34 / var(--glass-alpha,0.58))` + a faint `--color-glass-border`
-hairline + an optional `backdrop-filter: blur(var(--glass-blur,0px))`. The fill **alpha** (transparency)
-and **blur** radius are user-controllable in Settings → Appearance; `MainApp` writes `--glass-alpha` /
-`--glass-blur` as `:root` vars so every glass surface (shell + recording widget) reacts live (persisted in
-`configStore`). Over a transparent window CSS backdrop-blur can't frost the desktop, so blur mostly affects
-overlapping in-app layers. Buttons get subtle depth via the (de-glossed) `shadow-liquid` utility. Exact
+The **"liquid glass"** look = a translucent fill + a bright glassy **edge** (white border + inset top
+highlight + soft inner glow); the edge is what reads as "liquid glass" and stays. Only the distracting
+diagonal specular **sheen** over the panel background (former `::before`/`::after`) was removed. `@utility
+liquid-glass` (panels, sidebar, titlebar, pill, recording panel) fill = `rgb(28 28 34 / var(--glass-alpha,0.58))`.
+The fill **alpha** (transparency) and a CSS `backdrop-filter: blur(var(--glass-blur,0px))` are user-controllable
+in Settings → Appearance; `MainApp` writes `--glass-alpha` / `--glass-blur` as `:root` vars so every glass
+surface (shell + recording widget) reacts live (persisted in `configStore`). CSS backdrop-blur can't frost the
+desktop behind a transparent window, so the **Background blur** pref instead drives **native Windows acrylic**
+(`window-vibrancy`, via the `set_window_blur` command) for real desktop frosting — on when blur > 0, tint
+opacity following the transparency pref. Buttons get the glossy edge via the `shadow-liquid` utility. Exact
 non-scale values use arbitrary utilities (`text-[13px]`, `bg-[rgba(110,168,254,0.2)]`).
 
 ### Audio → STT pipeline (the core data flow)

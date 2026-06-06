@@ -63,3 +63,10 @@ export const translateSegment = (
   text: string,
   targetLang: string,
 ): Promise<string> => invoke('translate_segment', { sessionId, segmentId, text, targetLang });
+
+// --- Window appearance ---
+
+/** Apply/clear the native Windows acrylic frost on the window (CSS backdrop-filter
+ *  can't frost the desktop). `alpha` is the tint opacity 0..255. No-op off Windows. */
+export const setWindowBlur = (enabled: boolean, alpha: number): Promise<void> =>
+  invoke('set_window_blur', { enabled, alpha });

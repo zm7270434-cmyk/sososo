@@ -4,6 +4,7 @@ import { useTranscriptStream } from '../../hooks/useTranscriptStream';
 import { useSessionStore } from '../../state/sessionStore';
 import { useTranscriptStore } from '../../state/transcriptStore';
 import { useConfigStore } from '../../state/configStore';
+import { setWindowBlur } from '../../lib/ipc';
 import Titlebar from './Titlebar';
 import SessionSidebar from './SessionSidebar';
 import RecordingView from './RecordingView';
@@ -45,6 +46,10 @@ export default function MainApp() {
     const root = document.documentElement;
     root.style.setProperty('--glass-alpha', String(glassOpacity));
     root.style.setProperty('--glass-blur', `${backgroundBlur}px`);
+    // Real desktop frosting (CSS backdrop-filter can't do it over a transparent
+    // window): native Windows acrylic, on when Background blur > 0, with a tint
+    // opacity that follows the transparency pref.
+    void setWindowBlur(backgroundBlur > 0, Math.round(glassOpacity * 255)).catch(() => {});
   }, [glassOpacity, backgroundBlur]);
 
   // While a session is active the whole window becomes the floating

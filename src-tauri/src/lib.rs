@@ -30,6 +30,7 @@ pub fn run() {
             commands::rename_session,
             commands::summarize_session,
             commands::translate_segment,
+            commands::set_window_blur,
         ])
         .setup(|app| {
             // Open (creating if needed) the SQLite history database in the app
@@ -43,9 +44,10 @@ pub fn run() {
             let db = db::Db::open(&data_dir.join("sososo.db"))?;
             app.manage(db);
 
-            // Transparent glass (no blur): the window is `transparent: true` with no
-            // native acrylic/vibrancy, so the desktop behind shows through sharply.
-            // The tint comes purely from the semi-transparent CSS panel backgrounds.
+            // Transparent glass: the window is `transparent: true`. By default the
+            // desktop shows through sharply; the user can opt into a real frosted
+            // background (native Windows acrylic) via Settings → Appearance →
+            // Background blur, applied at runtime by the `set_window_blur` command.
 
             Ok(())
         })
