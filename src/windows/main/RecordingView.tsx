@@ -19,6 +19,7 @@ import { useTranscriptStore, type TranslationEntry } from '../../state/transcrip
 import { useConfigStore } from '../../state/configStore';
 import { languageLabel, TRANSLATE_TARGETS } from '../../lib/languages';
 import { enterRecordingWindow, exitRecordingWindow } from '../../lib/window';
+import { isMacOS } from '../../lib/platform';
 
 const PILL_BTN =
   'inline-flex cursor-pointer items-center justify-center shadow-liquid transition duration-[120ms] enabled:hover:brightness-[1.12] enabled:active:scale-[0.92] disabled:cursor-default disabled:opacity-55';
@@ -62,7 +63,14 @@ export default function RecordingView() {
     state === 'starting' ? 'Starting…' : stopping ? 'Finishing…' : paused ? 'Paused' : 'Recording';
 
   return (
-    <div className="flex h-screen w-screen flex-col items-center gap-2 p-2">
+    <div
+      // macOS shows native traffic lights (titleBarStyle "Overlay") even on the
+      // shrunken widget, so add top padding to keep the pill clear of them.
+      className={clsx(
+        'flex h-screen w-screen flex-col items-center gap-2 px-2 pb-2',
+        isMacOS ? 'pt-7' : 'pt-2',
+      )}
+    >
       <div className="liquid-glass inline-flex shrink-0 items-center gap-2.5 rounded-full px-3 py-[7px]">
         <button
           className={`${PILL_BTN} h-[30px] w-10 rounded-[9px] bg-[#f5c518] text-[#1b1b1b]`}

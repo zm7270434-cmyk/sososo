@@ -42,8 +42,8 @@ export default function AboutRoute() {
       {version && <span className="text-[12px] text-fg-faint">Version {version}</span>}
 
       <p className="max-w-md text-[13px] leading-relaxed text-fg-dim">
-        Real-time meeting &amp; audio transcription for Windows — live captions from your system
-        audio and microphone, with AI summaries.
+        Real-time meeting &amp; audio transcription — live captions from your system audio and
+        microphone, with AI summaries.
       </p>
 
       <span className="rounded-full border border-glass-border bg-[rgba(255,255,255,0.06)] px-3 py-1 text-[12px] text-fg-dim">
