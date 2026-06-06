@@ -14,6 +14,8 @@
   <a href="./LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-yellow.svg" /></a>
   <a href="https://github.com/yusupsupriyadi/sososo/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/yusupsupriyadi/sososo/actions/workflows/ci.yml/badge.svg" /></a>
   <a href="https://tauri.app"><img alt="Built with Tauri 2" src="https://img.shields.io/badge/built%20with-Tauri%202-24C8DB.svg" /></a>
+  <a href="https://deepgram.com"><img alt="Speech-to-text by Deepgram" src="https://img.shields.io/badge/Speech--to--text-Deepgram-13EF93.svg?logo=deepgram&logoColor=black" /></a>
+  <a href="https://openai.com"><img alt="AI summaries by OpenAI" src="https://img.shields.io/badge/AI%20summaries-OpenAI-412991.svg?logo=openai&logoColor=white" /></a>
 </p>
 
 `sososo` captures what you hear (system audio via WASAPI loopback) and what you
@@ -125,6 +127,20 @@ Architecture notes and per-feature history live in
 Contributions are welcome — please read [CONTRIBUTING.md](./CONTRIBUTING.md) and
 our [Code of Conduct](./CODE_OF_CONDUCT.md). To report a security issue, see
 [SECURITY.md](./SECURITY.md).
+
+## Powered by
+
+sososo stands on the shoulders of best-in-class speech and AI APIs:
+
+- 🟢 **[Deepgram](https://deepgram.com)** — real-time speech-to-text (Nova-3 /
+  Nova-2) with diarization and smart formatting. It is the engine behind every
+  live caption in the app. Start with the
+  [console](https://console.deepgram.com) and the
+  [developer docs](https://developers.deepgram.com).
+- 🧠 **[OpenAI](https://openai.com)** — optional end-of-session AI summaries.
+
+Huge thanks to the [Deepgram](https://deepgram.com) team — sososo simply would
+not exist without their speech API. 💚
 
 ## License
 
