@@ -28,6 +28,8 @@ pub fn run() {
             commands::get_session,
             commands::delete_session,
             commands::rename_session,
+            commands::get_summary_language,
+            commands::set_summary_language,
             commands::summarize_session,
             commands::translate_segment,
         ])

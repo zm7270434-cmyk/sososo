@@ -1,6 +1,14 @@
 import { useEffect, useState } from 'react';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { hasApiKey, listDevices, setApiKey, setDevices } from '../../../lib/ipc';
+import {
+  getSummaryLanguage,
+  hasApiKey,
+  listDevices,
+  setApiKey,
+  setDevices,
+  setSummaryLanguage,
+} from '../../../lib/ipc';
+import { SUMMARY_LANGUAGES } from '../../../lib/languages';
 import {
   IconAlert,
   IconAppearance,
@@ -36,6 +44,8 @@ export default function SettingsRoute() {
   const [dgSaved, setDgSaved] = useState(false);
   const [oaSaved, setOaSaved] = useState(false);
   const [status, setStatus] = useState('');
+  // AI-summary output language ("auto" or a language code), persisted in the DB.
+  const [summaryLang, setSummaryLang] = useState('auto');
 
   // Device selection is shared with the Start-transcription screen via the config store.
   const inputDevice = useConfigStore((s) => s.inputDevice);
@@ -70,7 +80,20 @@ export default function SettingsRoute() {
     hasApiKey('openai')
       .then(setOaSaved)
       .catch(() => {});
+    getSummaryLanguage()
+      .then(setSummaryLang)
+      .catch(() => {});
   }, [setInputDevice, setOutputDevice]);
+
+  async function saveSummaryLanguage(code: string) {
+    setSummaryLang(code);
+    try {
+      await setSummaryLanguage(code);
+      setStatus('Summary language saved.');
+    } catch (e) {
+      setStatus(`Error: ${e}`);
+    }
+  }
 
   async function saveDevices() {
     try {
@@ -297,6 +320,24 @@ export default function SettingsRoute() {
           <HugeiconsIcon icon={IconLanguage} size={13} strokeWidth={1.8} aria-hidden={true} />
           Language
         </h3>
+        <label className={FIELD}>
+          <span className={FIELD_LABEL}>AI summary language</span>
+          <select
+            className={FIELD_CTRL}
+            value={summaryLang}
+            onChange={(e) => void saveSummaryLanguage(e.target.value)}
+          >
+            {SUMMARY_LANGUAGES.map((l) => (
+              <option key={l.code} value={l.code}>
+                {l.label}
+              </option>
+            ))}
+          </select>
+          <span className="text-[11.5px] leading-[1.4] text-fg-faint">
+            Language used for AI session summaries. "Auto" matches the transcript language. Saved to
+            the database.
+          </span>
+        </label>
         <p className="mt-2 text-[12px] leading-[1.5] text-fg-faint">
           All languages now use Deepgram's <b>Nova-3</b> model (best accuracy, including
           Indonesian). Pick the language on the main screen before you start recording. The{' '}

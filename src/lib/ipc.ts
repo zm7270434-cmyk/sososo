@@ -48,9 +48,18 @@ export const renameSession = (id: number, title: string): Promise<void> =>
 
 // --- AI summary ---
 
-/** Generate + persist an AI summary for a session; resolves to the Markdown text. */
-export const summarizeSession = (id: number): Promise<string> =>
-  invoke('summarize_session', { id });
+/** Read the persisted AI-summary output language (a language code or "auto"). */
+export const getSummaryLanguage = (): Promise<string> => invoke('get_summary_language');
+
+/** Persist the AI-summary output language (a language code or "auto"). */
+export const setSummaryLanguage = (language: string): Promise<void> =>
+  invoke('set_summary_language', { language });
+
+/** Generate + persist an AI summary for a session; resolves to the Markdown text.
+ *  `summaryLanguage` is the literal "auto" (match the transcript) or a
+ *  human-readable language name like "Indonesian". */
+export const summarizeSession = (id: number, summaryLanguage: string): Promise<string> =>
+  invoke('summarize_session', { id, summaryLanguage });
 
 // --- Live translation ---
 

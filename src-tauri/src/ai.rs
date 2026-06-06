@@ -4,8 +4,10 @@
 //! OpenAI key is read from the OS keychain (never the frontend) and the request
 //! is sent with the `reqwest` client already in the dependency tree (rustls).
 //! The stored transcript is rendered to a speaker-labelled plain-text block and
-//! the model is asked for a concise English summary in a fixed Markdown
-//! shape (Summary / Key Points / Action Items).
+//! the model is asked for a concise summary in a fixed Markdown shape (Summary /
+//! Key Points / Action Items). The output language is configurable (a per-app
+//! setting persisted in SQLite): `"auto"` follows the transcript language, or a
+//! specific language name is requested.
 
 use std::time::Duration;
 
@@ -22,7 +24,7 @@ const ENDPOINT: &str = "https://api.openai.com/v1/chat/completions";
 /// stay bounded; longer transcripts are truncated with a visible marker.
 const MAX_TRANSCRIPT_CHARS: usize = 60_000;
 
-const SYSTEM_PROMPT: &str = "You are an assistant that summarizes meeting or conversation transcripts into clear, concise, well-structured English. Use ONLY information present in the transcript — do not invent facts. In the transcript, \"You\" is the app user (microphone audio) and \"Other\" is the system/other participants' audio. If the transcript is too short or not meaningful, say so briefly instead of forcing a summary.";
+const SYSTEM_PROMPT: &str = "You are an assistant that summarizes meeting or conversation transcripts into clear, concise, well-structured prose. Follow the output-language instruction in the user message exactly. Use ONLY information present in the transcript — do not invent facts. In the transcript, \"You\" is the app user (microphone audio) and \"Other\" is the system/other participants' audio. If the transcript is too short or not meaningful, say so briefly instead of forcing a summary.";
 
 #[derive(Deserialize)]
 struct ChatResponse {
@@ -76,12 +78,15 @@ pub fn render_transcript(segments: &[StoredSegment]) -> String {
     out
 }
 
-/// Generate an English summary of the transcript. Returns
+/// Generate a summary of the transcript. `summary_language` is the desired output
+/// language: the literal `"auto"` (match the transcript's language) or a
+/// human-readable language name like `"English"` / `"Indonesian"`. Returns
 /// `(summary_markdown, model_used)`.
 pub async fn summarize(
     api_key: &str,
     title: &str,
     language: &str,
+    summary_language: &str,
     segments: &[StoredSegment],
 ) -> AppResult<(String, String)> {
     let transcript = render_transcript(segments);
@@ -91,9 +96,18 @@ pub async fn summarize(
         ));
     }
 
+    let language_directive = if summary_language.eq_ignore_ascii_case("auto") {
+        "Write the summary in the SAME language as the transcript.".to_string()
+    } else {
+        format!(
+            "Write the entire summary — including the section headings — in {summary_language}."
+        )
+    };
+
     let user_prompt = format!(
         "Session title: {title}\nTranscript language code: {language}\n\n\
-         Write a summary in English using exactly this Markdown format:\n\n\
+         {language_directive} Use exactly this Markdown structure (translate the \
+         section headings into the output language too):\n\n\
          ## Summary\n(2-4 sentences of the core discussion)\n\n\
          ## Key Points\n- (the main points, one per line)\n\n\
          ## Action Items\n- (decisions or action items; write \"None\" if there are none)\n\n\

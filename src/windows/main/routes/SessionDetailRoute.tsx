@@ -17,7 +17,13 @@ import {
   IconRename,
   IconSpeaker,
 } from '../../../lib/icons';
-import { deleteSession, getSession, renameSession, summarizeSession } from '../../../lib/ipc';
+import {
+  deleteSession,
+  getSession,
+  getSummaryLanguage,
+  renameSession,
+  summarizeSession,
+} from '../../../lib/ipc';
 import { formatDateTime } from '../../../lib/format';
 import { speakerColor } from '../../../lib/speaker';
 import { languageLabel } from '../../../lib/languages';
@@ -93,7 +99,12 @@ export default function SessionDetailRoute() {
     setErr('');
     setSummarizing(true);
     try {
-      await summarizeSession(sessionId);
+      // The summary output language is a persisted app setting (Settings →
+      // Language). Resolve the stored code to what the backend expects: "auto"
+      // verbatim, or a human-readable language name for a specific language.
+      const code = await getSummaryLanguage();
+      const target = code === 'auto' ? 'auto' : languageLabel(code);
+      await summarizeSession(sessionId, target);
       // Refetch so summary, model, and timestamp come straight from the DB.
       const fresh = await getSession(sessionId);
       if (fresh) setDetail(fresh);

@@ -46,6 +46,11 @@ CREATE TABLE IF NOT EXISTS segments (
 );
 
 CREATE INDEX IF NOT EXISTS idx_segments_session ON segments(session_id, t_start, id);
+
+CREATE TABLE IF NOT EXISTS app_settings (
+    key   TEXT PRIMARY KEY,
+    value TEXT NOT NULL
+);
 ";
 
 /// One row of the session history list (with a transcript segment count).
@@ -300,6 +305,32 @@ impl Db {
             "UPDATE sessions SET summary = ?1, summary_model = ?2, summarized_at = ?3 \
              WHERE id = ?4",
             rusqlite::params![summary, model, at, id],
+        )?;
+        Ok(())
+    }
+
+    /// Read a value from the key-value `app_settings` table, or `None` if unset.
+    /// Used for app-wide preferences that must outlive a single launch (e.g. the
+    /// AI summary output language).
+    pub fn get_setting(&self, key: &str) -> AppResult<Option<String>> {
+        let conn = self.0.lock().unwrap();
+        let value = conn
+            .query_row(
+                "SELECT value FROM app_settings WHERE key = ?1",
+                [key],
+                |r| r.get::<_, String>(0),
+            )
+            .optional()?;
+        Ok(value)
+    }
+
+    /// Insert or replace a key-value `app_settings` row.
+    pub fn set_setting(&self, key: &str, value: &str) -> AppResult<()> {
+        let conn = self.0.lock().unwrap();
+        conn.execute(
+            "INSERT INTO app_settings (key, value) VALUES (?1, ?2) \
+             ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+            rusqlite::params![key, value],
         )?;
         Ok(())
     }

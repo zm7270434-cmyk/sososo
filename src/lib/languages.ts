@@ -117,6 +117,14 @@ export const LANGUAGES: LanguageOption[] = [
  *  auto-detect pseudo-language ("multi"), which is not a valid target. */
 export const TRANSLATE_TARGETS: LanguageOption[] = LANGUAGES.filter((l) => l.code !== 'multi');
 
+/** AI-summary output languages: an "auto" option (match the transcript language)
+ *  followed by every specific language. `multi` is excluded (it is auto-detect,
+ *  not a valid output language). The chosen code is persisted in the database. */
+export const SUMMARY_LANGUAGES: LanguageOption[] = [
+  { code: 'auto', label: 'Auto (match transcript language)' },
+  ...TRANSLATE_TARGETS,
+];
+
 /** Look up the display label for a language code (falls back to the code itself). */
 export function languageLabel(code: string): string {
   return LANGUAGES.find((l) => l.code === code)?.label ?? code;

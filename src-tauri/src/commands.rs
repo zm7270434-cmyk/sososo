@@ -197,13 +197,40 @@ pub fn rename_session(db: State<'_, Db>, id: i64, title: String) -> AppResult<()
 
 // --- AI summary (Milestone E) ---
 
+/// `app_settings` key for the persisted AI-summary output-language preference.
+const SUMMARY_LANGUAGE_KEY: &str = "summary_language";
+
+/// Read the persisted AI-summary output language (a Deepgram language code or the
+/// literal `"auto"`). Defaults to `"auto"` when never set. Used by Settings to
+/// populate the dropdown.
+#[tauri::command]
+pub fn get_summary_language(db: State<'_, Db>) -> AppResult<String> {
+    Ok(db
+        .get_setting(SUMMARY_LANGUAGE_KEY)?
+        .unwrap_or_else(|| "auto".to_string()))
+}
+
+/// Persist the AI-summary output language (a language code or `"auto"`).
+#[tauri::command]
+pub fn set_summary_language(db: State<'_, Db>, language: String) -> AppResult<()> {
+    db.set_setting(SUMMARY_LANGUAGE_KEY, &language)
+}
+
 /// Generate (and persist) an AI summary for a recorded session via OpenAI, then
 /// return the Markdown summary. Requires the OpenAI key to be set in Settings.
+///
+/// `summary_language` is the desired output language: the literal `"auto"` (match
+/// the transcript) or a human-readable language name (e.g. `"Indonesian"`). The
+/// frontend resolves the persisted language code to this value.
 ///
 /// The DB mutex is only held during the synchronous read/write steps — never
 /// across the network `await` — so the command future stays `Send`.
 #[tauri::command]
-pub async fn summarize_session(db: State<'_, Db>, id: i64) -> AppResult<String> {
+pub async fn summarize_session(
+    db: State<'_, Db>,
+    id: i64,
+    summary_language: String,
+) -> AppResult<String> {
     let detail = db
         .get_session(id)?
         .ok_or_else(|| AppError::Session("session not found".into()))?;
@@ -218,6 +245,7 @@ pub async fn summarize_session(db: State<'_, Db>, id: i64) -> AppResult<String> 
         &key,
         &detail.session.title,
         &detail.session.language,
+        &summary_language,
         &detail.segments,
     )
     .await?;
