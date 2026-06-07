@@ -20,6 +20,7 @@ export {
   Settings01Icon as IconSettings,
   ArrowLeft02Icon as IconBack,
   Search01Icon as IconSearch,
+  Download04Icon as IconDownload,
   // Recording controls
   RecordIcon as IconRecord,
   PlayIcon as IconPlay,

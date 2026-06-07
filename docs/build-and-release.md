@@ -64,10 +64,59 @@ build and attach artifacts to a **draft GitHub Release** — review it and click
 - `workflow_dispatch` (no tag) builds the artifacts **without** creating a
   release.
 
-> **Code signing is not yet configured.** Builds are unsigned, so first run may
-> warn (Windows SmartScreen → "Run anyway"; macOS Gatekeeper → right-click →
-> Open). The signing secrets/hooks are stubbed in the workflow env for when
-> signing is added.
+> **Updater signing is configured** (minisign keys — see [Auto-update](#auto-update)),
+> so in-app updates are verified. **OS code signing is not** — builds are unsigned,
+> so first run may still warn (Windows SmartScreen → "Run anyway"; macOS Gatekeeper
+> → right-click → Open).
+
+## Auto-update
+
+The app updates itself in-app via the [Tauri updater plugin] — for releases after
+the first updater-enabled one, users no longer download installers from GitHub by hand.
+
+**How it works**
+
+- `tauri.conf.json` enables `bundle.createUpdaterArtifacts` and sets
+  `plugins.updater` with the signing **public key** plus one endpoint:
+  `https://github.com/yusupsupriyadi/sososo/releases/latest/download/latest.json`.
+- The frontend drives it (`src/lib/updater.ts` + `src/state/updateStore.ts`): a
+  silent check once at launch and a manual **Settings → App update → Check for
+  updates**. An available update shows a banner under the titlebar
+  (`src/windows/main/UpdateBanner.tsx`): **Download & install** → progress →
+  **Restart now** (`@tauri-apps/plugin-process` `relaunch()`). Rust only registers
+  the `updater` + `process` plugins (`src-tauri/src/lib.rs`).
+- On release, `tauri-action` builds **signed** update artifacts (NSIS `-setup.exe`,
+  macOS `.app.tar.gz`, Linux `.AppImage`) + a `.sig` for each, and uploads a merged
+  `latest.json` to the release (its `uploadUpdaterJson`/`uploadUpdaterSignatures`
+  default to on).
+
+**Signing keys** (one-time, already configured)
+
+- Generated with `tauri signer generate` (minisign). The **public** key is in
+  `tauri.conf.json` → `plugins.updater.pubkey`.
+- The **private** key + password are GitHub Actions secrets
+  `TAURI_SIGNING_PRIVATE_KEY` / `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`, passed to
+  `tauri-action` in [`release.yml`](../.github/workflows/release.yml). A local
+  backup lives at `~/.tauri/sososo.key` (+ `.pub`, `.pw`) — **never commit these**.
+- ⚠️ Lose the private key or password and you can no longer ship updates to
+  installed apps (users would have to manually install a fresh, re-keyed build).
+
+**Rollout caveat**
+
+Auto-update only works for releases **published after** the updater shipped. The
+0.5.0 build has no updater, so users must download the **first** updater-enabled
+release (**0.6.0**) once, by hand. From 0.6.0 → 0.7.0 onward it's in-app. Only
+NSIS / `.app` / AppImage are updatable (`.msi`/`.deb`/`.rpm` are not), and the
+endpoint resolves only to a **published** (not draft) release.
+
+**Verify after publishing**
+
+- The release has a `latest.json` + `.sig` assets, and `latest.json` lists all
+  three platforms with working download URLs.
+- Install an older updater-enabled build, publish a newer one, and confirm the
+  in-app banner appears and updates successfully.
+
+[Tauri updater plugin]: https://v2.tauri.app/plugin/updater
 
 ## Versioning
 

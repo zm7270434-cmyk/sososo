@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { openUrl } from '@tauri-apps/plugin-opener';
+import { getVersion } from '@tauri-apps/api/app';
 import {
   getAiProvider,
   getSummaryLanguage,
@@ -18,6 +19,7 @@ import {
   IconAppearance,
   IconCheck,
   IconDevices,
+  IconDownload,
   IconExternal,
   IconGift,
   IconKey,
@@ -32,12 +34,16 @@ import {
   TRANSCRIPT_SCALE_MIN,
   TRANSCRIPT_SCALE_MAX,
 } from '../../../state/configStore';
+import { useUpdateStore } from '../../../state/updateStore';
+import { checkForUpdate, downloadAndInstall, restartApp } from '../../../lib/updater';
 import type { AiProvider, ApiService, DeviceLists } from '../../../types/domain';
 
 const FIELD_CTRL =
   'w-full flex-1 rounded-sm border border-glass-border bg-[rgba(255,255,255,0.05)] px-[11px] py-[9px] text-[13px] text-fg outline-none focus:border-accent';
 const BTN =
   'cursor-pointer rounded-sm border border-[rgba(255,255,255,0.28)] bg-[rgba(255,255,255,0.1)] px-4 py-[9px] text-[13px] text-fg whitespace-nowrap shadow-liquid hover:bg-[rgba(255,255,255,0.18)]';
+const BTN_PRIMARY =
+  'cursor-pointer rounded-sm border border-[rgba(255,255,255,0.3)] bg-[rgba(110,168,254,0.24)] px-4 py-[9px] text-[13px] whitespace-nowrap text-[#dbe8ff] shadow-liquid hover:bg-[rgba(110,168,254,0.34)]';
 const H3 =
   'mb-3 inline-flex items-center gap-2 text-[12px] uppercase tracking-[0.06em] text-fg-faint';
 const FIELD = 'mb-3.5 flex flex-col gap-1.5';
@@ -87,6 +93,20 @@ export default function SettingsRoute() {
   const setGlassOpacity = useConfigStore((s) => s.setGlassOpacity);
   const autoSummarizeOnFinish = useConfigStore((s) => s.autoSummarizeOnFinish);
   const setAutoSummarizeOnFinish = useConfigStore((s) => s.setAutoSummarizeOnFinish);
+
+  // App update (in-app updater): current version + the check/download/restart flow.
+  const [appVersion, setAppVersion] = useState('');
+  const updateStatus = useUpdateStore((s) => s.status);
+  const updateVersion = useUpdateStore((s) => s.version);
+  const updateDownloaded = useUpdateStore((s) => s.downloaded);
+  const updateContentLength = useUpdateStore((s) => s.contentLength);
+  const updateError = useUpdateStore((s) => s.error);
+
+  useEffect(() => {
+    getVersion()
+      .then(setAppVersion)
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     listDevices()
@@ -168,6 +188,32 @@ export default function SettingsRoute() {
     } catch (e) {
       setStatus(`Error: ${e}`);
     }
+  }
+
+  // Derive the App-update status line from the updater store.
+  const updatePct =
+    updateContentLength && updateContentLength > 0
+      ? Math.min(100, Math.round((updateDownloaded / updateContentLength) * 100))
+      : null;
+  let updateMsg = '';
+  let updateMsgWarn = false;
+  switch (updateStatus) {
+    case 'uptodate':
+      updateMsg = "You're on the latest version.";
+      break;
+    case 'available':
+      updateMsg = `Version ${updateVersion ?? ''} is available.`;
+      break;
+    case 'downloading':
+      updateMsg = `Downloading…${updatePct != null ? ` ${updatePct}%` : ''}`;
+      break;
+    case 'ready':
+      updateMsg = 'Update installed — restart to finish.';
+      break;
+    case 'error':
+      updateMsg = `Update check failed: ${updateError ?? 'unknown error'}`;
+      updateMsgWarn = true;
+      break;
   }
 
   return (
@@ -538,6 +584,51 @@ export default function SettingsRoute() {
           <i>Auto-detect (multilingual)</i> option recognizes a mix of languages automatically, but
           choosing one specific language is usually more accurate.
         </p>
+      </section>
+
+      <section className="mb-7">
+        <h3 className={H3}>
+          <HugeiconsIcon icon={IconDownload} size={13} strokeWidth={1.8} aria-hidden={true} />
+          App update
+        </h3>
+        <p className="mb-3 text-[12px] leading-[1.5] text-fg-faint">
+          Updates install in-app from GitHub Releases — no need to download installers manually.
+          {appVersion && (
+            <>
+              {' '}
+              You&apos;re on <b className="text-fg-dim">version {appVersion}</b>.
+            </>
+          )}
+        </p>
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            className={`${BTN} disabled:cursor-default disabled:opacity-60`}
+            disabled={updateStatus === 'checking' || updateStatus === 'downloading'}
+            onClick={() => void checkForUpdate()}
+          >
+            {updateStatus === 'checking' ? 'Checking…' : 'Check for updates'}
+          </button>
+          {updateStatus === 'available' && (
+            <button type="button" className={BTN_PRIMARY} onClick={() => void downloadAndInstall()}>
+              Download &amp; install{updateVersion ? ` ${updateVersion}` : ''}
+            </button>
+          )}
+          {updateStatus === 'ready' && (
+            <button type="button" className={BTN_PRIMARY} onClick={() => void restartApp()}>
+              Restart to update
+            </button>
+          )}
+        </div>
+        {updateMsg && (
+          <p
+            className={`mt-2.5 text-[12.5px] leading-[1.4] ${
+              updateMsgWarn ? 'text-[#ffb454]' : 'text-fg-dim'
+            }`}
+          >
+            {updateMsg}
+          </p>
+        )}
       </section>
 
       {status && (

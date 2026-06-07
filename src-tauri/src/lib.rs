@@ -14,6 +14,10 @@ use tauri::Manager;
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
+        // In-app auto-update: the frontend drives check/download/install via the
+        // updater JS plugin; `process` provides `relaunch()` after install.
+        .plugin(tauri_plugin_process::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .manage(state::AppState::default())
         .invoke_handler(tauri::generate_handler![
             commands::list_devices,

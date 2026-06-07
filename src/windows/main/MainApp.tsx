@@ -4,7 +4,9 @@ import { useTranscriptStream } from '../../hooks/useTranscriptStream';
 import { useSessionStore } from '../../state/sessionStore';
 import { useTranscriptStore } from '../../state/transcriptStore';
 import { useConfigStore } from '../../state/configStore';
+import { checkOnLaunch } from '../../lib/updater';
 import Titlebar from './Titlebar';
+import UpdateBanner from './UpdateBanner';
 import SessionSidebar from './SessionSidebar';
 import RecordingView from './RecordingView';
 import LibraryRoute from './routes/LibraryRoute';
@@ -52,6 +54,13 @@ export default function MainApp() {
     document.documentElement.style.setProperty('--glass-alpha', String(glassOpacity));
   }, [glassOpacity]);
 
+  // Check GitHub Releases for a newer version once, shortly after launch. Silent:
+  // failures (offline, or plain `vite dev` outside Tauri) stay invisible; an
+  // available update surfaces as the <UpdateBanner/> below.
+  useEffect(() => {
+    void checkOnLaunch();
+  }, []);
+
   // While a session is active the whole window becomes the floating
   // transcription widget (its own root, no titlebar/sidebar). The floating
   // widget is intentionally compact and not affected by the UI zoom.
@@ -71,6 +80,7 @@ export default function MainApp() {
       }}
     >
       <Titlebar />
+      <UpdateBanner />
       <div className="flex min-h-0 flex-1 gap-2">
         <SessionSidebar />
         <main className="liquid-glass min-w-0 flex-1 overflow-y-auto rounded-lg">
