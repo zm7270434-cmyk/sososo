@@ -15,17 +15,20 @@
   <a href="https://github.com/yusupsupriyadi/sososo/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/yusupsupriyadi/sososo/actions/workflows/ci.yml/badge.svg" /></a>
   <a href="https://tauri.app"><img alt="Built with Tauri 2" src="https://img.shields.io/badge/built%20with-Tauri%202-24C8DB.svg" /></a>
   <a href="https://deepgram.com"><img alt="Speech-to-text by Deepgram" src="https://img.shields.io/badge/Speech--to--text-Deepgram-13EF93.svg?logo=deepgram&logoColor=black" /></a>
-  <a href="https://openai.com"><img alt="AI summaries by OpenAI" src="https://img.shields.io/badge/AI%20summaries-OpenAI-412991.svg?logo=openai&logoColor=white" /></a>
+  <a href="https://openai.com"><img alt="AI by OpenAI" src="https://img.shields.io/badge/AI-OpenAI-412991.svg?logo=openai&logoColor=white" /></a>
+  <a href="https://ai.google.dev"><img alt="or Google Gemini" src="https://img.shields.io/badge/or-Gemini-8E75FF.svg?logo=googlegemini&logoColor=white" /></a>
 </p>
 
 `sososo` captures what you hear (system audio) and what you say (microphone),
 streams both to [Deepgram](https://deepgram.com) for live speech-to-text, and
 shows captions in a translucent "liquid glass" window. When a session ends it
-can generate an AI summary via [OpenAI](https://openai.com).
+can generate an AI summary via [OpenAI](https://openai.com) or
+[Google Gemini](https://ai.google.dev) — whichever you select in Settings.
 
-It is a **bring-your-own-key** app: you use your own Deepgram and OpenAI API
-keys, stored securely in the OS keychain (Windows Credential Manager / macOS
-Keychain). There is no backend, no account, and no telemetry.
+It is a **bring-your-own-key** app: you bring your own Deepgram key plus an
+AI-provider key (OpenAI **or** Google Gemini), stored securely in the OS
+keychain (Windows Credential Manager / macOS Keychain). There is no backend, no
+account, and no telemetry.
 
 > [!IMPORTANT]
 > **Platforms:** Windows 10/11 and macOS 11+. System audio capture differs per
@@ -52,7 +55,9 @@ Keychain). There is no backend, no account, and no telemetry.
   (other languages), with diarization and smart formatting.
 - 🪟 **Compact recording widget** — a small always-on-top pill (pause / finish)
   while recording; full library, history, and settings views when idle.
-- 🧠 **AI summaries** — optional end-of-session summary generated with OpenAI.
+- 🧠 **AI summaries & live translation** — optional end-of-session summary and
+  per-line translation, powered by OpenAI **or** Google Gemini (your pick in
+  Settings).
 - 🔒 **Private by design** — keys in the OS keychain; no server, no telemetry.
   (See [PRIVACY.md](./PRIVACY.md) for what leaves your machine.)
 
@@ -61,7 +66,8 @@ Keychain). There is no backend, no account, and no telemetry.
 This app sends audio and text to third-party services **you** configure:
 
 - **Audio → Deepgram** over a secure WebSocket for transcription.
-- **Transcript → OpenAI** (only if you trigger a summary).
+- **Transcript → your AI provider** (OpenAI or Google Gemini) — only when you
+  trigger a summary or live translation.
 
 Your API keys never leave your machine except as auth headers to those
 services, and are stored in the OS keychain (Windows Credential Manager / macOS
@@ -100,14 +106,17 @@ bun run tauri build   # produce an installer in src-tauri/target/release/bundle
 ## Configure your API keys
 
 1. Launch the app and open **Settings**.
-2. Paste your **Deepgram** API key (required for transcription) and, optionally,
-   your **OpenAI** API key (for summaries).
+2. Paste your **Deepgram** API key (required for transcription). For AI features,
+   pick your **Active AI provider** (OpenAI or Google Gemini) and paste that
+   provider's API key (optional — only needed for summaries and live
+   translation).
 3. Keys are saved to the OS keychain (Windows Credential Manager / macOS
    Keychain). The app only ever checks _whether_ a key exists — it never reads
    keys back into the UI.
 
-Get keys from the [Deepgram console](https://console.deepgram.com) and the
-[OpenAI dashboard](https://platform.openai.com/api-keys).
+Get keys from the [Deepgram console](https://console.deepgram.com), the
+[OpenAI dashboard](https://platform.openai.com/api-keys), or
+[Google AI Studio](https://aistudio.google.com/app/apikey).
 
 ## macOS system audio setup
 
@@ -147,7 +156,8 @@ web files and rustfmt on Rust). See [CONTRIBUTING.md](./CONTRIBUTING.md).
 ## Tech stack
 
 - **Backend:** Tauri 2 (Rust) — audio capture (WASAPI on Windows, CoreAudio via
-  cpal on macOS), Deepgram WS streaming, SQLite persistence, OpenAI summaries.
+  cpal on macOS), Deepgram WS streaming, SQLite persistence, AI summaries &
+  translation via OpenAI or Google Gemini.
 - **Frontend:** React 19 · React Router 7 · Zustand 5 · Vite 7 · Tailwind CSS v4
   (TypeScript).
 
@@ -169,7 +179,10 @@ sososo stands on the shoulders of best-in-class speech and AI APIs:
   live caption in the app. Start with the
   [console](https://console.deepgram.com) and the
   [developer docs](https://developers.deepgram.com).
-- 🧠 **[OpenAI](https://openai.com)** — optional end-of-session AI summaries.
+- 🧠 **[OpenAI](https://openai.com)** or **[Google Gemini](https://ai.google.dev)**
+  — optional, user-selectable AI summaries and live translation. Bring a key
+  from the [OpenAI dashboard](https://platform.openai.com/api-keys) or
+  [Google AI Studio](https://aistudio.google.com/app/apikey).
 
 Huge thanks to the [Deepgram](https://deepgram.com) team — sososo simply would
 not exist without their speech API. 💚
