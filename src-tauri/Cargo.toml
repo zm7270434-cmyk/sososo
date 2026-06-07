@@ -4,7 +4,7 @@ version = "0.7.1"
 description = "Real-time meeting & audio transcription (system audio + mic) with AI summaries."
 authors = ["Yusup Supriyadi"]
 edition = "2021"
-license = "MIT"
+license = "AGPL-3.0-only"
 repository = "https://github.com/yusupsupriyadi/sososo"
 homepage = "https://github.com/yusupsupriyadi/sososo"
 

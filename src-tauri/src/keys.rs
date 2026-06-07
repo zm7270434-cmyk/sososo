@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (C) 2026 Yusup Supriyadi
 //! Secure API-key storage via the OS keychain (Windows Credential Manager).
 //! Keys never reach the frontend — only `has_api_key` (a boolean) is exposed.
 
