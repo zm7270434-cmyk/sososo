@@ -50,6 +50,37 @@ export async function minimizeSelf(): Promise<void> {
   }
 }
 
+/** Toggle between maximized and the previous (restored) window size. */
+export async function toggleMaximizeSelf(): Promise<void> {
+  try {
+    await getCurrentWindow().toggleMaximize();
+  } catch (e) {
+    console.warn('toggleMaximizeSelf failed (not in Tauri?)', e);
+  }
+}
+
+/** Whether the window is currently maximized (false outside a Tauri webview). */
+export async function isMaximizedSelf(): Promise<boolean> {
+  try {
+    return await getCurrentWindow().isMaximized();
+  } catch (e) {
+    console.warn('isMaximizedSelf failed (not in Tauri?)', e);
+    return false;
+  }
+}
+
+/** Subscribe to window resize events so the UI can keep its maximize/restore
+ *  state in sync (the window can also be maximized via OS gestures). Returns an
+ *  unlisten function — a no-op outside a Tauri webview. */
+export async function onWindowResized(cb: () => void): Promise<() => void> {
+  try {
+    return await getCurrentWindow().onResized(() => cb());
+  } catch (e) {
+    console.warn('onWindowResized failed (not in Tauri?)', e);
+    return () => {};
+  }
+}
+
 export async function setAlwaysOnTop(value: boolean): Promise<void> {
   try {
     await getCurrentWindow().setAlwaysOnTop(value);

@@ -1,12 +1,37 @@
+import { useEffect, useState } from 'react';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { closeSelf, minimizeSelf } from '../../lib/window';
-import { IconClose, IconMinimize } from '../../lib/icons';
+import {
+  closeSelf,
+  minimizeSelf,
+  toggleMaximizeSelf,
+  isMaximizedSelf,
+  onWindowResized,
+} from '../../lib/window';
+import { IconClose, IconMinimize, IconMaximize, IconRestore } from '../../lib/icons';
 import { isMacOS } from '../../lib/platform';
 
 const ICON_BTN =
   'inline-flex h-7 w-7 cursor-pointer items-center justify-center rounded-sm bg-transparent text-[14px] leading-none text-fg-dim transition-colors duration-[120ms] active:bg-active';
 
 export default function Titlebar() {
+  const [maximized, setMaximized] = useState(false);
+
+  // Keep the maximize/restore icon in sync with the real window state — the
+  // window can also be (un)maximized via OS gestures (double-click the drag
+  // region, Win+Up), not only through our button. macOS uses native controls,
+  // so this only matters on Windows/Linux.
+  useEffect(() => {
+    if (isMacOS) return;
+    let unlisten = () => {};
+    void isMaximizedSelf().then(setMaximized);
+    void onWindowResized(() => {
+      void isMaximizedSelf().then(setMaximized);
+    }).then((fn) => {
+      unlisten = fn;
+    });
+    return () => unlisten();
+  }, []);
+
   return (
     <header
       // On macOS the window uses native traffic lights (titleBarStyle "Overlay"),
@@ -33,6 +58,19 @@ export default function Titlebar() {
             onClick={() => void minimizeSelf()}
           >
             <HugeiconsIcon icon={IconMinimize} size={16} strokeWidth={2} aria-hidden={true} />
+          </button>
+          <button
+            className={`${ICON_BTN} hover:bg-hover hover:text-fg`}
+            title={maximized ? 'Restore' : 'Maximize'}
+            aria-label={maximized ? 'Restore' : 'Maximize'}
+            onClick={() => void toggleMaximizeSelf()}
+          >
+            <HugeiconsIcon
+              icon={maximized ? IconRestore : IconMaximize}
+              size={14}
+              strokeWidth={2}
+              aria-hidden={true}
+            />
           </button>
           <button
             className={`${ICON_BTN} hover:bg-[rgba(255,93,93,0.22)] hover:text-[#ffd9d9]`}

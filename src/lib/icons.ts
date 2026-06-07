@@ -14,6 +14,8 @@
 export {
   // Window controls
   MinusSignIcon as IconMinimize,
+  Square01Icon as IconMaximize,
+  Copy01Icon as IconRestore,
   Cancel01Icon as IconClose,
   // Navigation & primary actions
   Add01Icon as IconAdd,
