@@ -20,11 +20,17 @@ jobs:
         include:
           - os: windows-latest
             args: ''
+            # OS-clear asset names, e.g. sososo_windows_x64-setup.exe / _x64.msi.
+            assetNamePattern: 'sososo_windows_[arch][setup][ext]'
           - os: macos-latest
             # Universal binary so the .dmg runs on both Apple Silicon and Intel.
             args: '--target universal-apple-darwin'
+            # e.g. sososo_macos_universal.dmg
+            assetNamePattern: 'sososo_macos_[arch][ext]'
           - os: ubuntu-latest
             args: ''
+            # e.g. sososo_linux_amd64.deb / .AppImage / .rpm
+            assetNamePattern: 'sososo_linux_[arch][ext]'
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -69,4 +75,6 @@ jobs:
           prerelease: false
           tauriScript: bun run tauri
           args: ${{ matrix.args }}
+          # Per-OS asset names (defined in the matrix) so downloads are clearly labeled.
+          assetNamePattern: ${{ matrix.assetNamePattern }}
           uploadWorkflowArtifacts: true
