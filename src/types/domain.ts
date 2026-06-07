@@ -74,6 +74,8 @@ export interface SessionSummary {
 
 /** A persisted (finalized) transcript line. */
 export interface StoredSegment {
+  /** Stable id `{session}:{channel}:{start}` — needed to (re)translate a saved line. */
+  segmentId: string;
   source: Source;
   speaker?: string | null;
   text: string;

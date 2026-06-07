@@ -23,11 +23,13 @@ import {
   getSummaryLanguage,
   renameSession,
   renameSpeaker,
+  setSummaryLanguage,
   summarizeSession,
+  translateSegment,
 } from '../../../lib/ipc';
 import { formatDateTime } from '../../../lib/format';
 import { speakerColor } from '../../../lib/speaker';
-import { languageLabel } from '../../../lib/languages';
+import { languageLabel, SUMMARY_LANGUAGES, TRANSLATE_TARGETS } from '../../../lib/languages';
 import { useLibraryStore } from '../../../state/libraryStore';
 import { useConfigStore } from '../../../state/configStore';
 import type { SessionDetail, Source, StoredSegment } from '../../../types/domain';
@@ -35,12 +37,22 @@ import type { SessionDetail, Source, StoredSegment } from '../../../types/domain
 const ACTION_BTN =
   'inline-flex items-center gap-1.5 cursor-pointer rounded-sm border border-[rgba(255,255,255,0.25)] bg-[rgba(255,255,255,0.08)] px-[11px] py-1.5 text-[12.5px] text-fg-dim whitespace-nowrap shadow-liquid hover:bg-hover hover:text-fg';
 
+/** Compact dropdown styling for the in-panel language selectors (summary + translate). */
+const SELECT_CLS =
+  'max-w-[170px] cursor-pointer truncate rounded-sm border border-glass-border bg-[rgba(255,255,255,0.06)] px-2 py-[5px] text-[12px] text-fg outline-none focus:border-accent disabled:cursor-default disabled:opacity-60';
+
+/** How many saved lines to translate at once when batch-translating a transcript. */
+const TRANSLATE_CONCURRENCY = 4;
+
 export default function SessionDetailRoute() {
   const { id } = useParams();
   const sessionId = Number(id);
   const navigate = useNavigate();
   const refreshLibrary = useLibraryStore((s) => s.refresh);
   const transcriptScale = useConfigStore((s) => s.transcriptScale);
+  // Reuse the live-translate target language so it stays consistent (persisted).
+  const targetLanguage = useConfigStore((s) => s.targetLanguage);
+  const setTargetLanguage = useConfigStore((s) => s.setTargetLanguage);
 
   const [detail, setDetail] = useState<SessionDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -48,8 +60,15 @@ export default function SessionDetailRoute() {
   const [titleDraft, setTitleDraft] = useState('');
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [summarizing, setSummarizing] = useState(false);
+  // AI-summary output language (a code or "auto"); mirrors the global setting.
+  const [summaryLang, setSummaryLang] = useState('auto');
   const [editingSpeaker, setEditingSpeaker] = useState<number | null>(null);
   const [speakerDraft, setSpeakerDraft] = useState('');
+  // Batch transcript translation: in-flight flag, progress counter, and the set
+  // of segment indices currently being translated (for the per-line "Translating…").
+  const [translating, setTranslating] = useState(false);
+  const [tProgress, setTProgress] = useState({ done: 0, total: 0 });
+  const [tPending, setTPending] = useState<Set<number>>(new Set());
   const [err, setErr] = useState('');
 
   const speakers = useMemo(() => distinctSpeakers(detail?.segments ?? []), [detail]);
@@ -61,6 +80,9 @@ export default function SessionDetailRoute() {
     setConfirmDelete(false);
     setSummarizing(false);
     setEditingSpeaker(null);
+    setTranslating(false);
+    setTProgress({ done: 0, total: 0 });
+    setTPending(new Set());
     setErr('');
     getSession(sessionId)
       .then((d) => {
@@ -77,6 +99,14 @@ export default function SessionDetailRoute() {
       alive = false;
     };
   }, [sessionId]);
+
+  // Load the persisted AI-summary output language once so the dropdown reflects
+  // the global setting (Settings → Language). Changing it here writes back.
+  useEffect(() => {
+    getSummaryLanguage()
+      .then(setSummaryLang)
+      .catch(() => {});
+  }, []);
 
   async function saveTitle() {
     const next = titleDraft.trim();
@@ -124,11 +154,9 @@ export default function SessionDetailRoute() {
     setErr('');
     setSummarizing(true);
     try {
-      // The summary output language is a persisted app setting (Settings →
-      // Language). Resolve the stored code to what the backend expects: "auto"
-      // verbatim, or a human-readable language name for a specific language.
-      const code = await getSummaryLanguage();
-      const target = code === 'auto' ? 'auto' : languageLabel(code);
+      // Resolve the chosen summary-language code to what the backend expects:
+      // "auto" verbatim, or a human-readable language name for a specific one.
+      const target = summaryLang === 'auto' ? 'auto' : languageLabel(summaryLang);
       await summarizeSession(sessionId, target);
       // Refetch so summary, model, and timestamp come straight from the DB.
       const fresh = await getSession(sessionId);
@@ -138,6 +166,91 @@ export default function SessionDetailRoute() {
     } finally {
       setSummarizing(false);
     }
+  }
+
+  function onSummaryLang(code: string) {
+    setSummaryLang(code);
+    // Persist to the global app setting so the choice is remembered everywhere.
+    void setSummaryLanguage(code).catch(() => {});
+  }
+
+  // Translate every saved transcript line into the selected target language via
+  // the active AI provider. `translate_segment` is idempotent (re-running only
+  // re-translates lines not yet in the target language), and persists each result
+  // to the DB, so we just mirror it into local state for a progressive fill-in.
+  // A different target overwrites a line's previous translation (single column).
+  async function doTranslate() {
+    if (!detail || translating) return;
+    setErr('');
+    const targetName = languageLabel(targetLanguage);
+
+    // Lines that still need work (skip empty and already-in-target lines).
+    const work: number[] = [];
+    detail.segments.forEach((s, i) => {
+      if (!s.text.trim()) return;
+      if (s.translation && s.translationLang === targetName) return;
+      work.push(i);
+    });
+    if (work.length === 0) return;
+
+    setTranslating(true);
+    setTProgress({ done: 0, total: work.length });
+    setTPending(new Set(work));
+    let failed = 0;
+
+    const sid = sessionId;
+    const translateOne = async (i: number) => {
+      const seg = detail.segments[i];
+      try {
+        const translated = await translateSegment(sid, seg.segmentId, seg.text, targetName);
+        setDetail((prev) => {
+          if (!prev) return prev;
+          const next = prev.segments.slice();
+          next[i] = { ...next[i], translation: translated, translationLang: targetName };
+          return { ...prev, segments: next };
+        });
+      } catch (e) {
+        failed += 1;
+        throw e;
+      } finally {
+        setTPending((prev) => {
+          const n = new Set(prev);
+          n.delete(i);
+          return n;
+        });
+        setTProgress((p) => ({ ...p, done: p.done + 1 }));
+      }
+    };
+
+    // Run the first line alone so a fatal error (e.g. missing API key) aborts the
+    // whole batch instead of firing one failing request per line.
+    try {
+      await translateOne(work[0]);
+    } catch (e) {
+      setErr(String(e));
+      setTranslating(false);
+      setTPending(new Set());
+      return;
+    }
+
+    // Translate the rest with a small concurrency pool; per-line errors are
+    // tolerated (the line is just left untranslated and can be retried).
+    const rest = work.slice(1);
+    let cursor = 0;
+    const worker = async () => {
+      while (cursor < rest.length) {
+        const idx = rest[cursor++];
+        try {
+          await translateOne(idx);
+        } catch {
+          /* tolerated — counted in `failed` */
+        }
+      }
+    };
+    await Promise.all(Array.from({ length: Math.min(TRANSLATE_CONCURRENCY, rest.length) }, worker));
+
+    setTranslating(false);
+    if (failed > 0) setErr(`${failed} line(s) failed to translate — try again.`);
   }
 
   if (loading) {
@@ -256,27 +369,43 @@ export default function SessionDetailRoute() {
               <HugeiconsIcon icon={IconAi} size={14} strokeWidth={1.8} aria-hidden={true} />
               AI Summary
             </h3>
-            {session.summary && (
-              <button
-                className="inline-flex cursor-pointer items-center gap-1.5 rounded-sm border border-[rgba(255,255,255,0.25)] bg-[rgba(255,255,255,0.08)] px-[11px] py-1.5 text-[12.5px] font-medium whitespace-nowrap text-fg-dim shadow-liquid enabled:hover:bg-hover disabled:cursor-default disabled:opacity-60"
-                onClick={() => void doSummarize()}
+            <div className="flex shrink-0 items-center gap-1.5">
+              <select
+                className={SELECT_CLS}
+                value={summaryLang}
+                onChange={(e) => onSummaryLang(e.target.value)}
                 disabled={summarizing}
+                title="Summary output language"
+                aria-label="Summary output language"
               >
-                {summarizing ? (
-                  'Processing…'
-                ) : (
-                  <>
-                    <HugeiconsIcon
-                      icon={IconRegenerate}
-                      size={14}
-                      strokeWidth={1.8}
-                      aria-hidden={true}
-                    />
-                    Regenerate
-                  </>
-                )}
-              </button>
-            )}
+                {SUMMARY_LANGUAGES.map((l) => (
+                  <option key={l.code} value={l.code}>
+                    {l.label}
+                  </option>
+                ))}
+              </select>
+              {session.summary && (
+                <button
+                  className="inline-flex cursor-pointer items-center gap-1.5 rounded-sm border border-[rgba(255,255,255,0.25)] bg-[rgba(255,255,255,0.08)] px-[11px] py-1.5 text-[12.5px] font-medium whitespace-nowrap text-fg-dim shadow-liquid enabled:hover:bg-hover disabled:cursor-default disabled:opacity-60"
+                  onClick={() => void doSummarize()}
+                  disabled={summarizing}
+                >
+                  {summarizing ? (
+                    'Processing…'
+                  ) : (
+                    <>
+                      <HugeiconsIcon
+                        icon={IconRegenerate}
+                        size={14}
+                        strokeWidth={1.8}
+                        aria-hidden={true}
+                      />
+                      Regenerate
+                    </>
+                  )}
+                </button>
+              )}
+            </div>
           </div>
 
           {session.summary ? (
@@ -381,41 +510,91 @@ export default function SessionDetailRoute() {
           <p className="text-[13px]">No transcript saved for this session.</p>
         </div>
       ) : (
-        <div className="flex flex-col gap-3">
-          {segments.map((s, i) => (
-            <div key={i} className="flex flex-col gap-[3px]">
-              <span
-                className="inline-flex items-center gap-1 font-semibold tracking-[0.02em]"
-                style={{
-                  fontSize: `${11 * transcriptScale}px`,
-                  color: speakerColor(s.source, s.speaker),
-                }}
+        <>
+          <div className="mb-3 flex items-center justify-between gap-2.5">
+            <h3 className="m-0 inline-flex items-center gap-1.5 text-[12px] tracking-[0.06em] text-fg-faint uppercase">
+              <HugeiconsIcon icon={IconLanguage} size={14} strokeWidth={1.8} aria-hidden={true} />
+              Transcript
+            </h3>
+            <div className="flex shrink-0 items-center gap-1.5">
+              <select
+                className={SELECT_CLS}
+                value={targetLanguage}
+                onChange={(e) => setTargetLanguage(e.target.value)}
+                disabled={translating}
+                title="Translate transcript to"
+                aria-label="Translate transcript to"
               >
-                <HugeiconsIcon
-                  icon={s.source === 'you' ? IconMic : IconRemote}
-                  size={Math.round(12 * transcriptScale)}
-                  strokeWidth={2}
-                  aria-hidden={true}
-                />
-                {s.speaker ?? (s.source === 'you' ? 'You' : 'Speaker')}
-              </span>
-              <span
-                className="leading-[1.55] text-fg"
-                style={{ fontSize: `${14 * transcriptScale}px` }}
+                {TRANSLATE_TARGETS.map((l) => (
+                  <option key={l.code} value={l.code}>
+                    {l.label}
+                  </option>
+                ))}
+              </select>
+              <button
+                className="inline-flex cursor-pointer items-center gap-1.5 rounded-sm border border-[rgba(255,255,255,0.25)] bg-[rgba(255,255,255,0.08)] px-[11px] py-1.5 text-[12.5px] font-medium whitespace-nowrap text-fg-dim shadow-liquid enabled:hover:bg-hover disabled:cursor-default disabled:opacity-60"
+                onClick={() => void doTranslate()}
+                disabled={translating}
               >
-                {s.text}
-              </span>
-              {s.translation && (
-                <span
-                  className="mt-0.5 border-l-2 border-[rgba(255,192,77,0.55)] pl-2 text-[#ffc04d]"
-                  style={{ fontSize: `${13 * transcriptScale}px` }}
-                >
-                  {s.translation}
-                </span>
-              )}
+                {translating ? (
+                  `Translating ${tProgress.done}/${tProgress.total}…`
+                ) : (
+                  <>
+                    <HugeiconsIcon
+                      icon={IconLanguage}
+                      size={14}
+                      strokeWidth={1.8}
+                      aria-hidden={true}
+                    />
+                    Translate
+                  </>
+                )}
+              </button>
             </div>
-          ))}
-        </div>
+          </div>
+          <div className="flex flex-col gap-3">
+            {segments.map((s, i) => (
+              <div key={i} className="flex flex-col gap-[3px]">
+                <span
+                  className="inline-flex items-center gap-1 font-semibold tracking-[0.02em]"
+                  style={{
+                    fontSize: `${11 * transcriptScale}px`,
+                    color: speakerColor(s.source, s.speaker),
+                  }}
+                >
+                  <HugeiconsIcon
+                    icon={s.source === 'you' ? IconMic : IconRemote}
+                    size={Math.round(12 * transcriptScale)}
+                    strokeWidth={2}
+                    aria-hidden={true}
+                  />
+                  {s.speaker ?? (s.source === 'you' ? 'You' : 'Speaker')}
+                </span>
+                <span
+                  className="leading-[1.55] text-fg"
+                  style={{ fontSize: `${14 * transcriptScale}px` }}
+                >
+                  {s.text}
+                </span>
+                {s.translation ? (
+                  <span
+                    className="mt-0.5 border-l-2 border-[rgba(255,192,77,0.55)] pl-2 text-[#ffc04d]"
+                    style={{ fontSize: `${13 * transcriptScale}px` }}
+                  >
+                    {s.translation}
+                  </span>
+                ) : tPending.has(i) ? (
+                  <span
+                    className="mt-0.5 border-l-2 border-[rgba(255,192,77,0.35)] pl-2 text-fg-faint italic"
+                    style={{ fontSize: `${13 * transcriptScale}px` }}
+                  >
+                    Translating…
+                  </span>
+                ) : null}
+              </div>
+            ))}
+          </div>
+        </>
       )}
 
       {err && (

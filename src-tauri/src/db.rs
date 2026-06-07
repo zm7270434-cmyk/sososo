@@ -74,6 +74,9 @@ pub struct SessionSummary {
 #[derive(Serialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct StoredSegment {
+    /// Stable per-line id (`{session}:{channel}:{start}`). Exposed so the history
+    /// view can (re)translate a saved line via `translate_segment`.
+    pub segment_id: String,
     pub source: String,
     pub speaker: Option<String>,
     pub text: String,
@@ -258,19 +261,20 @@ impl Db {
         };
 
         let mut stmt = conn.prepare(
-            "SELECT source, speaker, text, t_start, t_end, confidence, translation, translation_lang \
+            "SELECT segment_id, source, speaker, text, t_start, t_end, confidence, translation, translation_lang \
              FROM segments WHERE session_id = ?1 ORDER BY t_start, id",
         )?;
         let rows = stmt.query_map([id], |row| {
             Ok(StoredSegment {
-                source: row.get(0)?,
-                speaker: row.get(1)?,
-                text: row.get(2)?,
-                t_start: row.get(3)?,
-                t_end: row.get(4)?,
-                confidence: row.get(5)?,
-                translation: row.get(6)?,
-                translation_lang: row.get(7)?,
+                segment_id: row.get(0)?,
+                source: row.get(1)?,
+                speaker: row.get(2)?,
+                text: row.get(3)?,
+                t_start: row.get(4)?,
+                t_end: row.get(5)?,
+                confidence: row.get(6)?,
+                translation: row.get(7)?,
+                translation_lang: row.get(8)?,
             })
         })?;
         let mut segments = Vec::new();
