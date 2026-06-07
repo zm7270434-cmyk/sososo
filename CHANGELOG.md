@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-06-07
+
+### Added
+
+- **Rich Markdown in AI summaries** — session summaries now render formatted
+  Markdown (headings, lists, bold, links) instead of plain text.
+- **Session detail: summary-language selector + transcript translation** — pick
+  the AI-summary language and translate a saved transcript directly from the
+  session view.
+
+### Fixed
+
+- Corrected the contact email across the Code of Conduct, Privacy, and Security
+  documents.
+
 ## [0.4.0] - 2026-06-07
 
 ### Added
@@ -93,7 +108,8 @@ First public release. **Windows only** — macOS and Linux are not yet tested.
 - Formatting SOP — Prettier (with Tailwind class sorting) + rustfmt, enforced by
   a Husky pre-commit hook — plus CI and a Windows release workflow.
 
-[unreleased]: https://github.com/yusupsupriyadi/sososo/compare/v0.4.0...HEAD
+[unreleased]: https://github.com/yusupsupriyadi/sososo/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/yusupsupriyadi/sososo/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/yusupsupriyadi/sososo/compare/v0.3.1...v0.4.0
 [0.3.1]: https://github.com/yusupsupriyadi/sososo/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/yusupsupriyadi/sososo/compare/v0.2.0...v0.3.0
