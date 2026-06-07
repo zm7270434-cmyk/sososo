@@ -16,7 +16,6 @@ import { SUMMARY_LANGUAGES } from '../../../lib/languages';
 import { isMacOS, isLinux } from '../../../lib/platform';
 import {
   IconAlert,
-  IconAppearance,
   IconCheck,
   IconDevices,
   IconDownload,
@@ -27,34 +26,23 @@ import {
   IconMic,
   IconSpeaker,
 } from '../../../lib/icons';
-import {
-  useConfigStore,
-  UI_SCALE_MIN,
-  UI_SCALE_MAX,
-  TRANSCRIPT_SCALE_MIN,
-  TRANSCRIPT_SCALE_MAX,
-} from '../../../state/configStore';
+import { useConfigStore } from '../../../state/configStore';
 import { useUpdateStore } from '../../../state/updateStore';
 import { checkForUpdate, downloadAndInstall, restartApp } from '../../../lib/updater';
 import type { AiProvider, ApiService, DeviceLists } from '../../../types/domain';
-
-const FIELD_CTRL =
-  'w-full flex-1 rounded-sm border border-glass-border bg-[rgba(255,255,255,0.05)] px-[11px] py-[9px] text-[13px] text-fg outline-none focus:border-accent';
-const BTN =
-  'cursor-pointer rounded-sm border border-[rgba(255,255,255,0.28)] bg-[rgba(255,255,255,0.1)] px-4 py-[9px] text-[13px] text-fg whitespace-nowrap shadow-liquid hover:bg-[rgba(255,255,255,0.18)]';
-const BTN_PRIMARY =
-  'cursor-pointer rounded-sm border border-[rgba(255,255,255,0.3)] bg-[rgba(110,168,254,0.24)] px-4 py-[9px] text-[13px] whitespace-nowrap text-[#dbe8ff] shadow-liquid hover:bg-[rgba(110,168,254,0.34)]';
-const H3 =
-  'mb-3 inline-flex items-center gap-2 text-[12px] uppercase tracking-[0.06em] text-fg-faint';
-const FIELD = 'mb-3.5 flex flex-col gap-1.5';
-const FIELD_LABEL = 'text-[13px] text-fg-dim';
-// Sub-group header inside the API Keys section, used to separate the required
-// speech-to-text key (Deepgram) from the optional AI keys (OpenAI / Gemini).
-const SUBHEAD = 'text-[12.5px] font-semibold text-fg';
-const BADGE_REQ =
-  'inline-flex items-center rounded-full border border-[rgba(110,168,254,0.45)] bg-[rgba(110,168,254,0.16)] px-1.5 py-px text-[10px] font-semibold uppercase tracking-[0.04em] text-accent not-italic';
-const BADGE_OPT =
-  'inline-flex items-center rounded-full border border-glass-border bg-[rgba(255,255,255,0.06)] px-1.5 py-px text-[10px] font-semibold uppercase tracking-[0.04em] text-fg-faint not-italic';
+import { AppearanceSection } from './settings/AppearanceSection';
+import { deriveUpdateStatus } from './settings/updateStatus';
+import {
+  BADGE_OPT,
+  BADGE_REQ,
+  BTN,
+  BTN_PRIMARY,
+  FIELD,
+  FIELD_CTRL,
+  FIELD_LABEL,
+  H3,
+  SUBHEAD,
+} from './settings/styles';
 
 // Open external links in the system browser (Tauri), with a plain-web fallback
 // so the links still work under `vite dev` outside the Tauri webview.
@@ -85,12 +73,6 @@ export default function SettingsRoute() {
   const outputDevice = useConfigStore((s) => s.outputDevice);
   const setInputDevice = useConfigStore((s) => s.setInputDevice);
   const setOutputDevice = useConfigStore((s) => s.setOutputDevice);
-  const uiScale = useConfigStore((s) => s.uiScale);
-  const transcriptScale = useConfigStore((s) => s.transcriptScale);
-  const glassOpacity = useConfigStore((s) => s.glassOpacity);
-  const setUiScale = useConfigStore((s) => s.setUiScale);
-  const setTranscriptScale = useConfigStore((s) => s.setTranscriptScale);
-  const setGlassOpacity = useConfigStore((s) => s.setGlassOpacity);
   const autoSummarizeOnFinish = useConfigStore((s) => s.autoSummarizeOnFinish);
   const setAutoSummarizeOnFinish = useConfigStore((s) => s.setAutoSummarizeOnFinish);
 
@@ -191,30 +173,13 @@ export default function SettingsRoute() {
   }
 
   // Derive the App-update status line from the updater store.
-  const updatePct =
-    updateContentLength && updateContentLength > 0
-      ? Math.min(100, Math.round((updateDownloaded / updateContentLength) * 100))
-      : null;
-  let updateMsg = '';
-  let updateMsgWarn = false;
-  switch (updateStatus) {
-    case 'uptodate':
-      updateMsg = "You're on the latest version.";
-      break;
-    case 'available':
-      updateMsg = `Version ${updateVersion ?? ''} is available.`;
-      break;
-    case 'downloading':
-      updateMsg = `Downloading…${updatePct != null ? ` ${updatePct}%` : ''}`;
-      break;
-    case 'ready':
-      updateMsg = 'Update installed — restart to finish.';
-      break;
-    case 'error':
-      updateMsg = `Update check failed: ${updateError ?? 'unknown error'}`;
-      updateMsgWarn = true;
-      break;
-  }
+  const { msg: updateMsg, warn: updateMsgWarn } = deriveUpdateStatus(
+    updateStatus,
+    updateVersion,
+    updateDownloaded,
+    updateContentLength,
+    updateError,
+  );
 
   return (
     <div className="mx-auto max-w-[620px] px-8 py-7">
@@ -471,89 +436,7 @@ export default function SettingsRoute() {
         </button>
       </section>
 
-      <section className="mb-7">
-        <h3 className={H3}>
-          <HugeiconsIcon icon={IconAppearance} size={13} strokeWidth={1.8} aria-hidden={true} />
-          Appearance
-        </h3>
-
-        <div className={FIELD}>
-          <span className={FIELD_LABEL}>
-            UI font size
-            <em className="ml-1.5 text-[11.5px] text-fg-faint not-italic">
-              {Math.round(uiScale * 100)}%
-            </em>
-          </span>
-          <input
-            type="range"
-            min={UI_SCALE_MIN}
-            max={UI_SCALE_MAX}
-            step={0.05}
-            value={uiScale}
-            onChange={(e) => setUiScale(Number(e.target.value))}
-            className="w-full cursor-pointer accent-accent"
-          />
-          <span className="text-[11.5px] leading-[1.4] text-fg-faint">
-            Scales the whole interface (text, buttons, panels).
-          </span>
-        </div>
-
-        <div className={FIELD}>
-          <span className={FIELD_LABEL}>
-            Transcript font size
-            <em className="ml-1.5 text-[11.5px] text-fg-faint not-italic">
-              {Math.round(transcriptScale * 100)}%
-            </em>
-          </span>
-          <input
-            type="range"
-            min={TRANSCRIPT_SCALE_MIN}
-            max={TRANSCRIPT_SCALE_MAX}
-            step={0.05}
-            value={transcriptScale}
-            onChange={(e) => setTranscriptScale(Number(e.target.value))}
-            className="w-full cursor-pointer accent-accent"
-          />
-          <span className="text-[11.5px] leading-[1.4] text-fg-faint">
-            Transcript text &amp; speaker labels, in live recording and history.
-          </span>
-          <div className="mt-1 rounded-sm border border-glass-border bg-[rgba(255,255,255,0.04)] px-3 py-2">
-            <div
-              className="tracking-[0.05em] text-accent uppercase"
-              style={{ fontSize: `${11 * transcriptScale}px` }}
-            >
-              You
-            </div>
-            <div
-              className="leading-[1.5] text-fg"
-              style={{ fontSize: `${14 * transcriptScale}px` }}
-            >
-              Sample live transcript line.
-            </div>
-          </div>
-        </div>
-
-        <div className={FIELD}>
-          <span className={FIELD_LABEL}>
-            Background transparency
-            <em className="ml-1.5 text-[11.5px] text-fg-faint not-italic">
-              {Math.round((1 - glassOpacity) * 100)}%
-            </em>
-          </span>
-          <input
-            type="range"
-            min={5}
-            max={85}
-            step={5}
-            value={Math.round((1 - glassOpacity) * 100)}
-            onChange={(e) => setGlassOpacity(1 - Number(e.target.value) / 100)}
-            className="w-full cursor-pointer accent-accent"
-          />
-          <span className="text-[11.5px] leading-[1.4] text-fg-faint">
-            Higher = more see-through; the desktop behind shows through more.
-          </span>
-        </div>
-      </section>
+      <AppearanceSection />
 
       <section className="mb-7">
         <h3 className={H3}>
