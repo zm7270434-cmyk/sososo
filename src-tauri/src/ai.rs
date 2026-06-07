@@ -67,7 +67,7 @@ const GEMINI_ENDPOINT_BASE: &str = "https://generativelanguage.googleapis.com/v1
 /// stay bounded; longer transcripts are truncated with a visible marker.
 const MAX_TRANSCRIPT_CHARS: usize = 60_000;
 
-const SYSTEM_PROMPT: &str = "You are an assistant that summarizes meeting or conversation transcripts into clear, concise, well-structured prose. Follow the output-language instruction in the user message exactly. Use ONLY information present in the transcript — do not invent facts. In the transcript, \"You\" is the app user (microphone audio) and \"Other\" is the system/other participants' audio. If the transcript is too short or not meaningful, say so briefly instead of forcing a summary.";
+const SYSTEM_PROMPT: &str = "You are an assistant that summarizes meeting or conversation transcripts into a clear, concise, well-structured Markdown summary — use headings, bullet or numbered lists, and **bold** to emphasize key terms. Follow the output-language instruction in the user message exactly. Use ONLY information present in the transcript — do not invent facts. In the transcript, \"You\" is the app user (microphone audio) and \"Other\" is the system/other participants' audio. If the transcript is too short or not meaningful, say so briefly instead of forcing a summary.";
 
 // --- OpenAI response/error envelopes ---
 
@@ -315,11 +315,14 @@ pub async fn summarize(
 
     let user_prompt = format!(
         "Session title: {title}\nTranscript language code: {language}\n\n\
-         {language_directive} Use exactly this Markdown structure (translate the \
-         section headings into the output language too):\n\n\
+         {language_directive} Format the summary as clean Markdown using exactly this \
+         structure (translate the section headings into the output language too). Use \
+         **bold** for key terms, names, decisions, dates, and numbers so it is easy to \
+         skim, and *italic* for nuance where helpful:\n\n\
          ## Summary\n(2-4 sentences of the core discussion)\n\n\
-         ## Key Points\n- (the main points, one per line)\n\n\
-         ## Action Items\n- (decisions or action items; write \"None\" if there are none)\n\n\
+         ## Key Points\n- (the main points, one per line; **bold** the crucial term in each)\n\n\
+         ## Action Items\n1. (decisions or action items as a numbered list; **bold** the \
+         owner/decision)\n(if there are none, write a single line: None)\n\n\
          Transcript:\n{transcript}"
     );
 
