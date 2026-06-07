@@ -38,3 +38,27 @@ impl serde::Serialize for AppError {
 }
 
 pub type AppResult<T> = Result<T, AppError>;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn display_strings_are_prefixed_by_category() {
+        assert_eq!(AppError::Audio("x".into()).to_string(), "audio error: x");
+        assert_eq!(
+            AppError::Session("x".into()).to_string(),
+            "session error: x"
+        );
+        assert_eq!(AppError::Config("x".into()).to_string(), "config error: x");
+        assert_eq!(AppError::Db("x".into()).to_string(), "database error: x");
+        assert_eq!(AppError::Ai("x".into()).to_string(), "AI error: x");
+    }
+
+    #[test]
+    fn serializes_to_a_plain_json_string() {
+        // The frontend receives the error as a bare string, not a tagged object.
+        let json = serde_json::to_string(&AppError::Db("oops".into())).unwrap();
+        assert_eq!(json, "\"database error: oops\"");
+    }
+}

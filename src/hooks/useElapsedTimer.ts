@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useSessionStore } from '../state/sessionStore';
 
-function format(totalSeconds: number): string {
+/** Format an elapsed second count as zero-padded `HH:MM:SS` (hours uncapped). */
+export function formatElapsed(totalSeconds: number): string {
   const hh = String(Math.floor(totalSeconds / 3600)).padStart(2, '0');
   const mm = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, '0');
   const ss = String(totalSeconds % 60).padStart(2, '0');
@@ -26,5 +27,5 @@ export function useElapsedLabel(): string {
 
   if (!startedAt || state !== 'recording') return '00:00:00';
   const end = paused && pausedAt ? pausedAt : Date.now();
-  return format(Math.max(0, Math.floor((end - startedAt - pausedTotalMs) / 1000)));
+  return formatElapsed(Math.max(0, Math.floor((end - startedAt - pausedTotalMs) / 1000)));
 }
