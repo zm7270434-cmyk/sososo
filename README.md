@@ -56,14 +56,6 @@ These links always grab the [latest release](https://github.com/yusupsupriyadi/s
 > installing, add your free [Deepgram API key](https://console.deepgram.com/signup)
 > in **Settings** to start transcribing.
 
-<p align="center">
-  <a href="https://youtu.be/al1_YU_ILXs">
-    <img alt="Watch the sososo demo on YouTube" src="https://img.youtube.com/vi/al1_YU_ILXs/maxresdefault.jpg" width="640" />
-  </a>
-  <br />
-  <a href="https://youtu.be/al1_YU_ILXs"><b>▶ Watch the demo on YouTube</b></a>
-</p>
-
 ## Features
 
 - 🎙️ **Dual capture** — system audio (loopback) + microphone, mixed into two
@@ -79,6 +71,16 @@ These links always grab the [latest release](https://github.com/yusupsupriyadi/s
   Settings).
 - 🔒 **Private by design** — keys in the OS keychain; no server, no telemetry.
   (See [PRIVACY.md](./PRIVACY.md) for what leaves your machine.)
+
+## Demo
+
+<p align="center">
+  <a href="https://youtu.be/al1_YU_ILXs">
+    <img alt="Watch the sososo demo on YouTube" src="https://img.youtube.com/vi/al1_YU_ILXs/maxresdefault.jpg" width="640" />
+  </a>
+  <br />
+  <a href="https://youtu.be/al1_YU_ILXs"><b>▶ Watch the demo on YouTube</b></a>
+</p>
 
 ## Privacy at a glance
 
