@@ -46,7 +46,7 @@ export default function SearchRoute() {
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         placeholder="Search across every transcript…"
-        className="w-full rounded-sm border border-glass-border bg-[rgba(255,255,255,0.05)] px-3.5 py-2.5 text-[14px] text-fg outline-none placeholder:text-fg-faint focus:border-accent"
+        className="w-full rounded-sm border border-[rgba(255,192,77,0.6)] bg-[rgba(255,192,77,0.08)] px-3.5 py-2.5 text-[14px] text-fg caret-[#ffc04d] outline-none placeholder:text-fg-faint focus:border-[#ffc04d]"
       />
 
       <div className="mt-4 flex flex-col gap-2">
