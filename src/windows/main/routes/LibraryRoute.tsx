@@ -13,6 +13,7 @@ import {
   IconLanguage,
   IconMic,
   IconRecord,
+  IconRemote,
   IconRename,
   IconSettings,
   IconSpeaker,
@@ -23,6 +24,31 @@ const BIG_BTN_BASE =
   'inline-flex items-center justify-center gap-2 cursor-pointer rounded-full border px-[26px] py-[13px] text-[15px] font-semibold no-underline shadow-liquid transition duration-[120ms] active:scale-[0.98] disabled:cursor-default disabled:opacity-60';
 const SELECT =
   'cursor-pointer rounded-sm border border-glass-border bg-[rgba(255,255,255,0.05)] px-[11px] py-[9px] text-[13px] text-fg outline-none focus:border-accent';
+
+/** The two capture modes, shown on the Start screen as an icon toggle instead
+ *  of a dropdown — fewer clicks and a clearer picture of what gets captured. */
+const AUDIO_SOURCES: {
+  systemOnly: boolean;
+  icon: typeof IconMic;
+  label: string;
+  sublabel: string;
+  hint: string;
+}[] = [
+  {
+    systemOnly: false,
+    icon: IconRemote,
+    label: 'Meeting',
+    sublabel: 'System + Mic',
+    hint: 'Capture system audio and your microphone — best for meetings and calls.',
+  },
+  {
+    systemOnly: true,
+    icon: IconSpeaker,
+    label: 'System only',
+    sublabel: 'Video / music',
+    hint: 'Capture system audio only — best for videos, music, and podcasts.',
+  },
+];
 
 export default function LibraryRoute() {
   const { start } = useSession();
@@ -86,9 +112,6 @@ export default function LibraryRoute() {
 
   function onLanguage(e: React.ChangeEvent<HTMLSelectElement>) {
     setLanguage(e.target.value as LanguageCode);
-  }
-  function onSource(e: React.ChangeEvent<HTMLSelectElement>) {
-    setSystemOnly(e.target.value === 'system');
   }
   function onInput(e: React.ChangeEvent<HTMLSelectElement>) {
     setInputDevice(e.target.value || null);
@@ -156,20 +179,44 @@ export default function LibraryRoute() {
                   ))}
                 </select>
               </label>
-              <label className="flex flex-col gap-[5px]">
+              <div className="flex flex-col gap-[5px]">
                 <span className="inline-flex items-center gap-1.5 text-[12px] text-fg-faint">
                   <HugeiconsIcon icon={IconWave} size={13} strokeWidth={1.8} aria-hidden={true} />
                   Audio source
                 </span>
-                <select
-                  className={SELECT}
-                  value={systemOnly ? 'system' : 'both'}
-                  onChange={onSource}
-                >
-                  <option value="both">System + Microphone (meeting)</option>
-                  <option value="system">System only (video/music)</option>
-                </select>
-              </label>
+                <div className="grid grid-cols-2 gap-2" role="group" aria-label="Audio source">
+                  {AUDIO_SOURCES.map((src) => {
+                    const active = systemOnly === src.systemOnly;
+                    return (
+                      <button
+                        key={src.label}
+                        type="button"
+                        onClick={() => setSystemOnly(src.systemOnly)}
+                        aria-pressed={active}
+                        title={src.hint}
+                        className={`flex cursor-pointer flex-col items-center gap-1.5 rounded-sm border px-2 py-3 text-center transition duration-[120ms] active:scale-[0.98] ${
+                          active
+                            ? 'border-[rgba(110,168,254,0.45)] bg-[rgba(110,168,254,0.2)] text-[#dbe8ff] shadow-liquid'
+                            : 'border-glass-border bg-[rgba(255,255,255,0.04)] text-fg-faint hover:bg-hover'
+                        }`}
+                      >
+                        <HugeiconsIcon
+                          icon={src.icon}
+                          size={22}
+                          strokeWidth={1.7}
+                          aria-hidden={true}
+                        />
+                        <span className="text-[12.5px] leading-none font-semibold">
+                          {src.label}
+                        </span>
+                        <span className="text-[10.5px] leading-tight opacity-80">
+                          {src.sublabel}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
               <label className="flex flex-col gap-[5px]">
                 <span className="inline-flex items-center gap-1.5 text-[12px] text-fg-faint">
                   <HugeiconsIcon icon={IconMic} size={13} strokeWidth={1.8} aria-hidden={true} />
