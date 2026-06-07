@@ -16,6 +16,13 @@ jobs:
   release:
     strategy:
       fail-fast: false
+      # Build the three OSes ONE AT A TIME. The first job creates the draft
+      # release; the next two find it (same tag) and add their bundles, merging
+      # their platform into the single updater `latest.json`. Running them in
+      # parallel races to create the release — that splits assets across
+      # duplicate drafts and leaves each `latest.json` covering only some
+      # platforms, which breaks the updater.
+      max-parallel: 1
       matrix:
         # The asset names produced below are linked directly from README.md →
         # "Download" (via /releases/latest/download/<name>). Keep them in sync —
@@ -65,6 +72,26 @@ jobs:
       - name: Install frontend dependencies
         run: bun install --frozen-lockfile
 
+      # Build the release body: the matching CHANGELOG section for this tag (so
+      # every release's notes always carry its changelog) followed by the
+      # download/signing note. On workflow_dispatch (no tag) no section matches,
+      # so only the note is used — and no release is created anyway.
+      - name: Compose release notes from CHANGELOG
+        shell: bash
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          NOTES="$(awk -v ver="$VERSION" '
+            $0 ~ "^## \\[" ver "\\]" { capture = 1; next }
+            capture && /^## \[/ { exit }
+            capture { print }
+          ' CHANGELOG.md)"
+          {
+            echo "RELEASE_BODY<<__CHANGELOG_EOF__"
+            if [ -n "$NOTES" ]; then printf '%s\n\n' "$NOTES"; fi
+            echo "See the assets below to download and install. Builds are not code-signed yet, so the OS may warn on first run (Windows SmartScreen / macOS Gatekeeper — on macOS, right-click the app and choose Open)."
+            echo "__CHANGELOG_EOF__"
+          } >> "$GITHUB_ENV"
+
       - name: Build and release
         uses: tauri-apps/tauri-action@v0
         env:
@@ -80,11 +107,10 @@ jobs:
           # Empty on workflow_dispatch -> builds without creating a release.
           tagName: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || '' }}
           releaseName: ${{ startsWith(github.ref, 'refs/tags/') && format('sososo {0}', github.ref_name) || '' }}
-          releaseBody: 'See the assets below to download and install. Builds are not code-signed yet, so the OS may warn on first run (Windows SmartScreen / macOS Gatekeeper — on macOS, right-click the app and choose Open).'
+          releaseBody: ${{ env.RELEASE_BODY }}
           releaseDraft: true
           prerelease: false
           tauriScript: bun run tauri
           args: ${{ matrix.args }}
           # Per-OS asset names (defined in the matrix) so downloads are clearly labeled.
           assetNamePattern: ${{ matrix.assetNamePattern }}
-          uploadWorkflowArtifacts: true
