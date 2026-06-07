@@ -7,9 +7,7 @@ import {
   IconAlert,
   IconBack,
   IconCalendar,
-  IconChat,
   IconCheck,
-  IconChevronDown,
   IconClose,
   IconDelete,
   IconLanguage,
@@ -20,15 +18,11 @@ import {
   IconRemote,
   IconRename,
   IconSearch,
-  IconSend,
   IconSpeaker,
 } from '../../../lib/icons';
 import {
-  chatSession,
-  clearChat,
   deleteSession,
   getAiProvider,
-  getChatMessages,
   getSession,
   getSummaryLanguage,
   hasApiKey,
@@ -43,10 +37,11 @@ import { speakerColor } from '../../../lib/speaker';
 import { languageLabel, SUMMARY_LANGUAGES, TRANSLATE_TARGETS } from '../../../lib/languages';
 import { useLibraryStore } from '../../../state/libraryStore';
 import { useConfigStore } from '../../../state/configStore';
-import { ChatBubble, SummaryView } from './sessionDetail/markdown';
+import { SummaryView } from './sessionDetail/markdown';
 import { highlightText } from './sessionDetail/highlightText';
 import { distinctSpeakers, type SpeakerEntry } from './sessionDetail/speakers';
-import type { ChatMessage, SessionDetail } from '../../../types/domain';
+import ChatPanel from './sessionDetail/ChatPanel';
+import type { SessionDetail } from '../../../types/domain';
 
 const ACTION_BTN =
   'inline-flex items-center gap-1.5 cursor-pointer rounded-sm border border-[rgba(255,255,255,0.25)] bg-[rgba(255,255,255,0.08)] px-[11px] py-1.5 text-[12.5px] text-fg-dim whitespace-nowrap shadow-liquid hover:bg-hover hover:text-fg';
@@ -94,16 +89,6 @@ export default function SessionDetailRoute() {
   const [findPos, setFindPos] = useState(0);
   const findInputRef = useRef<HTMLInputElement>(null);
   const transcriptRef = useRef<HTMLDivElement>(null);
-  // Transcript chat ("ask about this transcript"): persisted per-session history,
-  // a draft message, in-flight flag, the panel's open/closed state, whether an AI
-  // provider key is configured (gates the input), and a chat-scoped error.
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
-  const [chatInput, setChatInput] = useState('');
-  const [chatSending, setChatSending] = useState(false);
-  const [chatOpen, setChatOpen] = useState(false);
-  const [aiReady, setAiReady] = useState(false);
-  const [chatErr, setChatErr] = useState('');
-  const chatScrollRef = useRef<HTMLDivElement>(null);
 
   const speakers = useMemo(() => distinctSpeakers(detail?.segments ?? []), [detail]);
   // Indices of transcript lines matching the find query (text or translation).
@@ -144,12 +129,6 @@ export default function SessionDetailRoute() {
     setTProgress({ done: 0, total: 0 });
     setTPending(new Set());
     setErr('');
-    setChatMessages([]);
-    setChatInput('');
-    setChatSending(false);
-    setChatOpen(false);
-    setChatErr('');
-    setAiReady(false);
     autoSummarizeTried.current = false;
     getSession(sessionId)
       .then((d) => {
@@ -162,23 +141,6 @@ export default function SessionDetailRoute() {
         setErr(String(e));
         setLoading(false);
       });
-    // Load any saved chat history (open the panel if there is some), and check
-    // whether the active AI provider's key is set (gates the chat input).
-    getChatMessages(sessionId)
-      .then((msgs) => {
-        if (!alive) return;
-        setChatMessages(msgs);
-        if (msgs.length > 0) setChatOpen(true);
-      })
-      .catch(() => {});
-    void (async () => {
-      try {
-        const ready = await hasApiKey(await getAiProvider());
-        if (alive) setAiReady(ready);
-      } catch {
-        if (alive) setAiReady(false);
-      }
-    })();
     return () => {
       alive = false;
     };
@@ -191,13 +153,6 @@ export default function SessionDetailRoute() {
       .then(setSummaryLang)
       .catch(() => {});
   }, []);
-
-  // Keep the chat pinned to the newest message as it grows / while thinking.
-  useEffect(() => {
-    if (!chatOpen) return;
-    const el = chatScrollRef.current;
-    if (el) el.scrollTop = el.scrollHeight;
-  }, [chatMessages, chatSending, chatOpen]);
 
   // Focus the find input when the find bar opens.
   useEffect(() => {
@@ -391,39 +346,6 @@ export default function SessionDetailRoute() {
     if (failed > 0) setErr(`${failed} line(s) failed to translate — try again.`);
   }
 
-  // Send a chat question about this transcript. Optimistically shows the user's
-  // message, then swaps the placeholder for the two persisted turns the backend
-  // returns (`[user, assistant]`). On failure the draft text is restored.
-  async function sendChat() {
-    const q = chatInput.trim();
-    if (!q || chatSending || !aiReady) return;
-    setChatErr('');
-    setChatInput('');
-    setChatSending(true);
-    const tempId = -Date.now();
-    setChatMessages((m) => [...m, { id: tempId, role: 'user', content: q, createdAt: '' }]);
-    try {
-      const added = await chatSession(sessionId, q);
-      setChatMessages((m) => [...m.filter((x) => x.id !== tempId), ...added]);
-    } catch (e) {
-      setChatMessages((m) => m.filter((x) => x.id !== tempId));
-      setChatInput(q);
-      setChatErr(String(e));
-    } finally {
-      setChatSending(false);
-    }
-  }
-
-  async function clearChatHistory() {
-    try {
-      await clearChat(sessionId);
-      setChatMessages([]);
-      setChatErr('');
-    } catch (e) {
-      setChatErr(String(e));
-    }
-  }
-
   if (loading) {
     return (
       <div className="flex h-full items-center justify-center p-6">
@@ -452,510 +374,438 @@ export default function SessionDetailRoute() {
   const { session, segments } = detail;
 
   return (
-    <div className="mx-auto max-w-[760px] px-7 py-6">
-      <div className="mb-5 border-b border-glass-border pb-3.5">
-        <div className="flex items-center gap-3">
-          {editing ? (
-            <input
-              className="flex-1 rounded-sm border border-accent bg-[rgba(255,255,255,0.06)] px-2.5 py-[7px] text-[18px] font-semibold text-fg outline-none"
-              value={titleDraft}
-              autoFocus
-              onChange={(e) => setTitleDraft(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') void saveTitle();
-                if (e.key === 'Escape') setEditing(false);
-              }}
-              onBlur={() => void saveTitle()}
-            />
-          ) : (
-            <h2 className="m-0 flex-1 text-[19px] font-semibold break-words text-fg">
-              {session.title}
-            </h2>
-          )}
-          <div className="flex shrink-0 gap-1.5">
-            {!editing && (
-              <button
-                className={ACTION_BTN}
-                onClick={() => {
-                  setTitleDraft(session.title);
-                  setEditing(true);
-                }}
-              >
-                <HugeiconsIcon icon={IconRename} size={14} strokeWidth={1.8} aria-hidden={true} />
-                Rename
-              </button>
-            )}
-            {confirmDelete ? (
-              <>
-                <button
-                  className="cursor-pointer rounded-sm border border-[rgba(255,93,93,0.55)] bg-[rgba(255,93,93,0.24)] px-[11px] py-1.5 text-[12.5px] whitespace-nowrap text-[#ffd9d9] shadow-liquid hover:bg-hover hover:text-fg"
-                  onClick={() => void doDelete()}
-                >
-                  Delete permanently
-                </button>
-                <button className={ACTION_BTN} onClick={() => setConfirmDelete(false)}>
-                  Cancel
-                </button>
-              </>
-            ) : (
-              <button
-                className="inline-flex cursor-pointer items-center gap-1.5 rounded-sm border border-[rgba(255,93,93,0.5)] bg-[rgba(255,93,93,0.16)] px-[11px] py-1.5 text-[12.5px] whitespace-nowrap text-[#ffb4b4] shadow-liquid hover:border-[rgba(255,93,93,0.65)] hover:bg-[rgba(255,93,93,0.26)] hover:text-[#ffd9d9]"
-                onClick={() => setConfirmDelete(true)}
-              >
-                <HugeiconsIcon icon={IconDelete} size={14} strokeWidth={1.8} aria-hidden={true} />
-                Delete
-              </button>
-            )}
-          </div>
-        </div>
-        <div className="mt-2.5 flex flex-wrap items-center gap-x-3.5 gap-y-1 text-[12px] text-fg-faint">
-          <span className="inline-flex items-center gap-1.5">
-            <HugeiconsIcon icon={IconCalendar} size={13} strokeWidth={1.8} aria-hidden={true} />
-            {formatDateTime(session.startedAt)}
-          </span>
-          <span className="inline-flex items-center gap-1.5">
-            <HugeiconsIcon icon={IconLanguage} size={13} strokeWidth={1.8} aria-hidden={true} />
-            {languageLabel(session.language)}
-          </span>
-          <span className="inline-flex items-center gap-1.5">
-            <HugeiconsIcon icon={IconLines} size={13} strokeWidth={1.8} aria-hidden={true} />
-            {session.segmentCount} lines
-          </span>
-          <span className="inline-flex items-center gap-1.5">
-            <HugeiconsIcon
-              icon={session.systemOnly ? IconSpeaker : IconMic}
-              size={13}
-              strokeWidth={1.8}
-              aria-hidden={true}
-            />
-            {session.systemOnly ? 'System only' : 'System + Microphone'}
-          </span>
-        </div>
-      </div>
-
-      {segments.length > 0 && (
-        <section className="mb-[22px] rounded-md border border-glass-border bg-[rgba(110,168,254,0.07)] px-[18px] py-4">
-          <div className="mb-2.5 flex items-center justify-between gap-2.5">
-            <h3 className="m-0 inline-flex items-center gap-1.5 text-[12px] tracking-[0.06em] text-accent uppercase">
-              <HugeiconsIcon icon={IconAi} size={14} strokeWidth={1.8} aria-hidden={true} />
-              AI Summary
-            </h3>
-            <div className="flex shrink-0 items-center gap-1.5">
-              <select
-                className={SELECT_CLS}
-                value={summaryLang}
-                onChange={(e) => onSummaryLang(e.target.value)}
-                disabled={summarizing}
-                title="Summary output language"
-                aria-label="Summary output language"
-              >
-                {SUMMARY_LANGUAGES.map((l) => (
-                  <option key={l.code} value={l.code}>
-                    {l.label}
-                  </option>
-                ))}
-              </select>
-              {session.summary && (
-                <button
-                  className="inline-flex cursor-pointer items-center gap-1.5 rounded-sm border border-[rgba(255,255,255,0.25)] bg-[rgba(255,255,255,0.08)] px-[11px] py-1.5 text-[12.5px] font-medium whitespace-nowrap text-fg-dim shadow-liquid enabled:hover:bg-hover disabled:cursor-default disabled:opacity-60"
-                  onClick={() => void doSummarize()}
-                  disabled={summarizing}
-                >
-                  {summarizing ? (
-                    'Processing…'
-                  ) : (
-                    <>
-                      <HugeiconsIcon
-                        icon={IconRegenerate}
-                        size={14}
-                        strokeWidth={1.8}
-                        aria-hidden={true}
-                      />
-                      Regenerate
-                    </>
-                  )}
-                </button>
+    <div className="flex h-full min-h-0">
+      <div className="min-w-0 flex-1 overflow-y-auto">
+        <div className="mx-auto max-w-[760px] px-7 py-6">
+          <div className="mb-5 border-b border-glass-border pb-3.5">
+            <div className="flex items-center gap-3">
+              {editing ? (
+                <input
+                  className="flex-1 rounded-sm border border-accent bg-[rgba(255,255,255,0.06)] px-2.5 py-[7px] text-[18px] font-semibold text-fg outline-none"
+                  value={titleDraft}
+                  autoFocus
+                  onChange={(e) => setTitleDraft(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') void saveTitle();
+                    if (e.key === 'Escape') setEditing(false);
+                  }}
+                  onBlur={() => void saveTitle()}
+                />
+              ) : (
+                <h2 className="m-0 flex-1 text-[19px] font-semibold break-words text-fg">
+                  {session.title}
+                </h2>
               )}
-            </div>
-          </div>
-
-          {session.summary ? (
-            <>
-              <SummaryView text={session.summary} />
-              {session.summarizedAt && (
-                <p className="mt-2.5 text-[11px] text-fg-faint">
-                  Created {formatDateTime(session.summarizedAt)}
-                  {session.summaryModel ? ` · ${session.summaryModel}` : ''}
-                </p>
-              )}
-            </>
-          ) : (
-            <div className="flex flex-col items-start gap-3">
-              <p className="m-0 text-[13px] leading-[1.5] text-fg-dim">
-                Finish this transcript by generating an automatic summary — overview, key points,
-                and action items — using OpenAI.
-              </p>
-              <button
-                className="inline-flex cursor-pointer items-center gap-2 rounded-sm border border-[rgba(255,255,255,0.3)] bg-[rgba(110,168,254,0.24)] px-4 py-[9px] text-[13px] font-semibold whitespace-nowrap text-[#dbe8ff] shadow-liquid enabled:hover:bg-[rgba(110,168,254,0.34)] disabled:cursor-default disabled:opacity-60"
-                onClick={() => void doSummarize()}
-                disabled={summarizing}
-              >
-                {summarizing ? (
-                  'Generating summary…'
-                ) : (
-                  <>
-                    <HugeiconsIcon
-                      icon={IconCheck}
-                      size={16}
-                      strokeWidth={1.8}
-                      aria-hidden={true}
-                    />
-                    Finish &amp; Summarize
-                  </>
-                )}
-              </button>
-            </div>
-          )}
-        </section>
-      )}
-
-      {segments.length > 0 && (
-        <section className="mb-[22px] rounded-md border border-glass-border bg-[rgba(167,139,250,0.07)] px-[18px] py-4">
-          <div className="flex items-center justify-between gap-2.5">
-            <button
-              className="inline-flex cursor-pointer items-center gap-1.5 text-[12px] tracking-[0.06em] text-accent-2 uppercase"
-              onClick={() => setChatOpen((v) => !v)}
-              aria-expanded={chatOpen}
-            >
-              <HugeiconsIcon icon={IconChat} size={14} strokeWidth={1.8} aria-hidden={true} />
-              Ask about this transcript
-              <HugeiconsIcon
-                icon={IconChevronDown}
-                size={13}
-                strokeWidth={2}
-                className={clsx('transition-transform', chatOpen && 'rotate-180')}
-                aria-hidden={true}
-              />
-            </button>
-            {chatOpen && aiReady && chatMessages.length > 0 && (
-              <button
-                className="inline-flex shrink-0 cursor-pointer items-center gap-1.5 rounded-sm border border-[rgba(255,255,255,0.2)] bg-[rgba(255,255,255,0.06)] px-2.5 py-1 text-[11.5px] text-fg-faint shadow-liquid hover:bg-hover hover:text-fg-dim"
-                onClick={() => void clearChatHistory()}
-                title="Clear chat history"
-              >
-                <HugeiconsIcon icon={IconDelete} size={12} strokeWidth={1.8} aria-hidden={true} />
-                Clear
-              </button>
-            )}
-          </div>
-
-          {chatOpen &&
-            (!aiReady ? (
-              <p className="mt-3 text-[13px] leading-[1.5] text-fg-dim">
-                Set an OpenAI or Gemini API key in{' '}
-                <Link to="/main/settings" className="text-accent-2 underline">
-                  Settings
-                </Link>{' '}
-                to chat about this transcript.
-              </p>
-            ) : (
-              <div className="mt-3">
-                {chatMessages.length > 0 || chatSending ? (
-                  <div
-                    ref={chatScrollRef}
-                    className="mb-3 flex max-h-[360px] flex-col gap-2.5 overflow-y-auto pr-1"
-                  >
-                    {chatMessages.map((m) => (
-                      <ChatBubble key={m.id} msg={m} />
-                    ))}
-                    {chatSending && (
-                      <div className="max-w-[85%] self-start rounded-lg rounded-bl-sm border border-glass-border bg-[rgba(255,255,255,0.06)] px-3 py-2 text-[13px] text-fg-faint italic">
-                        Thinking…
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <p className="mb-3 text-[13px] leading-[1.5] text-fg-dim">
-                    Ask anything about this transcript — e.g. “What were the main decisions?” or
-                    “What did each speaker focus on?”
-                  </p>
-                )}
-                <div className="flex items-end gap-2">
-                  <textarea
-                    value={chatInput}
-                    onChange={(e) => setChatInput(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault();
-                        void sendChat();
-                      }
-                    }}
-                    rows={1}
-                    placeholder="Ask about this transcript…"
-                    disabled={chatSending}
-                    className="max-h-[120px] min-h-[38px] flex-1 resize-y rounded-sm border border-glass-border bg-[rgba(255,255,255,0.06)] px-3 py-2 text-[13px] leading-[1.5] text-fg caret-[#b794f6] outline-none placeholder:text-fg-faint focus:border-accent-2 disabled:opacity-60"
-                  />
+              <div className="flex shrink-0 gap-1.5">
+                {!editing && (
                   <button
-                    className="inline-flex h-[38px] shrink-0 cursor-pointer items-center gap-1.5 rounded-sm border border-[rgba(167,139,250,0.5)] bg-[rgba(167,139,250,0.16)] px-3.5 text-[13px] font-medium whitespace-nowrap text-[#d6c6ff] shadow-liquid enabled:hover:bg-[rgba(167,139,250,0.26)] disabled:cursor-default disabled:opacity-50"
-                    onClick={() => void sendChat()}
-                    disabled={chatSending || !chatInput.trim()}
-                  >
-                    <HugeiconsIcon icon={IconSend} size={15} strokeWidth={1.8} aria-hidden={true} />
-                    Send
-                  </button>
-                </div>
-                {chatErr && (
-                  <p className="mt-2.5 flex items-start gap-2 rounded-sm border border-[rgba(255,180,84,0.25)] bg-[rgba(255,180,84,0.1)] px-3 py-2 text-[12.5px] text-[#ffb454]">
-                    <HugeiconsIcon
-                      icon={IconAlert}
-                      size={15}
-                      strokeWidth={1.8}
-                      className="mt-px shrink-0"
-                      aria-hidden={true}
-                    />
-                    <span>{chatErr}</span>
-                  </p>
-                )}
-              </div>
-            ))}
-        </section>
-      )}
-
-      {segments.length > 0 && (
-        <section className="mb-4 rounded-md border border-glass-border bg-[rgba(255,255,255,0.04)] px-[18px] py-3.5">
-          <h3 className="mb-2.5 inline-flex items-center gap-1.5 text-[12px] tracking-[0.06em] text-fg-faint uppercase">
-            <HugeiconsIcon icon={IconSpeaker} size={14} strokeWidth={1.8} aria-hidden={true} />
-            Speakers
-          </h3>
-          <div className="flex flex-wrap gap-2">
-            {speakers.map((sp, i) => (
-              <div
-                key={i}
-                className="inline-flex items-center gap-2 rounded-full border border-glass-border bg-[rgba(255,255,255,0.06)] py-1 pr-1.5 pl-2.5"
-              >
-                {editingSpeaker === i ? (
-                  <input
-                    className="w-[120px] rounded-sm border border-accent bg-[rgba(255,255,255,0.06)] px-1.5 py-0.5 text-[12.5px] text-fg outline-none"
-                    value={speakerDraft}
-                    autoFocus
-                    onChange={(e) => setSpeakerDraft(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') void saveSpeaker(sp);
-                      if (e.key === 'Escape') setEditingSpeaker(null);
+                    className={ACTION_BTN}
+                    onClick={() => {
+                      setTitleDraft(session.title);
+                      setEditing(true);
                     }}
-                    onBlur={() => void saveSpeaker(sp)}
-                  />
-                ) : (
-                  <>
-                    <span
-                      className="inline-block h-2 w-2 shrink-0 rounded-full"
-                      style={{ backgroundColor: speakerColor(sp.source, sp.display) }}
-                      aria-hidden={true}
-                    />
-                    <span className="text-[12.5px] font-medium text-fg">{sp.display}</span>
-                    <span className="text-[11px] text-fg-faint">{sp.count}</span>
-                    <button
-                      className="inline-flex cursor-pointer items-center rounded-full p-1 text-fg-faint hover:bg-hover hover:text-fg"
-                      aria-label={`Rename ${sp.display}`}
-                      onClick={() => {
-                        setSpeakerDraft(sp.display);
-                        setEditingSpeaker(i);
-                      }}
-                    >
-                      <HugeiconsIcon
-                        icon={IconRename}
-                        size={13}
-                        strokeWidth={1.8}
-                        aria-hidden={true}
-                      />
-                    </button>
-                  </>
-                )}
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
-
-      {segments.length === 0 ? (
-        <div className="flex flex-col items-center gap-2 py-10 text-fg-faint">
-          <HugeiconsIcon icon={IconNoTranscript} size={32} strokeWidth={1.5} aria-hidden={true} />
-          <p className="text-[13px]">No transcript saved for this session.</p>
-        </div>
-      ) : (
-        <>
-          <div className="mb-3 flex items-center justify-between gap-2.5">
-            <h3 className="m-0 inline-flex items-center gap-1.5 text-[12px] tracking-[0.06em] text-fg-faint uppercase">
-              <HugeiconsIcon icon={IconLanguage} size={14} strokeWidth={1.8} aria-hidden={true} />
-              Transcript
-            </h3>
-            <div className="flex shrink-0 items-center gap-1.5">
-              <button
-                className="inline-flex cursor-pointer items-center gap-1.5 rounded-sm border border-[rgba(255,192,77,0.45)] bg-[rgba(255,192,77,0.1)] px-[11px] py-1.5 text-[12.5px] font-medium whitespace-nowrap text-[#ffc04d] shadow-liquid hover:bg-[rgba(255,192,77,0.18)]"
-                onClick={() => setFindOpen((v) => !v)}
-                aria-label="Find in transcript"
-                title="Find in transcript (Ctrl/Cmd+F)"
-              >
-                <HugeiconsIcon icon={IconSearch} size={14} strokeWidth={1.8} aria-hidden={true} />
-                Find
-              </button>
-              <select
-                className={SELECT_CLS}
-                value={targetLanguage}
-                onChange={(e) => setTargetLanguage(e.target.value)}
-                disabled={translating}
-                title="Translate transcript to"
-                aria-label="Translate transcript to"
-              >
-                {TRANSLATE_TARGETS.map((l) => (
-                  <option key={l.code} value={l.code}>
-                    {l.label}
-                  </option>
-                ))}
-              </select>
-              <button
-                className="inline-flex cursor-pointer items-center gap-1.5 rounded-sm border border-[rgba(167,139,250,0.5)] bg-[rgba(167,139,250,0.16)] px-[11px] py-1.5 text-[12.5px] font-medium whitespace-nowrap text-[#d6c6ff] shadow-liquid enabled:hover:bg-[rgba(167,139,250,0.26)] disabled:cursor-default disabled:opacity-60"
-                onClick={() => void doTranslate()}
-                disabled={translating}
-              >
-                {translating ? (
-                  `Translating ${tProgress.done}/${tProgress.total}…`
-                ) : (
-                  <>
+                  >
                     <HugeiconsIcon
-                      icon={IconLanguage}
+                      icon={IconRename}
                       size={14}
                       strokeWidth={1.8}
                       aria-hidden={true}
                     />
-                    Translate
-                  </>
+                    Rename
+                  </button>
                 )}
-              </button>
-            </div>
-          </div>
-          {findOpen && (
-            <div className="mb-3 flex items-center gap-2 rounded-sm border border-[rgba(255,192,77,0.4)] bg-[rgba(255,192,77,0.08)] px-2.5 py-2">
-              <HugeiconsIcon
-                icon={IconSearch}
-                size={14}
-                strokeWidth={1.8}
-                className="shrink-0 text-[#ffc04d]"
-                aria-hidden={true}
-              />
-              <input
-                ref={findInputRef}
-                type="text"
-                value={findQuery}
-                onChange={(e) => setFindQuery(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') stepMatch(e.shiftKey ? -1 : 1);
-                  if (e.key === 'Escape') setFindOpen(false);
-                }}
-                placeholder="Find in transcript…"
-                className="min-w-0 flex-1 bg-transparent text-[13px] text-fg caret-[#ffc04d] outline-none placeholder:text-fg-faint"
-              />
-              <span className="shrink-0 text-[11.5px] text-fg-faint">
-                {findMatches.length > 0
-                  ? `${findPos + 1}/${findMatches.length}`
-                  : findQuery.trim()
-                    ? 'No matches'
-                    : ''}
-              </span>
-              <button
-                className="cursor-pointer rounded-sm px-1.5 py-0.5 text-[14px] leading-none text-[rgba(255,192,77,0.85)] hover:bg-[rgba(255,192,77,0.18)] hover:text-[#ffc04d] disabled:opacity-40"
-                onClick={() => stepMatch(-1)}
-                disabled={findMatches.length === 0}
-                aria-label="Previous match"
-              >
-                ↑
-              </button>
-              <button
-                className="cursor-pointer rounded-sm px-1.5 py-0.5 text-[14px] leading-none text-[rgba(255,192,77,0.85)] hover:bg-[rgba(255,192,77,0.18)] hover:text-[#ffc04d] disabled:opacity-40"
-                onClick={() => stepMatch(1)}
-                disabled={findMatches.length === 0}
-                aria-label="Next match"
-              >
-                ↓
-              </button>
-              <button
-                className="cursor-pointer rounded-sm p-1 text-[rgba(255,192,77,0.85)] hover:bg-[rgba(255,192,77,0.18)] hover:text-[#ffc04d]"
-                onClick={() => setFindOpen(false)}
-                aria-label="Close find"
-              >
-                <HugeiconsIcon icon={IconClose} size={13} strokeWidth={2} aria-hidden={true} />
-              </button>
-            </div>
-          )}
-          <div ref={transcriptRef} className="flex flex-col gap-3">
-            {segments.map((s, i) => {
-              const isCurrent = findOpen && findMatches[findPos] === i;
-              const find = findOpen && findQuery.trim() !== '';
-              return (
-                <div
-                  key={i}
-                  data-find-line={i}
-                  className={clsx(
-                    'flex flex-col gap-[3px]',
-                    isCurrent &&
-                      '-mx-2 rounded-sm bg-[rgba(255,192,77,0.14)] px-2 py-1 ring-1 ring-[rgba(255,192,77,0.5)]',
-                  )}
-                >
-                  <span
-                    className="inline-flex items-center gap-1 font-semibold tracking-[0.02em]"
-                    style={{
-                      fontSize: `${11 * transcriptScale}px`,
-                      color: speakerColor(s.source, s.speaker),
-                    }}
+                {confirmDelete ? (
+                  <>
+                    <button
+                      className="cursor-pointer rounded-sm border border-[rgba(255,93,93,0.55)] bg-[rgba(255,93,93,0.24)] px-[11px] py-1.5 text-[12.5px] whitespace-nowrap text-[#ffd9d9] shadow-liquid hover:bg-hover hover:text-fg"
+                      onClick={() => void doDelete()}
+                    >
+                      Delete permanently
+                    </button>
+                    <button className={ACTION_BTN} onClick={() => setConfirmDelete(false)}>
+                      Cancel
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    className="inline-flex cursor-pointer items-center gap-1.5 rounded-sm border border-[rgba(255,93,93,0.5)] bg-[rgba(255,93,93,0.16)] px-[11px] py-1.5 text-[12.5px] whitespace-nowrap text-[#ffb4b4] shadow-liquid hover:border-[rgba(255,93,93,0.65)] hover:bg-[rgba(255,93,93,0.26)] hover:text-[#ffd9d9]"
+                    onClick={() => setConfirmDelete(true)}
                   >
                     <HugeiconsIcon
-                      icon={s.source === 'you' ? IconMic : IconRemote}
-                      size={Math.round(12 * transcriptScale)}
-                      strokeWidth={2}
+                      icon={IconDelete}
+                      size={14}
+                      strokeWidth={1.8}
                       aria-hidden={true}
                     />
-                    {s.speaker ?? (s.source === 'you' ? 'You' : 'Speaker')}
-                  </span>
-                  <span
-                    className="leading-[1.55] text-fg"
-                    style={{ fontSize: `${14 * transcriptScale}px` }}
-                  >
-                    {find ? highlightText(s.text, findQuery) : s.text}
-                  </span>
-                  {s.translation ? (
-                    <span
-                      className="mt-0.5 border-l-2 border-[rgba(255,192,77,0.55)] pl-2 text-[#ffc04d]"
-                      style={{ fontSize: `${13 * transcriptScale}px` }}
-                    >
-                      {find ? highlightText(s.translation, findQuery) : s.translation}
-                    </span>
-                  ) : tPending.has(i) ? (
-                    <span
-                      className="mt-0.5 border-l-2 border-[rgba(255,192,77,0.35)] pl-2 text-fg-faint italic"
-                      style={{ fontSize: `${13 * transcriptScale}px` }}
-                    >
-                      Translating…
-                    </span>
-                  ) : null}
-                </div>
-              );
-            })}
+                    Delete
+                  </button>
+                )}
+              </div>
+            </div>
+            <div className="mt-2.5 flex flex-wrap items-center gap-x-3.5 gap-y-1 text-[12px] text-fg-faint">
+              <span className="inline-flex items-center gap-1.5">
+                <HugeiconsIcon icon={IconCalendar} size={13} strokeWidth={1.8} aria-hidden={true} />
+                {formatDateTime(session.startedAt)}
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <HugeiconsIcon icon={IconLanguage} size={13} strokeWidth={1.8} aria-hidden={true} />
+                {languageLabel(session.language)}
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <HugeiconsIcon icon={IconLines} size={13} strokeWidth={1.8} aria-hidden={true} />
+                {session.segmentCount} lines
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <HugeiconsIcon
+                  icon={session.systemOnly ? IconSpeaker : IconMic}
+                  size={13}
+                  strokeWidth={1.8}
+                  aria-hidden={true}
+                />
+                {session.systemOnly ? 'System only' : 'System + Microphone'}
+              </span>
+            </div>
           </div>
-        </>
-      )}
 
-      {err && (
-        <p className="mt-4 flex items-start gap-2 rounded-sm border border-[rgba(255,180,84,0.25)] bg-[rgba(255,180,84,0.1)] px-3 py-2 text-[12.5px] text-[#ffb454]">
-          <HugeiconsIcon
-            icon={IconAlert}
-            size={15}
-            strokeWidth={1.8}
-            className="mt-px shrink-0"
-            aria-hidden={true}
-          />
-          <span>{err}</span>
-        </p>
-      )}
+          {segments.length > 0 && (
+            <section className="mb-[22px] rounded-md border border-glass-border bg-[rgba(110,168,254,0.07)] px-[18px] py-4">
+              <div className="mb-2.5 flex items-center justify-between gap-2.5">
+                <h3 className="m-0 inline-flex items-center gap-1.5 text-[12px] tracking-[0.06em] text-accent uppercase">
+                  <HugeiconsIcon icon={IconAi} size={14} strokeWidth={1.8} aria-hidden={true} />
+                  AI Summary
+                </h3>
+                <div className="flex shrink-0 items-center gap-1.5">
+                  <select
+                    className={SELECT_CLS}
+                    value={summaryLang}
+                    onChange={(e) => onSummaryLang(e.target.value)}
+                    disabled={summarizing}
+                    title="Summary output language"
+                    aria-label="Summary output language"
+                  >
+                    {SUMMARY_LANGUAGES.map((l) => (
+                      <option key={l.code} value={l.code}>
+                        {l.label}
+                      </option>
+                    ))}
+                  </select>
+                  {session.summary && (
+                    <button
+                      className="inline-flex cursor-pointer items-center gap-1.5 rounded-sm border border-[rgba(255,255,255,0.25)] bg-[rgba(255,255,255,0.08)] px-[11px] py-1.5 text-[12.5px] font-medium whitespace-nowrap text-fg-dim shadow-liquid enabled:hover:bg-hover disabled:cursor-default disabled:opacity-60"
+                      onClick={() => void doSummarize()}
+                      disabled={summarizing}
+                    >
+                      {summarizing ? (
+                        'Processing…'
+                      ) : (
+                        <>
+                          <HugeiconsIcon
+                            icon={IconRegenerate}
+                            size={14}
+                            strokeWidth={1.8}
+                            aria-hidden={true}
+                          />
+                          Regenerate
+                        </>
+                      )}
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {session.summary ? (
+                <>
+                  <SummaryView text={session.summary} />
+                  {session.summarizedAt && (
+                    <p className="mt-2.5 text-[11px] text-fg-faint">
+                      Created {formatDateTime(session.summarizedAt)}
+                      {session.summaryModel ? ` · ${session.summaryModel}` : ''}
+                    </p>
+                  )}
+                </>
+              ) : (
+                <div className="flex flex-col items-start gap-3">
+                  <p className="m-0 text-[13px] leading-[1.5] text-fg-dim">
+                    Finish this transcript by generating an automatic summary — overview, key
+                    points, and action items — using OpenAI.
+                  </p>
+                  <button
+                    className="inline-flex cursor-pointer items-center gap-2 rounded-sm border border-[rgba(255,255,255,0.3)] bg-[rgba(110,168,254,0.24)] px-4 py-[9px] text-[13px] font-semibold whitespace-nowrap text-[#dbe8ff] shadow-liquid enabled:hover:bg-[rgba(110,168,254,0.34)] disabled:cursor-default disabled:opacity-60"
+                    onClick={() => void doSummarize()}
+                    disabled={summarizing}
+                  >
+                    {summarizing ? (
+                      'Generating summary…'
+                    ) : (
+                      <>
+                        <HugeiconsIcon
+                          icon={IconCheck}
+                          size={16}
+                          strokeWidth={1.8}
+                          aria-hidden={true}
+                        />
+                        Finish &amp; Summarize
+                      </>
+                    )}
+                  </button>
+                </div>
+              )}
+            </section>
+          )}
+
+          {segments.length > 0 && (
+            <section className="mb-4 rounded-md border border-glass-border bg-[rgba(255,255,255,0.04)] px-[18px] py-3.5">
+              <h3 className="mb-2.5 inline-flex items-center gap-1.5 text-[12px] tracking-[0.06em] text-fg-faint uppercase">
+                <HugeiconsIcon icon={IconSpeaker} size={14} strokeWidth={1.8} aria-hidden={true} />
+                Speakers
+              </h3>
+              <div className="flex flex-wrap gap-2">
+                {speakers.map((sp, i) => (
+                  <div
+                    key={i}
+                    className="inline-flex items-center gap-2 rounded-full border border-glass-border bg-[rgba(255,255,255,0.06)] py-1 pr-1.5 pl-2.5"
+                  >
+                    {editingSpeaker === i ? (
+                      <input
+                        className="w-[120px] rounded-sm border border-accent bg-[rgba(255,255,255,0.06)] px-1.5 py-0.5 text-[12.5px] text-fg outline-none"
+                        value={speakerDraft}
+                        autoFocus
+                        onChange={(e) => setSpeakerDraft(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') void saveSpeaker(sp);
+                          if (e.key === 'Escape') setEditingSpeaker(null);
+                        }}
+                        onBlur={() => void saveSpeaker(sp)}
+                      />
+                    ) : (
+                      <>
+                        <span
+                          className="inline-block h-2 w-2 shrink-0 rounded-full"
+                          style={{ backgroundColor: speakerColor(sp.source, sp.display) }}
+                          aria-hidden={true}
+                        />
+                        <span className="text-[12.5px] font-medium text-fg">{sp.display}</span>
+                        <span className="text-[11px] text-fg-faint">{sp.count}</span>
+                        <button
+                          className="inline-flex cursor-pointer items-center rounded-full p-1 text-fg-faint hover:bg-hover hover:text-fg"
+                          aria-label={`Rename ${sp.display}`}
+                          onClick={() => {
+                            setSpeakerDraft(sp.display);
+                            setEditingSpeaker(i);
+                          }}
+                        >
+                          <HugeiconsIcon
+                            icon={IconRename}
+                            size={13}
+                            strokeWidth={1.8}
+                            aria-hidden={true}
+                          />
+                        </button>
+                      </>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {segments.length === 0 ? (
+            <div className="flex flex-col items-center gap-2 py-10 text-fg-faint">
+              <HugeiconsIcon
+                icon={IconNoTranscript}
+                size={32}
+                strokeWidth={1.5}
+                aria-hidden={true}
+              />
+              <p className="text-[13px]">No transcript saved for this session.</p>
+            </div>
+          ) : (
+            <>
+              <div className="mb-3 flex items-center justify-between gap-2.5">
+                <h3 className="m-0 inline-flex items-center gap-1.5 text-[12px] tracking-[0.06em] text-fg-faint uppercase">
+                  <HugeiconsIcon
+                    icon={IconLanguage}
+                    size={14}
+                    strokeWidth={1.8}
+                    aria-hidden={true}
+                  />
+                  Transcript
+                </h3>
+                <div className="flex shrink-0 items-center gap-1.5">
+                  <button
+                    className="inline-flex cursor-pointer items-center gap-1.5 rounded-sm border border-[rgba(255,192,77,0.45)] bg-[rgba(255,192,77,0.1)] px-[11px] py-1.5 text-[12.5px] font-medium whitespace-nowrap text-[#ffc04d] shadow-liquid hover:bg-[rgba(255,192,77,0.18)]"
+                    onClick={() => setFindOpen((v) => !v)}
+                    aria-label="Find in transcript"
+                    title="Find in transcript (Ctrl/Cmd+F)"
+                  >
+                    <HugeiconsIcon
+                      icon={IconSearch}
+                      size={14}
+                      strokeWidth={1.8}
+                      aria-hidden={true}
+                    />
+                    Find
+                  </button>
+                  <select
+                    className={SELECT_CLS}
+                    value={targetLanguage}
+                    onChange={(e) => setTargetLanguage(e.target.value)}
+                    disabled={translating}
+                    title="Translate transcript to"
+                    aria-label="Translate transcript to"
+                  >
+                    {TRANSLATE_TARGETS.map((l) => (
+                      <option key={l.code} value={l.code}>
+                        {l.label}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    className="inline-flex cursor-pointer items-center gap-1.5 rounded-sm border border-[rgba(167,139,250,0.5)] bg-[rgba(167,139,250,0.16)] px-[11px] py-1.5 text-[12.5px] font-medium whitespace-nowrap text-[#d6c6ff] shadow-liquid enabled:hover:bg-[rgba(167,139,250,0.26)] disabled:cursor-default disabled:opacity-60"
+                    onClick={() => void doTranslate()}
+                    disabled={translating}
+                  >
+                    {translating ? (
+                      `Translating ${tProgress.done}/${tProgress.total}…`
+                    ) : (
+                      <>
+                        <HugeiconsIcon
+                          icon={IconLanguage}
+                          size={14}
+                          strokeWidth={1.8}
+                          aria-hidden={true}
+                        />
+                        Translate
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+              {findOpen && (
+                <div className="mb-3 flex items-center gap-2 rounded-sm border border-[rgba(255,192,77,0.4)] bg-[rgba(255,192,77,0.08)] px-2.5 py-2">
+                  <HugeiconsIcon
+                    icon={IconSearch}
+                    size={14}
+                    strokeWidth={1.8}
+                    className="shrink-0 text-[#ffc04d]"
+                    aria-hidden={true}
+                  />
+                  <input
+                    ref={findInputRef}
+                    type="text"
+                    value={findQuery}
+                    onChange={(e) => setFindQuery(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') stepMatch(e.shiftKey ? -1 : 1);
+                      if (e.key === 'Escape') setFindOpen(false);
+                    }}
+                    placeholder="Find in transcript…"
+                    className="min-w-0 flex-1 bg-transparent text-[13px] text-fg caret-[#ffc04d] outline-none placeholder:text-fg-faint"
+                  />
+                  <span className="shrink-0 text-[11.5px] text-fg-faint">
+                    {findMatches.length > 0
+                      ? `${findPos + 1}/${findMatches.length}`
+                      : findQuery.trim()
+                        ? 'No matches'
+                        : ''}
+                  </span>
+                  <button
+                    className="cursor-pointer rounded-sm px-1.5 py-0.5 text-[14px] leading-none text-[rgba(255,192,77,0.85)] hover:bg-[rgba(255,192,77,0.18)] hover:text-[#ffc04d] disabled:opacity-40"
+                    onClick={() => stepMatch(-1)}
+                    disabled={findMatches.length === 0}
+                    aria-label="Previous match"
+                  >
+                    ↑
+                  </button>
+                  <button
+                    className="cursor-pointer rounded-sm px-1.5 py-0.5 text-[14px] leading-none text-[rgba(255,192,77,0.85)] hover:bg-[rgba(255,192,77,0.18)] hover:text-[#ffc04d] disabled:opacity-40"
+                    onClick={() => stepMatch(1)}
+                    disabled={findMatches.length === 0}
+                    aria-label="Next match"
+                  >
+                    ↓
+                  </button>
+                  <button
+                    className="cursor-pointer rounded-sm p-1 text-[rgba(255,192,77,0.85)] hover:bg-[rgba(255,192,77,0.18)] hover:text-[#ffc04d]"
+                    onClick={() => setFindOpen(false)}
+                    aria-label="Close find"
+                  >
+                    <HugeiconsIcon icon={IconClose} size={13} strokeWidth={2} aria-hidden={true} />
+                  </button>
+                </div>
+              )}
+              <div ref={transcriptRef} className="flex flex-col gap-3">
+                {segments.map((s, i) => {
+                  const isCurrent = findOpen && findMatches[findPos] === i;
+                  const find = findOpen && findQuery.trim() !== '';
+                  return (
+                    <div
+                      key={i}
+                      data-find-line={i}
+                      className={clsx(
+                        'flex flex-col gap-[3px]',
+                        isCurrent &&
+                          '-mx-2 rounded-sm bg-[rgba(255,192,77,0.14)] px-2 py-1 ring-1 ring-[rgba(255,192,77,0.5)]',
+                      )}
+                    >
+                      <span
+                        className="inline-flex items-center gap-1 font-semibold tracking-[0.02em]"
+                        style={{
+                          fontSize: `${11 * transcriptScale}px`,
+                          color: speakerColor(s.source, s.speaker),
+                        }}
+                      >
+                        <HugeiconsIcon
+                          icon={s.source === 'you' ? IconMic : IconRemote}
+                          size={Math.round(12 * transcriptScale)}
+                          strokeWidth={2}
+                          aria-hidden={true}
+                        />
+                        {s.speaker ?? (s.source === 'you' ? 'You' : 'Speaker')}
+                      </span>
+                      <span
+                        className="leading-[1.55] text-fg"
+                        style={{ fontSize: `${14 * transcriptScale}px` }}
+                      >
+                        {find ? highlightText(s.text, findQuery) : s.text}
+                      </span>
+                      {s.translation ? (
+                        <span
+                          className="mt-0.5 border-l-2 border-[rgba(255,192,77,0.55)] pl-2 text-[#ffc04d]"
+                          style={{ fontSize: `${13 * transcriptScale}px` }}
+                        >
+                          {find ? highlightText(s.translation, findQuery) : s.translation}
+                        </span>
+                      ) : tPending.has(i) ? (
+                        <span
+                          className="mt-0.5 border-l-2 border-[rgba(255,192,77,0.35)] pl-2 text-fg-faint italic"
+                          style={{ fontSize: `${13 * transcriptScale}px` }}
+                        >
+                          Translating…
+                        </span>
+                      ) : null}
+                    </div>
+                  );
+                })}
+              </div>
+            </>
+          )}
+
+          {err && (
+            <p className="mt-4 flex items-start gap-2 rounded-sm border border-[rgba(255,180,84,0.25)] bg-[rgba(255,180,84,0.1)] px-3 py-2 text-[12.5px] text-[#ffb454]">
+              <HugeiconsIcon
+                icon={IconAlert}
+                size={15}
+                strokeWidth={1.8}
+                className="mt-px shrink-0"
+                aria-hidden={true}
+              />
+              <span>{err}</span>
+            </p>
+          )}
+        </div>
+      </div>
+      {segments.length > 0 && <ChatPanel key={sessionId} sessionId={sessionId} />}
     </div>
   );
 }
