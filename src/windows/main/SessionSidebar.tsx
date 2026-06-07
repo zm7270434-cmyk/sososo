@@ -6,6 +6,7 @@ import { listSessions } from '../../lib/ipc';
 import {
   IconAbout,
   IconAdd,
+  IconAi,
   IconHistory,
   IconInbox,
   IconSettings,
@@ -73,7 +74,18 @@ export default function SessionSidebar() {
                 aria-hidden={true}
               />
               <span className="flex min-w-0 flex-col gap-0.5">
-                <span className="truncate text-[13px]">{s.title}</span>
+                <span className="flex items-center gap-1">
+                  <span className="min-w-0 truncate text-[13px]">{s.title}</span>
+                  {s.summary != null && (
+                    <HugeiconsIcon
+                      icon={IconAi}
+                      size={12}
+                      strokeWidth={1.8}
+                      className="shrink-0 text-accent"
+                      aria-label="Summarized"
+                    />
+                  )}
+                </span>
                 <span className="text-[11px] text-fg-faint">
                   {formatDateTime(s.startedAt)} · {s.segmentCount} lines
                 </span>
