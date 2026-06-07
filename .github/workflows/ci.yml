@@ -35,6 +35,12 @@ jobs:
       - name: Prettier check
         run: bun run format:check
 
+      - name: ESLint
+        run: bun run lint
+
+      - name: Frontend tests
+        run: bun test
+
       - name: Setup Rust toolchain
         uses: dtolnay/rust-toolchain@stable
         with:
@@ -62,4 +68,7 @@ jobs:
         run: bun run build
 
       - name: Clippy
-        run: cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets
+        run: cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings
+
+      - name: Rust tests
+        run: cargo test --manifest-path src-tauri/Cargo.toml
