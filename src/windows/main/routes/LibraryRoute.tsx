@@ -123,7 +123,7 @@ export default function LibraryRoute() {
 
   return (
     <div className="flex min-h-full items-center justify-center p-6">
-      <div className="max-w-[440px] text-center text-fg-dim">
+      <div className="max-w-[480px] text-center text-fg-dim">
         <div className="mb-2 flex justify-center text-accent">
           <HugeiconsIcon icon={IconMic} size={46} strokeWidth={1.5} aria-hidden={true} />
         </div>
@@ -147,7 +147,7 @@ export default function LibraryRoute() {
           </>
         ) : (
           <>
-            <div className="mx-auto mb-5 flex max-w-[340px] flex-col gap-3 text-left">
+            <div className="mx-auto mb-5 flex max-w-[440px] flex-col gap-3 text-left">
               <label className="flex flex-col gap-[5px]">
                 <span className="inline-flex items-center gap-1.5 text-[12px] text-fg-faint">
                   <HugeiconsIcon icon={IconRename} size={13} strokeWidth={1.8} aria-hidden={true} />
@@ -179,17 +179,15 @@ export default function LibraryRoute() {
                     </option>
                   ))}
                 </select>
-                <span className="inline-flex items-start gap-1 text-[11px] leading-snug text-fg-faint">
+                <span className="inline-flex items-center gap-1 text-[11px] leading-snug whitespace-nowrap text-fg-faint">
                   <HugeiconsIcon
                     icon={IconAbout}
                     size={12}
                     strokeWidth={1.8}
-                    className="mt-px shrink-0"
+                    className="shrink-0"
                     aria-hidden={true}
                   />
-                  <span>
-                    Tip: picking a specific language (e.g. English) is more accurate than Auto.
-                  </span>
+                  <span>Tip: a specific language (e.g. English) is more accurate than Auto.</span>
                 </span>
               </label>
               <div className="flex flex-col gap-[5px]">

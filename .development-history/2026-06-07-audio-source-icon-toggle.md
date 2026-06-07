@@ -34,4 +34,7 @@ buttons for a clearer, one-tap choice (better UX than a dropdown for a binary pi
   select**: "Tip: picking a specific language (e.g. English) is more accurate than Auto."
 - Removed the duplicate sentence from the bottom helper paragraph (now only describes the
   Pause/Finish behavior) so the same advice isn't shown twice.
+- Widened the Start form so the tip fits on one line: outer wrapper `max-w-[440px]→[480px]`,
+  inner form `max-w-[340px]→[440px]`; the tip uses `whitespace-nowrap` + `items-center` and
+  drops the redundant word "picking" to stay comfortably within one line.
 - Re-verified: `bun run build` pass, `bun test` 33 pass / 0 fail.
