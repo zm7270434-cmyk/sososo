@@ -12,7 +12,7 @@ collapsible mid-page section into an always-visible, **floating** right sidebar
   IPC (`getChatMessages`, `chatSession`, `clearChat`, `getAiProvider`,
   `hasApiKey`) + auto-scroll-to-newest. No open/close toggle (always visible).
   Layout: full-height `flex-col` — header (title + Clear) / scrollable messages /
-  pinned input. Left-border divider + faint accent-2 (purple) tint.
+  pinned input, with `border-b`/`border-t` dividers between the three regions.
 - **`SessionDetailRoute.tsx`** — root is now a positioning context
   (`relative h-full`) holding a single scroll column (content centered
   `max-w-[760px]`). The chat is a sibling `<ChatPanel>` floating above it.
