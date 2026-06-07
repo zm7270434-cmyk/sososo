@@ -417,7 +417,7 @@ export default function SessionDetailRoute() {
               </>
             ) : (
               <button
-                className="inline-flex cursor-pointer items-center gap-1.5 rounded-sm border border-[rgba(255,255,255,0.25)] bg-[rgba(255,255,255,0.08)] px-[11px] py-1.5 text-[12.5px] whitespace-nowrap text-fg-dim shadow-liquid hover:border-[rgba(255,93,93,0.4)] hover:bg-hover hover:text-[#ffb4b4]"
+                className="inline-flex cursor-pointer items-center gap-1.5 rounded-sm border border-[rgba(255,93,93,0.5)] bg-[rgba(255,93,93,0.16)] px-[11px] py-1.5 text-[12.5px] whitespace-nowrap text-[#ffb4b4] shadow-liquid hover:border-[rgba(255,93,93,0.65)] hover:bg-[rgba(255,93,93,0.26)] hover:text-[#ffd9d9]"
                 onClick={() => setConfirmDelete(true)}
               >
                 <HugeiconsIcon icon={IconDelete} size={14} strokeWidth={1.8} aria-hidden={true} />
