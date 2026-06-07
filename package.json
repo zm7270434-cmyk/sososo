@@ -9,6 +9,7 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "test": "bun test",
+    "coverage": "bun test --coverage",
     "lint": "eslint .",
     "tauri": "tauri",
     "format": "prettier --write .",

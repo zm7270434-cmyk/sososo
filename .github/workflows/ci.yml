@@ -72,3 +72,40 @@ jobs:
 
       - name: Rust tests
         run: cargo test --manifest-path src-tauri/Cargo.toml
+
+  audit:
+    name: Security audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      # JS/TS dependency advisories (npm advisory DB).
+      - name: bun audit
+        run: bun audit
+
+      - name: Install cargo-audit
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-audit
+
+      # Rust dependency advisories (RustSec). RUSTSEC-2024-0429 (glib VariantStrIter
+      # unsoundness) is ignored: glib 0.18 is pinned transitively by gtk 0.18 ←
+      # tauri 2.11, so no fixed release is reachable until Tauri bumps its GTK stack,
+      # and the affected iterator is not used by this app. Revisit on the next Tauri bump.
+      - name: cargo audit
+        run: cargo audit --file src-tauri/Cargo.lock --ignore RUSTSEC-2024-0429
+
+  commitlint:
+    name: Commit lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: wagoid/commitlint-github-action@v6
