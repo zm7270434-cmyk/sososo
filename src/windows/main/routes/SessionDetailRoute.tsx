@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { HugeiconsIcon } from '@hugeicons/react';
 import {
   IconAi,
@@ -19,8 +19,10 @@ import {
 } from '../../../lib/icons';
 import {
   deleteSession,
+  getAiProvider,
   getSession,
   getSummaryLanguage,
+  hasApiKey,
   renameSession,
   renameSpeaker,
   setSummaryLanguage,
@@ -48,11 +50,13 @@ export default function SessionDetailRoute() {
   const { id } = useParams();
   const sessionId = Number(id);
   const navigate = useNavigate();
+  const location = useLocation();
   const refreshLibrary = useLibraryStore((s) => s.refresh);
   const transcriptScale = useConfigStore((s) => s.transcriptScale);
   // Reuse the live-translate target language so it stays consistent (persisted).
   const targetLanguage = useConfigStore((s) => s.targetLanguage);
   const setTargetLanguage = useConfigStore((s) => s.setTargetLanguage);
+  const autoSummarizeOnFinish = useConfigStore((s) => s.autoSummarizeOnFinish);
 
   const [detail, setDetail] = useState<SessionDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -70,6 +74,8 @@ export default function SessionDetailRoute() {
   const [tProgress, setTProgress] = useState({ done: 0, total: 0 });
   const [tPending, setTPending] = useState<Set<number>>(new Set());
   const [err, setErr] = useState('');
+  // Guards the one-shot auto-summarize on finish; reset per session in the loader.
+  const autoSummarizeTried = useRef(false);
 
   const speakers = useMemo(() => distinctSpeakers(detail?.segments ?? []), [detail]);
 
@@ -84,6 +90,7 @@ export default function SessionDetailRoute() {
     setTProgress({ done: 0, total: 0 });
     setTPending(new Set());
     setErr('');
+    autoSummarizeTried.current = false;
     getSession(sessionId)
       .then((d) => {
         if (!alive) return;
@@ -167,6 +174,27 @@ export default function SessionDetailRoute() {
       setSummarizing(false);
     }
   }
+
+  // Auto-summarize once when arriving straight from a just-finished recording
+  // (MainApp passes `state.autoSummarize`), when enabled and the active provider's
+  // key is set. Opening an old session from history carries no such state, so it
+  // won't fire there; a missing key is skipped silently (manual button stays).
+  useEffect(() => {
+    if (autoSummarizeTried.current) return;
+    const wantsAuto =
+      (location.state as { autoSummarize?: boolean } | null)?.autoSummarize === true;
+    if (!wantsAuto || !autoSummarizeOnFinish) return;
+    if (loading || !detail || detail.session.summary || detail.segments.length === 0) return;
+    autoSummarizeTried.current = true;
+    void (async () => {
+      try {
+        if (await hasApiKey(await getAiProvider())) await doSummarize();
+      } catch {
+        /* ignore — the manual "Finish & Summarize" button remains available */
+      }
+    })();
+    // doSummarize is read fresh from the closure; the ref keeps this one-shot.
+  }, [loading, detail, autoSummarizeOnFinish, location.state]);
 
   function onSummaryLang(code: string) {
     setSummaryLang(code);

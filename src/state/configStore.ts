@@ -25,6 +25,9 @@ interface ConfigStore {
   /** Target language code for live translation (display name resolved via
    *  `lib/languages.ts`). Default "en". */
   targetLanguage: LanguageCode;
+  /** Auto-generate an AI summary when a recording finishes (only if the active
+   *  provider's API key is set). Default on. */
+  autoSummarizeOnFinish: boolean;
   setLanguage: (l: LanguageCode) => void;
   setSystemOnly: (s: boolean) => void;
   setInputDevice: (id: string | null) => void;
@@ -34,6 +37,7 @@ interface ConfigStore {
   setGlassOpacity: (v: number) => void;
   setTranslateEnabled: (v: boolean) => void;
   setTargetLanguage: (l: LanguageCode) => void;
+  setAutoSummarizeOnFinish: (v: boolean) => void;
 }
 
 /** Bounds for the appearance sliders, also used to clamp persisted values. */
@@ -56,6 +60,7 @@ export const useConfigStore = create<ConfigStore>()(
       glassOpacity: 0.58,
       translateEnabled: false,
       targetLanguage: 'en',
+      autoSummarizeOnFinish: true,
       setLanguage: (language) => set({ language }),
       setSystemOnly: (systemOnly) => set({ systemOnly }),
       setInputDevice: (inputDevice) => set({ inputDevice }),
@@ -65,6 +70,7 @@ export const useConfigStore = create<ConfigStore>()(
       setGlassOpacity: (glassOpacity) => set({ glassOpacity }),
       setTranslateEnabled: (translateEnabled) => set({ translateEnabled }),
       setTargetLanguage: (targetLanguage) => set({ targetLanguage }),
+      setAutoSummarizeOnFinish: (autoSummarizeOnFinish) => set({ autoSummarizeOnFinish }),
     }),
     {
       name: 'sososo-config',
@@ -76,6 +82,7 @@ export const useConfigStore = create<ConfigStore>()(
         glassOpacity: s.glassOpacity,
         translateEnabled: s.translateEnabled,
         targetLanguage: s.targetLanguage,
+        autoSummarizeOnFinish: s.autoSummarizeOnFinish,
       }),
     },
   ),

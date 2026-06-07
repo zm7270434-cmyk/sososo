@@ -78,6 +78,8 @@ export default function SettingsRoute() {
   const setUiScale = useConfigStore((s) => s.setUiScale);
   const setTranscriptScale = useConfigStore((s) => s.setTranscriptScale);
   const setGlassOpacity = useConfigStore((s) => s.setGlassOpacity);
+  const autoSummarizeOnFinish = useConfigStore((s) => s.autoSummarizeOnFinish);
+  const setAutoSummarizeOnFinish = useConfigStore((s) => s.setAutoSummarizeOnFinish);
 
   useEffect(() => {
     listDevices()
@@ -294,6 +296,21 @@ export default function SettingsRoute() {
           </select>
           <span className="text-[11.5px] leading-[1.4] text-fg-faint">
             Powers AI session summaries and live translation. Set the matching API key above.
+          </span>
+        </label>
+        <label className="mb-3.5 flex cursor-pointer items-start gap-2.5">
+          <input
+            type="checkbox"
+            className="mt-0.5 h-4 w-4 shrink-0 cursor-pointer accent-[#6ea8fe]"
+            checked={autoSummarizeOnFinish}
+            onChange={(e) => setAutoSummarizeOnFinish(e.target.checked)}
+          />
+          <span className="flex flex-col gap-0.5">
+            <span className={FIELD_LABEL}>Auto-summarize when a recording finishes</span>
+            <span className="text-[11.5px] leading-[1.4] text-fg-faint">
+              Generates the AI summary automatically as soon as a recording ends, using the active
+              provider above. Needs that provider&apos;s API key — otherwise it&apos;s skipped.
+            </span>
           </span>
         </label>
         <p className="mt-2 text-[12px] leading-[1.5] text-fg-faint">

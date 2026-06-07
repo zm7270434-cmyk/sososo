@@ -33,7 +33,13 @@ export default function MainApp() {
   useEffect(() => {
     if (prev.current !== 'stopped' && state === 'stopped') {
       const hasFinal = useTranscriptStore.getState().segments.some((s) => s.isFinal);
-      navigate(hasFinal && sessionId != null ? `/main/session/${sessionId}` : '/main');
+      if (hasFinal && sessionId != null) {
+        // Mark the "just finished" path so the detail view can auto-summarize
+        // (opening an old session from history carries no such state).
+        navigate(`/main/session/${sessionId}`, { state: { autoSummarize: true } });
+      } else {
+        navigate('/main');
+      }
     }
     prev.current = state;
   }, [state, sessionId, navigate]);
