@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-06-07
+
+### Changed
+
+- Documentation: the README now documents **Google Gemini** as a selectable AI
+  provider alongside OpenAI (for both session summaries and live translation),
+  with provider-selection and key-setup steps and a Google AI Studio key link.
+  Added a developer/architecture reference under `docs/`.
+
+> No application code changed since 0.3.0 — Gemini support shipped in 0.3.0; this
+> release brings the user-facing docs in line with it.
+
 ## [0.3.0] - 2026-06-06
 
 ### Added
@@ -64,7 +76,8 @@ First public release. **Windows only** — macOS and Linux are not yet tested.
 - Formatting SOP — Prettier (with Tailwind class sorting) + rustfmt, enforced by
   a Husky pre-commit hook — plus CI and a Windows release workflow.
 
-[unreleased]: https://github.com/yusupsupriyadi/sososo/compare/v0.3.0...HEAD
+[unreleased]: https://github.com/yusupsupriyadi/sososo/compare/v0.3.1...HEAD
+[0.3.1]: https://github.com/yusupsupriyadi/sososo/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/yusupsupriyadi/sososo/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/yusupsupriyadi/sososo/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/yusupsupriyadi/sososo/releases/tag/v0.1.0
