@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { HugeiconsIcon } from '@hugeicons/react';
+import clsx from 'clsx';
 import {
   IconAi,
   IconAlert,
@@ -606,7 +607,7 @@ export default function SessionDetailRoute() {
             </h3>
             <div className="flex shrink-0 items-center gap-1.5">
               <button
-                className="inline-flex cursor-pointer items-center gap-1.5 rounded-sm border border-[rgba(255,255,255,0.25)] bg-[rgba(255,255,255,0.08)] px-[11px] py-1.5 text-[12.5px] font-medium whitespace-nowrap text-fg-dim shadow-liquid hover:bg-hover hover:text-fg"
+                className="inline-flex cursor-pointer items-center gap-1.5 rounded-sm border border-[rgba(255,192,77,0.45)] bg-[rgba(255,192,77,0.1)] px-[11px] py-1.5 text-[12.5px] font-medium whitespace-nowrap text-[#ffc04d] shadow-liquid hover:bg-[rgba(255,192,77,0.18)]"
                 onClick={() => setFindOpen((v) => !v)}
                 aria-label="Find in transcript"
                 title="Find in transcript (Ctrl/Cmd+F)"
@@ -650,12 +651,12 @@ export default function SessionDetailRoute() {
             </div>
           </div>
           {findOpen && (
-            <div className="mb-3 flex items-center gap-2 rounded-sm border border-glass-border bg-[rgba(255,255,255,0.05)] px-2.5 py-2">
+            <div className="mb-3 flex items-center gap-2 rounded-sm border border-[rgba(255,192,77,0.4)] bg-[rgba(255,192,77,0.08)] px-2.5 py-2">
               <HugeiconsIcon
                 icon={IconSearch}
                 size={14}
                 strokeWidth={1.8}
-                className="shrink-0 text-fg-faint"
+                className="shrink-0 text-[#ffc04d]"
                 aria-hidden={true}
               />
               <input
@@ -668,7 +669,7 @@ export default function SessionDetailRoute() {
                   if (e.key === 'Escape') setFindOpen(false);
                 }}
                 placeholder="Find in transcript…"
-                className="min-w-0 flex-1 bg-transparent text-[13px] text-fg outline-none placeholder:text-fg-faint"
+                className="min-w-0 flex-1 bg-transparent text-[13px] text-fg caret-[#ffc04d] outline-none placeholder:text-fg-faint"
               />
               <span className="shrink-0 text-[11.5px] text-fg-faint">
                 {findMatches.length > 0
@@ -678,7 +679,7 @@ export default function SessionDetailRoute() {
                     : ''}
               </span>
               <button
-                className="cursor-pointer rounded-sm px-1.5 py-0.5 text-[14px] leading-none text-fg-faint hover:bg-hover hover:text-fg disabled:opacity-40"
+                className="cursor-pointer rounded-sm px-1.5 py-0.5 text-[14px] leading-none text-[rgba(255,192,77,0.85)] hover:bg-[rgba(255,192,77,0.18)] hover:text-[#ffc04d] disabled:opacity-40"
                 onClick={() => stepMatch(-1)}
                 disabled={findMatches.length === 0}
                 aria-label="Previous match"
@@ -686,7 +687,7 @@ export default function SessionDetailRoute() {
                 ↑
               </button>
               <button
-                className="cursor-pointer rounded-sm px-1.5 py-0.5 text-[14px] leading-none text-fg-faint hover:bg-hover hover:text-fg disabled:opacity-40"
+                className="cursor-pointer rounded-sm px-1.5 py-0.5 text-[14px] leading-none text-[rgba(255,192,77,0.85)] hover:bg-[rgba(255,192,77,0.18)] hover:text-[#ffc04d] disabled:opacity-40"
                 onClick={() => stepMatch(1)}
                 disabled={findMatches.length === 0}
                 aria-label="Next match"
@@ -694,7 +695,7 @@ export default function SessionDetailRoute() {
                 ↓
               </button>
               <button
-                className="cursor-pointer rounded-sm p-1 text-fg-faint hover:bg-hover hover:text-fg"
+                className="cursor-pointer rounded-sm p-1 text-[rgba(255,192,77,0.85)] hover:bg-[rgba(255,192,77,0.18)] hover:text-[#ffc04d]"
                 onClick={() => setFindOpen(false)}
                 aria-label="Close find"
               >
@@ -710,11 +711,11 @@ export default function SessionDetailRoute() {
                 <div
                   key={i}
                   data-find-line={i}
-                  className={`flex flex-col gap-[3px]${
-                    isCurrent
-                      ? '-mx-2 rounded-sm bg-[rgba(110,168,254,0.12)] px-2 py-1 ring-1 ring-[rgba(110,168,254,0.45)]'
-                      : ''
-                  }`}
+                  className={clsx(
+                    'flex flex-col gap-[3px]',
+                    isCurrent &&
+                      '-mx-2 rounded-sm bg-[rgba(255,192,77,0.14)] px-2 py-1 ring-1 ring-[rgba(255,192,77,0.5)]',
+                  )}
                 >
                   <span
                     className="inline-flex items-center gap-1 font-semibold tracking-[0.02em]"

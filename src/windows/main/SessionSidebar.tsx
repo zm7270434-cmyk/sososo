@@ -48,8 +48,10 @@ export default function SessionSidebar() {
         to="/main/search"
         className={({ isActive }) =>
           clsx(
-            'mb-0.5 flex cursor-pointer items-center gap-2 rounded-sm border border-glass-border px-2.5 py-[9px] text-left text-[13px] no-underline hover:bg-hover hover:text-fg',
-            isActive ? 'bg-hover text-fg' : 'bg-[rgba(255,255,255,0.04)] text-fg-dim',
+            'mb-0.5 flex cursor-pointer items-center gap-2 rounded-sm border border-[rgba(255,192,77,0.35)] px-2.5 py-[9px] text-left text-[13px] no-underline hover:bg-[rgba(255,192,77,0.14)] hover:text-[#ffc04d]',
+            isActive
+              ? 'bg-[rgba(255,192,77,0.18)] text-[#ffc04d]'
+              : 'bg-[rgba(255,192,77,0.06)] text-[rgba(255,192,77,0.85)]',
           )
         }
       >

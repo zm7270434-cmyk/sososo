@@ -36,7 +36,7 @@ export default function SearchRoute() {
 
   return (
     <div className="mx-auto max-w-[760px] px-7 py-6">
-      <h2 className="mb-4 inline-flex items-center gap-2 text-[20px] font-semibold text-fg">
+      <h2 className="mb-4 inline-flex items-center gap-2 text-[20px] font-semibold text-[#ffc04d]">
         <HugeiconsIcon icon={IconSearch} size={20} strokeWidth={1.8} aria-hidden={true} />
         Search transcripts
       </h2>
@@ -55,10 +55,12 @@ export default function SearchRoute() {
             <button
               key={h.sessionId}
               onClick={() => navigate(`/main/session/${h.sessionId}`)}
-              className="flex cursor-pointer flex-col gap-1 rounded-md border border-glass-border bg-[rgba(255,255,255,0.04)] px-4 py-3 text-left transition-colors duration-[120ms] hover:bg-hover"
+              className="flex cursor-pointer flex-col gap-1 rounded-md border border-[rgba(255,192,77,0.35)] bg-[rgba(255,192,77,0.06)] px-4 py-3 text-left transition-colors duration-[120ms] hover:bg-[rgba(255,192,77,0.12)]"
             >
               <span className="flex items-center justify-between gap-3">
-                <span className="min-w-0 truncate text-[14px] font-medium text-fg">{h.title}</span>
+                <span className="min-w-0 truncate text-[14px] font-medium text-[#ffc04d]">
+                  {h.title}
+                </span>
                 <span className="shrink-0 text-[11px] text-fg-faint">
                   {h.matchCount} {h.matchCount === 1 ? 'match' : 'matches'}
                 </span>
@@ -96,7 +98,7 @@ function renderSnippet(snippet: string): ReactNode {
   while ((m = re.exec(snippet)) !== null) {
     if (m.index > last) out.push(snippet.slice(last, m.index));
     out.push(
-      <mark className="rounded-[3px] bg-[rgba(110,168,254,0.32)] px-0.5 text-fg" key={key++}>
+      <mark className="rounded-[3px] bg-[rgba(255,192,77,0.4)] px-0.5 text-fg" key={key++}>
         {m[1]}
       </mark>,
     );
