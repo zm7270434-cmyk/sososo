@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-06-07
+
+### Added
+
+- **In-app auto-update.** The app now checks GitHub Releases for new versions
+  (silently at launch and on demand in Settings → App update), then downloads,
+  installs, and restarts from within the app — no manual installer download
+  needed. Built on the Tauri updater plugin with signed update artifacts.
+
+> Auto-update takes effect from this release onward: updating _to_ 0.6.0 is a
+> one-time manual download (0.5.0 predates the updater); from 0.6.0 onward,
+> updates install in-app.
+
 ## [0.5.0] - 2026-06-07
 
 ### Added
@@ -108,7 +121,8 @@ First public release. **Windows only** — macOS and Linux are not yet tested.
 - Formatting SOP — Prettier (with Tailwind class sorting) + rustfmt, enforced by
   a Husky pre-commit hook — plus CI and a Windows release workflow.
 
-[unreleased]: https://github.com/yusupsupriyadi/sososo/compare/v0.5.0...HEAD
+[unreleased]: https://github.com/yusupsupriyadi/sososo/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/yusupsupriyadi/sososo/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/yusupsupriyadi/sososo/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/yusupsupriyadi/sososo/compare/v0.3.1...v0.4.0
 [0.3.1]: https://github.com/yusupsupriyadi/sososo/compare/v0.3.0...v0.3.1
