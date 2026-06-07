@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-06-07
+
+### Added
+
+- **Linux support.** The app now builds and runs on Linux (PulseAudio or
+  PipeWire). System audio is captured automatically from the default output's
+  **monitor** source — no virtual device or routing needed (unlike macOS), the
+  same zero-setup experience as Windows. Captured via `libpulse`, which converts
+  to the 16 kHz/16-bit/mono transcription format server-side. API keys are stored
+  in the Secret Service (GNOME Keyring / KWallet). Release artifacts: `.deb` /
+  `.AppImage` / `.rpm`.
+
+### Changed
+
+- CI and the release workflow now build on Linux (`ubuntu-latest`) in addition to
+  Windows and macOS.
+
 ## [0.3.1] - 2026-06-07
 
 ### Changed
@@ -76,7 +93,8 @@ First public release. **Windows only** — macOS and Linux are not yet tested.
 - Formatting SOP — Prettier (with Tailwind class sorting) + rustfmt, enforced by
   a Husky pre-commit hook — plus CI and a Windows release workflow.
 
-[unreleased]: https://github.com/yusupsupriyadi/sososo/compare/v0.3.1...HEAD
+[unreleased]: https://github.com/yusupsupriyadi/sososo/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/yusupsupriyadi/sososo/compare/v0.3.1...v0.4.0
 [0.3.1]: https://github.com/yusupsupriyadi/sososo/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/yusupsupriyadi/sososo/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/yusupsupriyadi/sososo/compare/v0.1.0...v0.2.0
