@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.1] - 2026-06-07
+
+### Changed
+
+- **Start screen: "Audio source" is now an icon toggle instead of a dropdown.**
+  The capture mode is chosen with two clearly-labeled icon buttons —
+  **Meeting** (system audio + microphone) and **System only** (video / music) —
+  so picking a mode is a single tap and the active choice is visible at a glance.
+  The microphone and system-audio device pickers stay as dropdowns (their lists
+  are dynamic). The Start form is a little wider to fit the new layout.
+
+### Added
+
+- **Language accuracy tip on the Start screen.** A short hint under the Language
+  selector notes that picking a specific language (e.g. English) is more accurate
+  than Auto-detect.
+
+### Internal
+
+- The release workflow no longer attaches the standalone `.sig` updater-signature
+  files as release assets — the signature is already inlined in `latest.json` (the
+  only thing the in-app updater reads at runtime), so the loose `.sig` files were
+  just clutter on the downloads page. Auto-update is unaffected.
+
 ## [0.7.0] - 2026-06-07
 
 ### Added
@@ -156,7 +180,8 @@ First public release. **Windows only** — macOS and Linux are not yet tested.
 - Formatting SOP — Prettier (with Tailwind class sorting) + rustfmt, enforced by
   a Husky pre-commit hook — plus CI and a Windows release workflow.
 
-[unreleased]: https://github.com/yusupsupriyadi/sososo/compare/v0.7.0...HEAD
+[unreleased]: https://github.com/yusupsupriyadi/sososo/compare/v0.7.1...HEAD
+[0.7.1]: https://github.com/yusupsupriyadi/sososo/compare/v0.7.0...v0.7.1
 [0.7.0]: https://github.com/yusupsupriyadi/sososo/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/yusupsupriyadi/sososo/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/yusupsupriyadi/sososo/compare/v0.4.0...v0.5.0
