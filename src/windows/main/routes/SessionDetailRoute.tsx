@@ -7,7 +7,9 @@ import {
   IconAlert,
   IconBack,
   IconCalendar,
+  IconChat,
   IconCheck,
+  IconChevronDown,
   IconClose,
   IconDelete,
   IconLanguage,
@@ -18,11 +20,15 @@ import {
   IconRemote,
   IconRename,
   IconSearch,
+  IconSend,
   IconSpeaker,
 } from '../../../lib/icons';
 import {
+  chatSession,
+  clearChat,
   deleteSession,
   getAiProvider,
+  getChatMessages,
   getSession,
   getSummaryLanguage,
   hasApiKey,
@@ -37,7 +43,7 @@ import { speakerColor } from '../../../lib/speaker';
 import { languageLabel, SUMMARY_LANGUAGES, TRANSLATE_TARGETS } from '../../../lib/languages';
 import { useLibraryStore } from '../../../state/libraryStore';
 import { useConfigStore } from '../../../state/configStore';
-import type { SessionDetail, Source, StoredSegment } from '../../../types/domain';
+import type { ChatMessage, SessionDetail, Source, StoredSegment } from '../../../types/domain';
 
 const ACTION_BTN =
   'inline-flex items-center gap-1.5 cursor-pointer rounded-sm border border-[rgba(255,255,255,0.25)] bg-[rgba(255,255,255,0.08)] px-[11px] py-1.5 text-[12.5px] text-fg-dim whitespace-nowrap shadow-liquid hover:bg-hover hover:text-fg';
@@ -85,6 +91,16 @@ export default function SessionDetailRoute() {
   const [findPos, setFindPos] = useState(0);
   const findInputRef = useRef<HTMLInputElement>(null);
   const transcriptRef = useRef<HTMLDivElement>(null);
+  // Transcript chat ("ask about this transcript"): persisted per-session history,
+  // a draft message, in-flight flag, the panel's open/closed state, whether an AI
+  // provider key is configured (gates the input), and a chat-scoped error.
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [chatInput, setChatInput] = useState('');
+  const [chatSending, setChatSending] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
+  const [aiReady, setAiReady] = useState(false);
+  const [chatErr, setChatErr] = useState('');
+  const chatScrollRef = useRef<HTMLDivElement>(null);
 
   const speakers = useMemo(() => distinctSpeakers(detail?.segments ?? []), [detail]);
   // Indices of transcript lines matching the find query (text or translation).
@@ -125,6 +141,12 @@ export default function SessionDetailRoute() {
     setTProgress({ done: 0, total: 0 });
     setTPending(new Set());
     setErr('');
+    setChatMessages([]);
+    setChatInput('');
+    setChatSending(false);
+    setChatOpen(false);
+    setChatErr('');
+    setAiReady(false);
     autoSummarizeTried.current = false;
     getSession(sessionId)
       .then((d) => {
@@ -137,6 +159,23 @@ export default function SessionDetailRoute() {
         setErr(String(e));
         setLoading(false);
       });
+    // Load any saved chat history (open the panel if there is some), and check
+    // whether the active AI provider's key is set (gates the chat input).
+    getChatMessages(sessionId)
+      .then((msgs) => {
+        if (!alive) return;
+        setChatMessages(msgs);
+        if (msgs.length > 0) setChatOpen(true);
+      })
+      .catch(() => {});
+    void (async () => {
+      try {
+        const ready = await hasApiKey(await getAiProvider());
+        if (alive) setAiReady(ready);
+      } catch {
+        if (alive) setAiReady(false);
+      }
+    })();
     return () => {
       alive = false;
     };
@@ -149,6 +188,13 @@ export default function SessionDetailRoute() {
       .then(setSummaryLang)
       .catch(() => {});
   }, []);
+
+  // Keep the chat pinned to the newest message as it grows / while thinking.
+  useEffect(() => {
+    if (!chatOpen) return;
+    const el = chatScrollRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  }, [chatMessages, chatSending, chatOpen]);
 
   // Focus the find input when the find bar opens.
   useEffect(() => {
@@ -340,6 +386,39 @@ export default function SessionDetailRoute() {
 
     setTranslating(false);
     if (failed > 0) setErr(`${failed} line(s) failed to translate — try again.`);
+  }
+
+  // Send a chat question about this transcript. Optimistically shows the user's
+  // message, then swaps the placeholder for the two persisted turns the backend
+  // returns (`[user, assistant]`). On failure the draft text is restored.
+  async function sendChat() {
+    const q = chatInput.trim();
+    if (!q || chatSending || !aiReady) return;
+    setChatErr('');
+    setChatInput('');
+    setChatSending(true);
+    const tempId = -Date.now();
+    setChatMessages((m) => [...m, { id: tempId, role: 'user', content: q, createdAt: '' }]);
+    try {
+      const added = await chatSession(sessionId, q);
+      setChatMessages((m) => [...m.filter((x) => x.id !== tempId), ...added]);
+    } catch (e) {
+      setChatMessages((m) => m.filter((x) => x.id !== tempId));
+      setChatInput(q);
+      setChatErr(String(e));
+    } finally {
+      setChatSending(false);
+    }
+  }
+
+  async function clearChatHistory() {
+    try {
+      await clearChat(sessionId);
+      setChatMessages([]);
+      setChatErr('');
+    } catch (e) {
+      setChatErr(String(e));
+    }
   }
 
   if (loading) {
@@ -534,6 +613,108 @@ export default function SessionDetailRoute() {
               </button>
             </div>
           )}
+        </section>
+      )}
+
+      {segments.length > 0 && (
+        <section className="mb-[22px] rounded-md border border-glass-border bg-[rgba(167,139,250,0.07)] px-[18px] py-4">
+          <div className="flex items-center justify-between gap-2.5">
+            <button
+              className="inline-flex cursor-pointer items-center gap-1.5 text-[12px] tracking-[0.06em] text-accent-2 uppercase"
+              onClick={() => setChatOpen((v) => !v)}
+              aria-expanded={chatOpen}
+            >
+              <HugeiconsIcon icon={IconChat} size={14} strokeWidth={1.8} aria-hidden={true} />
+              Ask about this transcript
+              <HugeiconsIcon
+                icon={IconChevronDown}
+                size={13}
+                strokeWidth={2}
+                className={clsx('transition-transform', chatOpen && 'rotate-180')}
+                aria-hidden={true}
+              />
+            </button>
+            {chatOpen && aiReady && chatMessages.length > 0 && (
+              <button
+                className="inline-flex shrink-0 cursor-pointer items-center gap-1.5 rounded-sm border border-[rgba(255,255,255,0.2)] bg-[rgba(255,255,255,0.06)] px-2.5 py-1 text-[11.5px] text-fg-faint shadow-liquid hover:bg-hover hover:text-fg-dim"
+                onClick={() => void clearChatHistory()}
+                title="Clear chat history"
+              >
+                <HugeiconsIcon icon={IconDelete} size={12} strokeWidth={1.8} aria-hidden={true} />
+                Clear
+              </button>
+            )}
+          </div>
+
+          {chatOpen &&
+            (!aiReady ? (
+              <p className="mt-3 text-[13px] leading-[1.5] text-fg-dim">
+                Set an OpenAI or Gemini API key in{' '}
+                <Link to="/main/settings" className="text-accent-2 underline">
+                  Settings
+                </Link>{' '}
+                to chat about this transcript.
+              </p>
+            ) : (
+              <div className="mt-3">
+                {chatMessages.length > 0 || chatSending ? (
+                  <div
+                    ref={chatScrollRef}
+                    className="mb-3 flex max-h-[360px] flex-col gap-2.5 overflow-y-auto pr-1"
+                  >
+                    {chatMessages.map((m) => (
+                      <ChatBubble key={m.id} msg={m} />
+                    ))}
+                    {chatSending && (
+                      <div className="max-w-[85%] self-start rounded-lg rounded-bl-sm border border-glass-border bg-[rgba(255,255,255,0.06)] px-3 py-2 text-[13px] text-fg-faint italic">
+                        Thinking…
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <p className="mb-3 text-[13px] leading-[1.5] text-fg-dim">
+                    Ask anything about this transcript — e.g. “What were the main decisions?” or
+                    “What did each speaker focus on?”
+                  </p>
+                )}
+                <div className="flex items-end gap-2">
+                  <textarea
+                    value={chatInput}
+                    onChange={(e) => setChatInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        void sendChat();
+                      }
+                    }}
+                    rows={1}
+                    placeholder="Ask about this transcript…"
+                    disabled={chatSending}
+                    className="max-h-[120px] min-h-[38px] flex-1 resize-y rounded-sm border border-glass-border bg-[rgba(255,255,255,0.06)] px-3 py-2 text-[13px] leading-[1.5] text-fg caret-[#b794f6] outline-none placeholder:text-fg-faint focus:border-accent-2 disabled:opacity-60"
+                  />
+                  <button
+                    className="inline-flex h-[38px] shrink-0 cursor-pointer items-center gap-1.5 rounded-sm border border-[rgba(167,139,250,0.5)] bg-[rgba(167,139,250,0.16)] px-3.5 text-[13px] font-medium whitespace-nowrap text-[#d6c6ff] shadow-liquid enabled:hover:bg-[rgba(167,139,250,0.26)] disabled:cursor-default disabled:opacity-50"
+                    onClick={() => void sendChat()}
+                    disabled={chatSending || !chatInput.trim()}
+                  >
+                    <HugeiconsIcon icon={IconSend} size={15} strokeWidth={1.8} aria-hidden={true} />
+                    Send
+                  </button>
+                </div>
+                {chatErr && (
+                  <p className="mt-2.5 flex items-start gap-2 rounded-sm border border-[rgba(255,180,84,0.25)] bg-[rgba(255,180,84,0.1)] px-3 py-2 text-[12.5px] text-[#ffb454]">
+                    <HugeiconsIcon
+                      icon={IconAlert}
+                      size={15}
+                      strokeWidth={1.8}
+                      className="mt-px shrink-0"
+                      aria-hidden={true}
+                    />
+                    <span>{chatErr}</span>
+                  </p>
+                )}
+              </div>
+            ))}
         </section>
       )}
 
@@ -862,6 +1043,23 @@ function SummaryView({ text }: { text: string }) {
   flushList('lend');
 
   return <div className="flex flex-col gap-1.5">{nodes}</div>;
+}
+
+/** One chat turn: the user's question (right, blue) shown as plain text, or the
+ *  assistant's reply (left, neutral) rendered through the shared Markdown view. */
+function ChatBubble({ msg }: { msg: ChatMessage }) {
+  if (msg.role === 'user') {
+    return (
+      <div className="max-w-[85%] self-end rounded-lg rounded-br-sm border border-[rgba(110,168,254,0.35)] bg-[rgba(110,168,254,0.18)] px-3 py-2 text-[13px] leading-[1.5] whitespace-pre-wrap text-fg">
+        {msg.content}
+      </div>
+    );
+  }
+  return (
+    <div className="max-w-[92%] self-start rounded-lg rounded-bl-sm border border-glass-border bg-[rgba(255,255,255,0.05)] px-3.5 py-2.5">
+      <SummaryView text={msg.content} />
+    </div>
+  );
 }
 
 /** Render inline Markdown emphasis: **bold**, *italic* / _italic_, `code`. */

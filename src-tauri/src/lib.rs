@@ -40,6 +40,9 @@ pub fn run() {
             commands::set_ai_provider,
             commands::summarize_session,
             commands::translate_segment,
+            commands::get_chat_messages,
+            commands::chat_session,
+            commands::clear_chat,
         ])
         .setup(|app| {
             // Open (creating if needed) the SQLite history database in the app

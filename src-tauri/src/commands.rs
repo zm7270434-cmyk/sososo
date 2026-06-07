@@ -6,7 +6,7 @@ use tauri::{AppHandle, State};
 use tokio_util::sync::CancellationToken;
 
 use crate::audio::devices::{self, DeviceInfo};
-use crate::db::{Db, SearchHit, SessionDetail, SessionSummary};
+use crate::db::{ChatMessage, Db, SearchHit, SessionDetail, SessionSummary};
 use crate::error::{AppError, AppResult};
 use crate::state::{ActiveSession, AppState};
 use crate::{ai, keys, session};
@@ -350,4 +350,79 @@ pub async fn translate_segment(
     let translated = ai::translate(provider, &key, &text, &target_lang).await?;
     db.save_translation(session_id, &segment_id, &translated, &target_lang)?;
     Ok(translated)
+}
+
+// --- Transcript chat (active AI provider) ---
+
+/// How many of the most recent chat turns to send to the model per request. The
+/// full transcript is always sent as context, so older turns are dropped first to
+/// keep the prompt bounded.
+const CHAT_HISTORY_LIMIT: usize = 20;
+
+/// All stored chat turns for a session (oldest first), for rendering the panel.
+#[tauri::command]
+pub fn get_chat_messages(db: State<'_, Db>, session_id: i64) -> AppResult<Vec<ChatMessage>> {
+    db.get_chat_messages(session_id)
+}
+
+/// Delete a session's entire chat history.
+#[tauri::command]
+pub fn clear_chat(db: State<'_, Db>, session_id: i64) -> AppResult<()> {
+    db.clear_chat_messages(session_id)
+}
+
+/// Ask a question about a session's transcript via the active AI provider (OpenAI
+/// or Gemini) and persist the exchange. Returns the two newly stored turns
+/// `[user, assistant]`. Requires the active provider's API key (Settings) and a
+/// non-empty transcript.
+///
+/// Like `summarize_session`, the DB mutex is only held for the synchronous
+/// read/write steps — never across the network `await` — so the future stays
+/// `Send`. Rows are written only after the AI call succeeds, so a failed turn
+/// leaves no orphan question in the history.
+#[tauri::command]
+pub async fn chat_session(
+    db: State<'_, Db>,
+    id: i64,
+    message: String,
+) -> AppResult<Vec<ChatMessage>> {
+    let trimmed = message.trim();
+    if trimmed.is_empty() {
+        return Err(AppError::Ai("message is empty".into()));
+    }
+
+    let detail = db
+        .get_session(id)?
+        .ok_or_else(|| AppError::Session("session not found".into()))?;
+    if detail.segments.is_empty() {
+        return Err(AppError::Session("no transcript to chat about yet".into()));
+    }
+
+    let (provider, key) = resolve_ai_provider(&db)?;
+
+    // Send only the most recent turns (older ones dropped first) to bound tokens.
+    let stored = db.get_chat_messages(id)?;
+    let start = stored.len().saturating_sub(CHAT_HISTORY_LIMIT);
+    let history: Vec<ai::ChatTurn> = stored[start..]
+        .iter()
+        .map(|m| ai::ChatTurn {
+            role: m.role.clone(),
+            content: m.content.clone(),
+        })
+        .collect();
+
+    let (reply, model) = ai::chat_about_transcript(
+        provider,
+        &key,
+        &detail.session.title,
+        &detail.segments,
+        &history,
+        trimmed,
+    )
+    .await?;
+
+    let at = chrono::Utc::now().to_rfc3339();
+    let user_msg = db.add_chat_message(id, "user", trimmed, None, &at)?;
+    let assistant_msg = db.add_chat_message(id, "assistant", &reply, Some(&model), &at)?;
+    Ok(vec![user_msg, assistant_msg])
 }

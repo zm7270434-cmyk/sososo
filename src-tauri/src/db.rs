@@ -53,6 +53,20 @@ CREATE TABLE IF NOT EXISTS app_settings (
     value TEXT NOT NULL
 );
 
+-- Chat (ask-about-this-transcript) history, one row per turn, scoped to a
+-- session. `model` is the AI model name for assistant rows (NULL for the user's
+-- questions). Rows cascade-delete with their session.
+CREATE TABLE IF NOT EXISTS chat_messages (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    session_id  INTEGER NOT NULL REFERENCES sessions(id) ON DELETE CASCADE,
+    role        TEXT    NOT NULL,
+    content     TEXT    NOT NULL,
+    model       TEXT,
+    created_at  TEXT    NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_chat_messages_session ON chat_messages(session_id, id);
+
 -- Full-text index over transcript text (FTS5, external-content = `segments`), so
 -- the library can search across every transcript. Triggers keep it in sync; the
 -- AFTER UPDATE one only re-indexes when `text` actually changes (rename-speaker
@@ -132,6 +146,19 @@ pub struct SearchHit {
     /// Excerpt of the best-matching line with matched terms wrapped in `[`…`]`.
     pub snippet: String,
     pub match_count: i64,
+}
+
+/// One turn of the per-session transcript chat. `role` is `"user"` or
+/// `"assistant"`; `model` is the AI model that produced an assistant reply
+/// (`None` for the user's questions).
+#[derive(Serialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct ChatMessage {
+    pub id: i64,
+    pub role: String,
+    pub content: String,
+    pub model: Option<String>,
+    pub created_at: String,
 }
 
 /// Tauri-managed handle to the SQLite database.
@@ -447,6 +474,63 @@ impl Db {
             "INSERT INTO app_settings (key, value) VALUES (?1, ?2) \
              ON CONFLICT(key) DO UPDATE SET value = excluded.value",
             rusqlite::params![key, value],
+        )?;
+        Ok(())
+    }
+
+    /// All chat turns for a session, oldest first (insertion order).
+    pub fn get_chat_messages(&self, session_id: i64) -> AppResult<Vec<ChatMessage>> {
+        let conn = self.0.lock().unwrap();
+        let mut stmt = conn.prepare(
+            "SELECT id, role, content, model, created_at FROM chat_messages \
+             WHERE session_id = ?1 ORDER BY id",
+        )?;
+        let rows = stmt.query_map([session_id], |row| {
+            Ok(ChatMessage {
+                id: row.get(0)?,
+                role: row.get(1)?,
+                content: row.get(2)?,
+                model: row.get(3)?,
+                created_at: row.get(4)?,
+            })
+        })?;
+        let mut out = Vec::new();
+        for r in rows {
+            out.push(r?);
+        }
+        Ok(out)
+    }
+
+    /// Append one chat turn and return the persisted row (with its new id).
+    pub fn add_chat_message(
+        &self,
+        session_id: i64,
+        role: &str,
+        content: &str,
+        model: Option<&str>,
+        created_at: &str,
+    ) -> AppResult<ChatMessage> {
+        let conn = self.0.lock().unwrap();
+        conn.execute(
+            "INSERT INTO chat_messages (session_id, role, content, model, created_at) \
+             VALUES (?1, ?2, ?3, ?4, ?5)",
+            rusqlite::params![session_id, role, content, model, created_at],
+        )?;
+        Ok(ChatMessage {
+            id: conn.last_insert_rowid(),
+            role: role.to_string(),
+            content: content.to_string(),
+            model: model.map(str::to_string),
+            created_at: created_at.to_string(),
+        })
+    }
+
+    /// Delete all chat turns for a session.
+    pub fn clear_chat_messages(&self, session_id: i64) -> AppResult<()> {
+        let conn = self.0.lock().unwrap();
+        conn.execute(
+            "DELETE FROM chat_messages WHERE session_id = ?1",
+            [session_id],
         )?;
         Ok(())
     }

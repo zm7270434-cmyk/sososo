@@ -46,6 +46,9 @@ export {
   Key01Icon as IconKey,
   TextFontIcon as IconAppearance,
   SparklesIcon as IconAi,
+  BubbleChatIcon as IconChat,
+  Sent02Icon as IconSend,
+  ArrowDown01Icon as IconChevronDown,
   // People
   UserMultiple02Icon as IconRemote,
   // Empty / error states

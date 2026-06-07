@@ -2,6 +2,7 @@ import { invoke } from '@tauri-apps/api/core';
 import type {
   AiProvider,
   ApiService,
+  ChatMessage,
   DeviceLists,
   SearchHit,
   SessionDetail,
@@ -96,3 +97,17 @@ export const translateSegment = (
   text: string,
   targetLang: string,
 ): Promise<string> => invoke('translate_segment', { sessionId, segmentId, text, targetLang });
+
+// --- Transcript chat ---
+
+/** All stored chat turns for a session (oldest first). */
+export const getChatMessages = (sessionId: number): Promise<ChatMessage[]> =>
+  invoke('get_chat_messages', { sessionId });
+
+/** Ask a question about a session's transcript via the active AI provider; the
+ *  exchange is persisted. Resolves to the two newly stored turns `[user, assistant]`. */
+export const chatSession = (id: number, message: string): Promise<ChatMessage[]> =>
+  invoke('chat_session', { id, message });
+
+/** Delete a session's entire chat history. */
+export const clearChat = (sessionId: number): Promise<void> => invoke('clear_chat', { sessionId });

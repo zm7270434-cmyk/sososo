@@ -93,6 +93,17 @@ export interface SessionDetail {
   segments: StoredSegment[];
 }
 
+/** One turn of the per-session transcript chat. */
+export interface ChatMessage {
+  id: number;
+  role: 'user' | 'assistant';
+  content: string;
+  /** AI model that produced an assistant reply; null for the user's questions. */
+  model?: string | null;
+  /** RFC-3339 timestamp. */
+  createdAt: string;
+}
+
 /** One full-text search result: a matching session with a highlighted snippet. */
 export interface SearchHit {
   sessionId: number;
