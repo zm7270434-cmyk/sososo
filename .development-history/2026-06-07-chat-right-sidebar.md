@@ -1,8 +1,9 @@
-# Transcript chat → right sidebar (session detail)
+# Transcript chat → floating right sidebar (session detail)
 
 **Goal:** Move the per-session "Ask about this transcript" chat out of the inline
-collapsible mid-page section into an always-visible right sidebar on the
-session-detail (transcription result) page.
+collapsible mid-page section into an always-visible, **floating** right sidebar
+(a detached glass card, mirroring the left `SessionSidebar`) on the session-detail
+(transcription result) page.
 
 ## Key changes
 
@@ -12,10 +13,15 @@ session-detail (transcription result) page.
   `hasApiKey`) + auto-scroll-to-newest. No open/close toggle (always visible).
   Layout: full-height `flex-col` — header (title + Clear) / scrollable messages /
   pinned input. Left-border divider + faint accent-2 (purple) tint.
-- **`SessionDetailRoute.tsx`** — restructured root into a 2-column split:
-  `flex h-full` → left scroll column (`flex-1 overflow-y-auto`, content centered
-  `max-w-[760px]`) + `<ChatPanel>` (`w-[340px] shrink-0`) on the right. Chat
-  sidebar renders only when `segments.length > 0`.
+- **`SessionDetailRoute.tsx`** — root is now a positioning context
+  (`relative h-full`) holding a single scroll column (content centered
+  `max-w-[760px]`). The chat is a sibling `<ChatPanel>` floating above it.
+  When a transcript exists the scroll column gets `pr-[368px]` to reserve room
+  on the right so text never slips under the floating card.
+- **Floating treatment** — `ChatPanel` is `absolute top-3 right-3 bottom-3 z-10
+w-[340px]`, `liquid-glass rounded-lg overflow-hidden` + a soft drop shadow, so
+  it hovers as a detached card (gaps on all sides) rather than a flush docked
+  column. Renders only when `segments.length > 0`.
 - Removed the old inline chat `<section>`, all chat state/effects/handlers
   (`sendChat`, `clearChatHistory`, auto-scroll effect, loader chat-resets) and
   now-unused imports (`IconChat`, `IconChevronDown`, `IconSend`, `chatSession`,
@@ -23,7 +29,8 @@ session-detail (transcription result) page.
 
 ## Decisions
 
-- **Always-visible split** (user choice) over a toggle drawer / collapsible dock.
+- **Always-visible floating glass card** (user choice — "melayang kaya sidebar")
+  over a flush docked column / toggle drawer / collapsible dock.
 - **`key={sessionId}`** on `<ChatPanel>` → React remounts it per session, so
   per-session state reset is automatic (avoids synchronous setState-in-effect).
 - Behavior of chat logic itself is unchanged — pure UI relocation + component

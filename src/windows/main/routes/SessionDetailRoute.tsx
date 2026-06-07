@@ -374,8 +374,8 @@ export default function SessionDetailRoute() {
   const { session, segments } = detail;
 
   return (
-    <div className="flex h-full min-h-0">
-      <div className="min-w-0 flex-1 overflow-y-auto">
+    <div className="relative h-full min-h-0">
+      <div className={clsx('h-full overflow-y-auto', segments.length > 0 && 'pr-[368px]')}>
         <div className="mx-auto max-w-[760px] px-7 py-6">
           <div className="mb-5 border-b border-glass-border pb-3.5">
             <div className="flex items-center gap-3">

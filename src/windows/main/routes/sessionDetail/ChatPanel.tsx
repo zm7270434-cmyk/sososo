@@ -89,7 +89,7 @@ export default function ChatPanel({ sessionId }: { sessionId: number }) {
   }
 
   return (
-    <aside className="flex h-full w-[340px] shrink-0 flex-col border-l border-glass-border bg-[rgba(167,139,250,0.06)]">
+    <aside className="liquid-glass absolute top-3 right-3 bottom-3 z-10 flex w-[340px] flex-col overflow-hidden rounded-lg shadow-[0_12px_40px_rgba(0,0,0,0.5)]">
       <div className="flex shrink-0 items-center justify-between gap-2.5 border-b border-glass-border px-4 py-3">
         <h3 className="m-0 inline-flex items-center gap-1.5 text-[12px] tracking-[0.06em] text-accent-2 uppercase">
           <HugeiconsIcon icon={IconChat} size={14} strokeWidth={1.8} aria-hidden={true} />
