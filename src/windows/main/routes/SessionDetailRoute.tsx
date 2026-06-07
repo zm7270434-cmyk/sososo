@@ -7,6 +7,7 @@ import {
   IconBack,
   IconCalendar,
   IconCheck,
+  IconClose,
   IconDelete,
   IconLanguage,
   IconLines,
@@ -15,6 +16,7 @@ import {
   IconRegenerate,
   IconRemote,
   IconRename,
+  IconSearch,
   IconSpeaker,
 } from '../../../lib/icons';
 import {
@@ -76,8 +78,40 @@ export default function SessionDetailRoute() {
   const [err, setErr] = useState('');
   // Guards the one-shot auto-summarize on finish; reset per session in the loader.
   const autoSummarizeTried = useRef(false);
+  // In-transcript find (client-side over the already-loaded segments).
+  const [findOpen, setFindOpen] = useState(false);
+  const [findQuery, setFindQuery] = useState('');
+  const [findPos, setFindPos] = useState(0);
+  const findInputRef = useRef<HTMLInputElement>(null);
+  const transcriptRef = useRef<HTMLDivElement>(null);
 
   const speakers = useMemo(() => distinctSpeakers(detail?.segments ?? []), [detail]);
+  // Indices of transcript lines matching the find query (text or translation).
+  const findMatches = useMemo(() => {
+    const q = findQuery.trim().toLowerCase();
+    if (!q) return [];
+    const out: number[] = [];
+    (detail?.segments ?? []).forEach((s, i) => {
+      if (s.text.toLowerCase().includes(q) || s.translation?.toLowerCase().includes(q)) {
+        out.push(i);
+      }
+    });
+    return out;
+  }, [findQuery, detail]);
+
+  const scrollToMatch = (pos: number) => {
+    const segIdx = findMatches[pos];
+    if (segIdx == null) return;
+    transcriptRef.current
+      ?.querySelector(`[data-find-line="${segIdx}"]`)
+      ?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  };
+  const stepMatch = (delta: number) => {
+    if (findMatches.length === 0) return;
+    const next = (findPos + delta + findMatches.length) % findMatches.length;
+    setFindPos(next);
+    scrollToMatch(next);
+  };
 
   useEffect(() => {
     let alive = true;
@@ -113,6 +147,32 @@ export default function SessionDetailRoute() {
     getSummaryLanguage()
       .then(setSummaryLang)
       .catch(() => {});
+  }, []);
+
+  // Focus the find input when the find bar opens.
+  useEffect(() => {
+    if (findOpen) findInputRef.current?.focus();
+  }, [findOpen]);
+
+  // Reset to the first match and scroll to it whenever the find query changes.
+  useEffect(() => {
+    setFindPos(0);
+    if (findQuery.trim() && findMatches.length > 0) scrollToMatch(0);
+  }, [findQuery]);
+
+  // Ctrl/Cmd+F opens the in-transcript find bar; Escape closes it.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'f') {
+        e.preventDefault();
+        setFindOpen(true);
+        findInputRef.current?.focus();
+      } else if (e.key === 'Escape') {
+        setFindOpen(false);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
   }, []);
 
   async function saveTitle() {
@@ -545,6 +605,15 @@ export default function SessionDetailRoute() {
               Transcript
             </h3>
             <div className="flex shrink-0 items-center gap-1.5">
+              <button
+                className="inline-flex cursor-pointer items-center gap-1.5 rounded-sm border border-[rgba(255,255,255,0.25)] bg-[rgba(255,255,255,0.08)] px-[11px] py-1.5 text-[12.5px] font-medium whitespace-nowrap text-fg-dim shadow-liquid hover:bg-hover hover:text-fg"
+                onClick={() => setFindOpen((v) => !v)}
+                aria-label="Find in transcript"
+                title="Find in transcript (Ctrl/Cmd+F)"
+              >
+                <HugeiconsIcon icon={IconSearch} size={14} strokeWidth={1.8} aria-hidden={true} />
+                Find
+              </button>
               <select
                 className={SELECT_CLS}
                 value={targetLanguage}
@@ -580,47 +649,112 @@ export default function SessionDetailRoute() {
               </button>
             </div>
           </div>
-          <div className="flex flex-col gap-3">
-            {segments.map((s, i) => (
-              <div key={i} className="flex flex-col gap-[3px]">
-                <span
-                  className="inline-flex items-center gap-1 font-semibold tracking-[0.02em]"
-                  style={{
-                    fontSize: `${11 * transcriptScale}px`,
-                    color: speakerColor(s.source, s.speaker),
-                  }}
+          {findOpen && (
+            <div className="mb-3 flex items-center gap-2 rounded-sm border border-glass-border bg-[rgba(255,255,255,0.05)] px-2.5 py-2">
+              <HugeiconsIcon
+                icon={IconSearch}
+                size={14}
+                strokeWidth={1.8}
+                className="shrink-0 text-fg-faint"
+                aria-hidden={true}
+              />
+              <input
+                ref={findInputRef}
+                type="text"
+                value={findQuery}
+                onChange={(e) => setFindQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') stepMatch(e.shiftKey ? -1 : 1);
+                  if (e.key === 'Escape') setFindOpen(false);
+                }}
+                placeholder="Find in transcript…"
+                className="min-w-0 flex-1 bg-transparent text-[13px] text-fg outline-none placeholder:text-fg-faint"
+              />
+              <span className="shrink-0 text-[11.5px] text-fg-faint">
+                {findMatches.length > 0
+                  ? `${findPos + 1}/${findMatches.length}`
+                  : findQuery.trim()
+                    ? 'No matches'
+                    : ''}
+              </span>
+              <button
+                className="cursor-pointer rounded-sm px-1.5 py-0.5 text-[14px] leading-none text-fg-faint hover:bg-hover hover:text-fg disabled:opacity-40"
+                onClick={() => stepMatch(-1)}
+                disabled={findMatches.length === 0}
+                aria-label="Previous match"
+              >
+                ↑
+              </button>
+              <button
+                className="cursor-pointer rounded-sm px-1.5 py-0.5 text-[14px] leading-none text-fg-faint hover:bg-hover hover:text-fg disabled:opacity-40"
+                onClick={() => stepMatch(1)}
+                disabled={findMatches.length === 0}
+                aria-label="Next match"
+              >
+                ↓
+              </button>
+              <button
+                className="cursor-pointer rounded-sm p-1 text-fg-faint hover:bg-hover hover:text-fg"
+                onClick={() => setFindOpen(false)}
+                aria-label="Close find"
+              >
+                <HugeiconsIcon icon={IconClose} size={13} strokeWidth={2} aria-hidden={true} />
+              </button>
+            </div>
+          )}
+          <div ref={transcriptRef} className="flex flex-col gap-3">
+            {segments.map((s, i) => {
+              const isCurrent = findOpen && findMatches[findPos] === i;
+              const find = findOpen && findQuery.trim() !== '';
+              return (
+                <div
+                  key={i}
+                  data-find-line={i}
+                  className={`flex flex-col gap-[3px]${
+                    isCurrent
+                      ? '-mx-2 rounded-sm bg-[rgba(110,168,254,0.12)] px-2 py-1 ring-1 ring-[rgba(110,168,254,0.45)]'
+                      : ''
+                  }`}
                 >
-                  <HugeiconsIcon
-                    icon={s.source === 'you' ? IconMic : IconRemote}
-                    size={Math.round(12 * transcriptScale)}
-                    strokeWidth={2}
-                    aria-hidden={true}
-                  />
-                  {s.speaker ?? (s.source === 'you' ? 'You' : 'Speaker')}
-                </span>
-                <span
-                  className="leading-[1.55] text-fg"
-                  style={{ fontSize: `${14 * transcriptScale}px` }}
-                >
-                  {s.text}
-                </span>
-                {s.translation ? (
                   <span
-                    className="mt-0.5 border-l-2 border-[rgba(255,192,77,0.55)] pl-2 text-[#ffc04d]"
-                    style={{ fontSize: `${13 * transcriptScale}px` }}
+                    className="inline-flex items-center gap-1 font-semibold tracking-[0.02em]"
+                    style={{
+                      fontSize: `${11 * transcriptScale}px`,
+                      color: speakerColor(s.source, s.speaker),
+                    }}
                   >
-                    {s.translation}
+                    <HugeiconsIcon
+                      icon={s.source === 'you' ? IconMic : IconRemote}
+                      size={Math.round(12 * transcriptScale)}
+                      strokeWidth={2}
+                      aria-hidden={true}
+                    />
+                    {s.speaker ?? (s.source === 'you' ? 'You' : 'Speaker')}
                   </span>
-                ) : tPending.has(i) ? (
                   <span
-                    className="mt-0.5 border-l-2 border-[rgba(255,192,77,0.35)] pl-2 text-fg-faint italic"
-                    style={{ fontSize: `${13 * transcriptScale}px` }}
+                    className="leading-[1.55] text-fg"
+                    style={{ fontSize: `${14 * transcriptScale}px` }}
                   >
-                    Translating…
+                    {find ? highlightText(s.text, findQuery) : s.text}
                   </span>
-                ) : null}
-              </div>
-            ))}
+                  {s.translation ? (
+                    <span
+                      className="mt-0.5 border-l-2 border-[rgba(255,192,77,0.55)] pl-2 text-[#ffc04d]"
+                      style={{ fontSize: `${13 * transcriptScale}px` }}
+                    >
+                      {find ? highlightText(s.translation, findQuery) : s.translation}
+                    </span>
+                  ) : tPending.has(i) ? (
+                    <span
+                      className="mt-0.5 border-l-2 border-[rgba(255,192,77,0.35)] pl-2 text-fg-faint italic"
+                      style={{ fontSize: `${13 * transcriptScale}px` }}
+                    >
+                      Translating…
+                    </span>
+                  ) : null}
+                </div>
+              );
+            })}
           </div>
         </>
       )}
@@ -765,6 +899,31 @@ function renderInline(text: string): ReactNode[] {
     last = re.lastIndex;
   }
   if (last < text.length) out.push(text.slice(last));
+  return out;
+}
+
+/** Wrap case-insensitive occurrences of `query` within `text` in a highlight mark. */
+function highlightText(text: string, query: string): ReactNode {
+  const q = query.trim();
+  if (!q) return text;
+  const lower = text.toLowerCase();
+  const lq = q.toLowerCase();
+  let idx = lower.indexOf(lq);
+  if (idx === -1) return text;
+  const out: ReactNode[] = [];
+  let i = 0;
+  let key = 0;
+  while (idx !== -1) {
+    if (idx > i) out.push(text.slice(i, idx));
+    out.push(
+      <mark className="rounded-[2px] bg-[rgba(255,213,79,0.45)] text-fg" key={key++}>
+        {text.slice(idx, idx + q.length)}
+      </mark>,
+    );
+    i = idx + q.length;
+    idx = lower.indexOf(lq, i);
+  }
+  if (i < text.length) out.push(text.slice(i));
   return out;
 }
 
