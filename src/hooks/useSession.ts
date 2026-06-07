@@ -11,10 +11,10 @@ export function useSession() {
 
   const isActive = state === 'recording' || state === 'starting';
 
-  async function start() {
+  async function start(title?: string) {
     patch({ state: 'starting', error: null });
     try {
-      await startSession();
+      await startSession(title);
     } catch (e) {
       patch({ state: 'error', error: String(e) });
     }

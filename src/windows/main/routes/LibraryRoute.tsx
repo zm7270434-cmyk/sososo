@@ -13,6 +13,7 @@ import {
   IconLanguage,
   IconMic,
   IconRecord,
+  IconRename,
   IconSettings,
   IconSpeaker,
   IconWave,
@@ -45,6 +46,7 @@ export default function LibraryRoute() {
   const [keyReady, setKeyReady] = useState<boolean | null>(null);
   const [openaiReady, setOpenaiReady] = useState<boolean | null>(null);
   const [devices, setDeviceLists] = useState<DeviceLists | null>(null);
+  const [title, setTitle] = useState('');
 
   useEffect(() => {
     hasApiKey('deepgram')
@@ -122,6 +124,20 @@ export default function LibraryRoute() {
         ) : (
           <>
             <div className="mx-auto mb-5 flex max-w-[340px] flex-col gap-3 text-left">
+              <label className="flex flex-col gap-[5px]">
+                <span className="inline-flex items-center gap-1.5 text-[12px] text-fg-faint">
+                  <HugeiconsIcon icon={IconRename} size={13} strokeWidth={1.8} aria-hidden={true} />
+                  Session title (optional)
+                </span>
+                <input
+                  type="text"
+                  className="rounded-sm border border-glass-border bg-[rgba(255,255,255,0.05)] px-[11px] py-[9px] text-[13px] text-fg outline-none placeholder:text-fg-faint focus:border-accent"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="e.g. Weekly sync"
+                  maxLength={120}
+                />
+              </label>
               <label className="flex flex-col gap-[5px]">
                 <span className="inline-flex items-center gap-1.5 text-[12px] text-fg-faint">
                   <HugeiconsIcon
@@ -255,7 +271,7 @@ export default function LibraryRoute() {
 
             <button
               className={`${BIG_BTN_BASE} border-[rgba(110,168,254,0.45)] bg-[rgba(110,168,254,0.2)] text-[#dbe8ff] hover:bg-[rgba(110,168,254,0.3)]`}
-              onClick={() => void start()}
+              onClick={() => void start(title)}
               disabled={state === 'starting'}
             >
               <HugeiconsIcon icon={IconRecord} size={17} strokeWidth={1.8} aria-hidden={true} />
