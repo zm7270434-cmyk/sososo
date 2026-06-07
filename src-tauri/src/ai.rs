@@ -486,3 +486,73 @@ pub async fn chat_about_transcript(
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::db::StoredSegment;
+
+    fn seg(source: &str, speaker: Option<&str>, text: &str) -> StoredSegment {
+        StoredSegment {
+            segment_id: "s".into(),
+            source: source.into(),
+            speaker: speaker.map(|s| s.into()),
+            text: text.into(),
+            t_start: 0.0,
+            t_end: None,
+            confidence: None,
+            translation: None,
+            translation_lang: None,
+        }
+    }
+
+    #[test]
+    fn render_transcript_labels_you_and_other_with_optional_speaker() {
+        let segs = [
+            seg("you", None, "hi there"),
+            seg("remote", Some("1"), "hello"),
+            seg("remote", None, "yo"),
+        ];
+        assert_eq!(
+            render_transcript(&segs),
+            "You: hi there\nOther (speaker 1): hello\nOther: yo\n"
+        );
+    }
+
+    #[test]
+    fn render_transcript_skips_blank_lines_and_trims_text() {
+        let segs = [seg("you", None, "   "), seg("you", None, "  real  ")];
+        assert_eq!(render_transcript(&segs), "You: real\n");
+    }
+
+    #[test]
+    fn render_transcript_on_no_segments_is_empty() {
+        assert_eq!(render_transcript(&[]), "");
+    }
+
+    #[test]
+    fn render_transcript_truncates_overlong_input_at_a_char_boundary() {
+        // Multibyte text far past the cap: the cut must not split a char (that
+        // would panic) and the output must end with the truncation marker.
+        let long = "é".repeat(40_000); // 80_000 bytes >> MAX_TRANSCRIPT_CHARS
+        let out = render_transcript(&[seg("you", None, &long)]);
+        assert!(out.contains("transcript truncated"));
+        assert!(out.starts_with("You: "));
+        assert!(out.len() <= MAX_TRANSCRIPT_CHARS + 64);
+    }
+
+    #[test]
+    fn provider_from_setting_is_case_insensitive_and_defaults_to_openai() {
+        assert_eq!(Provider::from_setting("gemini"), Provider::Gemini);
+        assert_eq!(Provider::from_setting("  GEMINI "), Provider::Gemini);
+        assert_eq!(Provider::from_setting("openai"), Provider::OpenAi);
+        assert_eq!(Provider::from_setting(""), Provider::OpenAi);
+        assert_eq!(Provider::from_setting("something-else"), Provider::OpenAi);
+    }
+
+    #[test]
+    fn provider_exposes_keychain_service_names() {
+        assert_eq!(Provider::OpenAi.key_service(), "openai");
+        assert_eq!(Provider::Gemini.key_service(), "gemini");
+    }
+}
