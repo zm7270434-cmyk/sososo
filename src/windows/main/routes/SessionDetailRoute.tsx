@@ -375,10 +375,10 @@ export default function SessionDetailRoute() {
 
   return (
     <div className="relative h-full min-h-0">
-      <div className={clsx('h-full overflow-y-auto', segments.length > 0 && 'pr-[368px]')}>
+      <div className={clsx('h-full overflow-y-auto', segments.length > 0 && 'pr-[328px]')}>
         <div className="mx-auto max-w-[760px] px-7 py-6">
           <div className="mb-5 border-b border-glass-border pb-3.5">
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
               {editing ? (
                 <input
                   className="flex-1 rounded-sm border border-accent bg-[rgba(255,255,255,0.06)] px-2.5 py-[7px] text-[18px] font-semibold text-fg outline-none"
@@ -392,7 +392,7 @@ export default function SessionDetailRoute() {
                   onBlur={() => void saveTitle()}
                 />
               ) : (
-                <h2 className="m-0 flex-1 text-[19px] font-semibold break-words text-fg">
+                <h2 className="m-0 min-w-[12rem] flex-1 text-[19px] font-semibold break-words text-fg">
                   {session.title}
                 </h2>
               )}
@@ -469,7 +469,7 @@ export default function SessionDetailRoute() {
 
           {segments.length > 0 && (
             <section className="mb-[22px] rounded-md border border-glass-border bg-[rgba(110,168,254,0.07)] px-[18px] py-4">
-              <div className="mb-2.5 flex items-center justify-between gap-2.5">
+              <div className="mb-2.5 flex flex-wrap items-center justify-between gap-x-2.5 gap-y-2">
                 <h3 className="m-0 inline-flex items-center gap-1.5 text-[12px] tracking-[0.06em] text-accent uppercase">
                   <HugeiconsIcon icon={IconAi} size={14} strokeWidth={1.8} aria-hidden={true} />
                   AI Summary
@@ -621,7 +621,7 @@ export default function SessionDetailRoute() {
             </div>
           ) : (
             <>
-              <div className="mb-3 flex items-center justify-between gap-2.5">
+              <div className="mb-3 flex flex-wrap items-center justify-between gap-x-2.5 gap-y-2">
                 <h3 className="m-0 inline-flex items-center gap-1.5 text-[12px] tracking-[0.06em] text-fg-faint uppercase">
                   <HugeiconsIcon
                     icon={IconLanguage}

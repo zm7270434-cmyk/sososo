@@ -16,12 +16,17 @@ collapsible mid-page section into an always-visible, **floating** right sidebar
 - **`SessionDetailRoute.tsx`** — root is now a positioning context
   (`relative h-full`) holding a single scroll column (content centered
   `max-w-[760px]`). The chat is a sibling `<ChatPanel>` floating above it.
-  When a transcript exists the scroll column gets `pr-[368px]` to reserve room
+  When a transcript exists the scroll column gets `pr-[328px]` to reserve room
   on the right so text never slips under the floating card.
 - **Floating treatment** — `ChatPanel` is `absolute top-3 right-3 bottom-3 z-10
-w-[340px]`, `liquid-glass rounded-lg overflow-hidden` + a soft drop shadow, so
+w-[300px]`, `liquid-glass rounded-lg overflow-hidden` + a soft drop shadow, so
   it hovers as a detached card (gaps on all sides) rather than a flush docked
   column. Renders only when `segments.length > 0`.
+- **Narrow-column robustness** — the reserved column is narrower than the full
+  page, so the header rows (title + Rename/Delete, AI-summary controls,
+  transcript controls) are `flex-wrap` and the title carries `min-w-[12rem]
+flex-1`. Cramped actions wrap onto their own line instead of overflowing under
+  the floating card / breaking the title mid-word.
 - Removed the old inline chat `<section>`, all chat state/effects/handlers
   (`sendChat`, `clearChatHistory`, auto-scroll effect, loader chat-resets) and
   now-unused imports (`IconChat`, `IconChevronDown`, `IconSend`, `chatSession`,
