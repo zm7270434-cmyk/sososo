@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { Routes, Route, useNavigate } from 'react-router-dom';
+import { Routes, Route, useMatch, useNavigate } from 'react-router-dom';
 import { useTranscriptStream } from '../../hooks/useTranscriptStream';
 import { useSessionStore } from '../../state/sessionStore';
 import { useTranscriptStore } from '../../state/transcriptStore';
@@ -14,6 +14,7 @@ import SettingsRoute from './routes/SettingsRoute';
 import SessionDetailRoute from './routes/SessionDetailRoute';
 import SearchRoute from './routes/SearchRoute';
 import AboutRoute from './routes/AboutRoute';
+import ChatPanel from './routes/sessionDetail/ChatPanel';
 
 export default function MainApp() {
   useTranscriptStream();
@@ -23,6 +24,12 @@ export default function MainApp() {
   const glassOpacity = useConfigStore((s) => s.glassOpacity);
   const navigate = useNavigate();
   const prev = useRef(state);
+  // The transcription-result page (session detail) gets a third shell column:
+  // the transcript chat, rendered as its own glass card beside the sidebar and
+  // main content. Matching the route here (instead of inside the route) keeps it
+  // a real sibling column rather than something floating over the content.
+  const sessionMatch = useMatch('/main/session/:id');
+  const detailSessionId = sessionMatch ? Number(sessionMatch.params.id) : null;
 
   // While a session is active the whole window becomes the transcription view.
   const inSession =
@@ -92,6 +99,9 @@ export default function MainApp() {
             <Route path="session/:id" element={<SessionDetailRoute />} />
           </Routes>
         </main>
+        {detailSessionId !== null && !Number.isNaN(detailSessionId) && (
+          <ChatPanel key={detailSessionId} sessionId={detailSessionId} />
+        )}
       </div>
     </div>
   );
