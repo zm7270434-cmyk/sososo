@@ -12,7 +12,7 @@ import {
   setSummaryLanguage,
 } from '../../../lib/ipc';
 import { SUMMARY_LANGUAGES } from '../../../lib/languages';
-import { isMacOS } from '../../../lib/platform';
+import { isMacOS, isLinux } from '../../../lib/platform';
 import {
   IconAlert,
   IconAppearance,
@@ -298,8 +298,12 @@ export default function SettingsRoute() {
         </label>
         <p className="mt-2 text-[12px] leading-[1.5] text-fg-faint">
           Keys are stored securely in{' '}
-          {isMacOS ? 'the macOS Keychain' : 'Windows Credential Manager'} and are never sent to the
-          frontend.
+          {isMacOS
+            ? 'the macOS Keychain'
+            : isLinux
+              ? 'the system keyring (GNOME Keyring / KWallet)'
+              : 'Windows Credential Manager'}{' '}
+          and are never sent to the frontend.
         </p>
       </section>
 
@@ -329,7 +333,9 @@ export default function SettingsRoute() {
         <label className={FIELD}>
           <span className={`${FIELD_LABEL} inline-flex items-center gap-1.5`}>
             <HugeiconsIcon icon={IconSpeaker} size={13} strokeWidth={1.8} aria-hidden={true} />
-            {isMacOS ? 'System audio source' : 'System audio source (the output to loop back)'}
+            {isMacOS || isLinux
+              ? 'System audio source'
+              : 'System audio source (the output to loop back)'}
           </span>
           <select
             className={FIELD_CTRL}
@@ -348,6 +354,13 @@ export default function SettingsRoute() {
               macOS can&apos;t capture speakers directly. Install a virtual audio device like{' '}
               <b className="text-fg-dim">BlackHole</b>, route your output into it via a Multi-Output
               Device, then select it here.
+            </span>
+          )}
+          {isLinux && (
+            <span className="text-[11.5px] leading-[1.4] text-fg-faint">
+              System audio is captured automatically from your default output&apos;s{' '}
+              <b className="text-fg-dim">monitor</b> (PulseAudio/PipeWire) — no setup needed. Pick a
+              specific output here to capture that one instead.
             </span>
           )}
         </label>
