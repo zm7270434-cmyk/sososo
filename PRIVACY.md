@@ -39,4 +39,4 @@ leaves your machine.
 
 ## Questions
 
-Open an issue or email **yusup@hamasmart.com**.
+Open an issue or email **yusupsupriyadi.cv@gmail.com**.

@@ -18,7 +18,7 @@ Report privately through one of:
 
 - GitHub: **Security → Report a vulnerability** (private advisory) on this
   repository.
-- Email: **yusup@hamasmart.com**
+- Email: **yusupsupriyadi.cv@gmail.com**
 
 Please include:
 
