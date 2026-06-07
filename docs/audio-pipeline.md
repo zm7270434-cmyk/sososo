@@ -17,6 +17,9 @@ stream can stay simple:
   the device's native format to exactly this target.
 - **macOS** does it in software: cpal delivers the device's native format, so the
   backend downmixes to mono and resamples to 16 kHz itself.
+- **Linux** gets it from the server: libpulse requests this exact spec and
+  PulseAudio/PipeWire converts (resample + downmix) before delivery — no
+  client-side resampling.
 
 ## The five stages
 
@@ -59,10 +62,19 @@ time:
   that the user routes their output into. The data callback downmixes to mono
   (`downmix_to_mono`) and resamples to 16 kHz with a small stateful
   `LinearResampler`, then `try_send`s `Vec<i16>`.
+- **Linux** ([`capture/linux.rs`](../src-tauri/src/audio/capture/linux.rs)):
+  PulseAudio/PipeWire via libpulse-simple. The mic records a PA _source_; "system
+  audio" records a sink **monitor** source (the default sink's monitor when none is
+  chosen) — every output sink has one, so no virtual device is needed. The record
+  stream is opened with the 16 kHz/16-bit/mono spec, so PA converts server-side and
+  the blocking-read loop just forwards `Vec<i16>` (no resampler). Source/monitor
+  enumeration uses one-shot introspection in
+  [`pulse.rs`](../src-tauri/src/audio/pulse.rs).
 
 ### 2) Mix — `audio/mixer.rs` (`Interleaver`)
 
-The two WASAPI/CoreAudio endpoints run on **independent clocks** and drift over
+The two capture endpoints (WASAPI / CoreAudio / libpulse) run on **independent
+clocks** and drift over
 long sessions. The `Interleaver` interleaves mic (channel 0) and system
 (channel 1) into one 2-channel stream `[mic0, sys0, mic1, sys1, …]`, emitting
 only `min(mic, sys)` paired frames. If one side races ahead beyond `max_skew`
@@ -148,6 +160,10 @@ the empty row and emits `"error"`.
   input devices only (there is no per-output loopback), surfaced for **both** the
   mic and the system-audio selector. cpal has no stable endpoint id, so the
   device **name is used as the id** (capture resolves devices by name).
+- **Linux** ([`devices/linux.rs`](../src-tauri/src/audio/devices/linux.rs)):
+  PulseAudio sources via libpulse introspection — non-monitor sources for the mic,
+  and each sink's **monitor** source for system audio. The source/monitor **name is
+  the id**; `is_default` flags the default source and the default sink's monitor.
 
 `null`/`None` device ids mean "system default".
 
@@ -170,4 +186,4 @@ audio and speak while it runs to confirm **both** channels carry signal.
 - [Architecture → Process & threading model](./architecture.md#process--threading-model)
 - [IPC reference → `transcript://segment`](./ipc-reference.md#events)
 - [Data model → segments](./data-model.md#segments)
-- [Platform support](./platform-support.md) — Windows vs macOS audio specifics.
+- [Platform support](./platform-support.md) — Windows / macOS / Linux audio specifics.

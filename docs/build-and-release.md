@@ -16,6 +16,8 @@ you get your platform's native artifacts:
 
 - **Windows** → NSIS `.exe` and/or MSI installer.
 - **macOS** → `.app` and `.dmg` (universal in CI; see below).
+- **Linux** → `.deb`, `.AppImage`, and/or `.rpm` (needs the WebKitGTK + libpulse
+  dev libraries installed; see [Development](./development.md)).
 
 Bundle metadata: identifier `com.yusup.sososo`, publisher "Yusup Supriyadi",
 category "Productivity", icons from `src-tauri/icons/`.
@@ -23,8 +25,8 @@ category "Productivity", icons from `src-tauri/icons/`.
 ## Continuous integration
 
 [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) runs on push/PR to
-`master`, on a **matrix of `windows-latest` + `macos-latest`** (cancel-in-progress
-per ref). Each job:
+`master`, on a **matrix of `windows-latest` + `macos-latest` + `ubuntu-latest`**
+(cancel-in-progress per ref). Each job:
 
 1. Setup Bun, `bun install --frozen-lockfile`.
 2. **Prettier check** — `bun run format:check`.
@@ -34,10 +36,11 @@ per ref). Each job:
    which `tauri::generate_context!` embeds, so it must run before clippy).
 6. **Clippy** — `cargo clippy --all-targets`.
 
-> Why both OSes: the audio backends are `cfg`-gated (WASAPI on Windows, cpal /
-> CoreAudio on macOS), so each **only compiles on its own OS**. Running clippy on
-> macOS is how the macOS backend is verified — it can't be cross-compiled from
-> Windows. Keep both green.
+> Why all three OSes: the audio backends are `cfg`-gated (WASAPI on Windows, cpal /
+> CoreAudio on macOS, libpulse on Linux), so each **only compiles on its own OS**.
+> Running clippy on macOS and Linux is how those backends are verified — they can't
+> be cross-compiled from Windows. The Linux job first installs the WebKitGTK +
+> libpulse dev packages. Keep all three green.
 
 ## Cutting a release
 
@@ -49,12 +52,15 @@ git tag v0.2.1
 git push origin v0.2.1
 ```
 
-On the same Windows + macOS matrix it uses `tauri-apps/tauri-action` to build and
-attach artifacts to a **draft GitHub Release** — review it and click **Publish**.
+On the same Windows + macOS + Linux matrix it uses `tauri-apps/tauri-action` to
+build and attach artifacts to a **draft GitHub Release** — review it and click
+**Publish**.
 
 - macOS builds a **universal** binary (`--target universal-apple-darwin`; the
   workflow adds the `aarch64`/`x86_64` rustup targets) so the `.dmg` runs on both
   Apple Silicon and Intel.
+- Linux builds `.deb` / `.AppImage` / `.rpm` on `ubuntu-latest` after installing
+  the WebKitGTK + libpulse dev packages.
 - `workflow_dispatch` (no tag) builds the artifacts **without** creating a
   release.
 

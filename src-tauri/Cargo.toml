@@ -30,9 +30,10 @@ serde_json = "1"
 crossbeam-channel = "0.5"  # lock-free bridge from realtime audio threads
 thiserror = "1"            # error enum
 
-# Per-OS audio backends live in the [target.*] tables below: WASAPI (Windows) and
-# cpal/CoreAudio (macOS). Both yield 16 kHz/16-bit/mono i16 — Windows via WASAPI
-# `autoconvert`, macOS via downmix + resample in src/audio/capture/macos.rs.
+# Per-OS audio backends live in the [target.*] tables below: WASAPI (Windows),
+# cpal/CoreAudio (macOS), and libpulse (Linux). All yield 16 kHz/16-bit/mono i16 —
+# Windows via WASAPI `autoconvert`, macOS via downmix + resample in
+# src/audio/capture/macos.rs, Linux via PulseAudio server-side conversion.
 
 # --- live STT + session (Milestone C) ---
 deepgram = "0.10"          # live streaming WS: stream_request_with_options(...).stream(audio)
@@ -59,6 +60,18 @@ keyring = { version = "3", features = ["windows-native"] }  # Windows Credential
 [target.'cfg(target_os = "macos")'.dependencies]
 cpal = "0.17"                                             # CoreAudio capture (mic + BlackHole)
 keyring = { version = "3", features = ["apple-native"] }  # macOS Keychain
+
+[target.'cfg(target_os = "linux")'.dependencies]
+# PulseAudio/PipeWire capture: mic + sink-monitor (system audio). PA converts to our
+# 16 kHz/16-bit/mono target server-side, so no resampler is needed.
+pulse = { version = "2", package = "libpulse-binding" }
+psimple = { version = "2", package = "libpulse-simple-binding" }
+# Secret Service (GNOME Keyring/KWallet) via D-Bus — persistent, pure-Rust crypto
+# (no OpenSSL). keyutils is in-memory only, so it's unsuitable for API keys.
+keyring = { version = "3", default-features = false, features = [
+    "sync-secret-service",
+    "crypto-rust",
+] }
 
 [dev-dependencies]
 hound = "3"                # WAV writer for the audio_probe verification example

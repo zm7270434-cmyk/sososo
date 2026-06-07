@@ -13,3 +13,16 @@ function detectMacOS(): boolean {
 
 /** True when the app is running on macOS. */
 export const isMacOS = detectMacOS();
+
+function detectLinux(): boolean {
+  if (typeof navigator === 'undefined') return false;
+  const ua = navigator.userAgent || '';
+  const platform = navigator.platform || '';
+  // WebKitGTK (Tauri on Linux) reports e.g. "X11; Linux x86_64" in the UA and
+  // "Linux x86_64" in platform. Android's UA also says "Linux", so exclude it.
+  if (/Android/i.test(ua)) return false;
+  return /Linux/i.test(platform) || /Linux/i.test(ua);
+}
+
+/** True when the app is running on Linux (excludes Android). */
+export const isLinux = detectLinux();

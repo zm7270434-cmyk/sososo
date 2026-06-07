@@ -1,21 +1,21 @@
 # Platform support
 
-sososo runs on **Windows 10/11** and **macOS 11+**. Linux is not supported. Most
-of the app is shared; the differences are concentrated in audio capture, window
-chrome, and packaging.
+sososo runs on **Windows 10/11**, **macOS 11+**, and **Linux** (PulseAudio or
+PipeWire). Most of the app is shared; the differences are concentrated in audio
+capture, window chrome, and packaging.
 
 ## At a glance
 
-| Concern              | Windows                                          | macOS                                                                    |
-| -------------------- | ------------------------------------------------ | ------------------------------------------------------------------------ |
-| System-audio capture | WASAPI **loopback** (no setup)                   | No native loopback → route through a **virtual device** (e.g. BlackHole) |
-| Audio backend crate  | `wasapi` (polling, MTA-COM)                      | `cpal` (CoreAudio; downmix + resample in software)                       |
-| Device id            | Stable WASAPI endpoint id                        | cpal device **name** (no stable id)                                      |
-| Output device list   | Render endpoints (to loopback)                   | Input devices (the virtual source)                                       |
-| Keychain             | Credential Manager (`windows-native`)            | macOS Keychain (`apple-native`)                                          |
-| Window chrome        | Frameless, `decorations: false`, custom titlebar | Native overlay titlebar + traffic lights                                 |
-| Mic permission       | Implicit                                         | Prompted on first record; declared in `Info.plist`                       |
-| Bundle               | `.exe` / `.msi`                                  | universal `.dmg` / `.app`                                                |
+| Concern              | Windows                               | macOS                                               | Linux                                                   |
+| -------------------- | ------------------------------------- | --------------------------------------------------- | ------------------------------------------------------- |
+| System-audio capture | WASAPI **loopback** (no setup)        | No native loopback → **virtual device** (BlackHole) | Sink **monitor** source (PulseAudio/PipeWire, no setup) |
+| Audio backend crate  | `wasapi` (polling, MTA-COM)           | `cpal` (CoreAudio; downmix + resample)              | `libpulse` (PA converts server-side; no resampler)      |
+| Device id            | Stable WASAPI endpoint id             | cpal device **name** (no stable id)                 | PA source / monitor-source **name**                     |
+| Output device list   | Render endpoints (to loopback)        | Input devices (the virtual source)                  | Sink monitor sources                                    |
+| Keychain             | Credential Manager (`windows-native`) | macOS Keychain (`apple-native`)                     | Secret Service (`sync-secret-service`)                  |
+| Window chrome        | Frameless, custom titlebar            | Native overlay titlebar + traffic lights            | Frameless, custom titlebar (like Windows)               |
+| Mic permission       | Implicit                              | Prompted on first record; `Info.plist`              | Implicit (PulseAudio/PipeWire)                          |
+| Bundle               | `.exe` / `.msi`                       | universal `.dmg` / `.app`                           | `.deb` / `.AppImage` / `.rpm`                           |
 
 ## Audio capture
 
@@ -34,6 +34,12 @@ full flow.
   cpal delivers the device's native format, so the backend **downmixes to mono and
   resamples to 16 kHz** itself (`downmix_to_mono` + `LinearResampler` in
   [`capture/macos.rs`](../src-tauri/src/audio/capture/macos.rs)).
+- **Linux** — no virtual device needed: every output **sink** exposes a `.monitor`
+  source, so the backend records the default sink's monitor (or a chosen one) for
+  system audio and a normal PA source for the mic. PulseAudio/PipeWire converts to
+  the 16 kHz/16-bit/mono target server-side, so — like WASAPI `autoconvert` — **no
+  software resampling is needed** ([`capture/linux.rs`](../src-tauri/src/audio/capture/linux.rs);
+  shared introspection in [`pulse.rs`](../src-tauri/src/audio/pulse.rs)).
 
 > cpal has no stable endpoint id, so on macOS the device **name** is used as the
 > id (capture resolves devices by name). A `TODO` notes migrating to cpal's
@@ -55,6 +61,19 @@ macOS can't capture system audio without a virtual loopback device:
 On Windows none of this is needed — WASAPI loopback captures the chosen output
 device directly.
 
+## Linux system audio
+
+Nothing to install. PulseAudio and PipeWire expose a **monitor** source for every
+output sink, so sososo records "what you hear" directly:
+
+1. In sososo → **Settings → Audio Devices**, pick your microphone.
+2. Leave the system-audio source on its default (the default output's monitor), or
+   pick a specific **Monitor of …** entry to capture a different output.
+
+No virtual device and no manual routing — it works out of the box on any
+PulseAudio- or PipeWire-based desktop. API keys are stored in the **Secret
+Service** (GNOME Keyring / KWallet), so a keyring daemon must be running.
+
 ## Window chrome
 
 The window config differs via a macOS overlay file. Tauri merges
@@ -75,8 +94,12 @@ Because macOS shows native traffic lights even on the shrunken recording widget,
 the **`macos-private-api`** feature (enabled in `Cargo.toml` and
 `tauri.conf.json`).
 
-[`lib/platform.ts`](../src/lib/platform.ts) (`isMacOS`) is used **only** for such
-cosmetic differences (chrome layout, copy), never for behavior.
+Linux inherits the base window config (frameless + custom titlebar, like Windows);
+transparency depends on the compositor (good on GNOME/KDE, may render opaque on
+bare tiling WMs).
+
+[`lib/platform.ts`](../src/lib/platform.ts) (`isMacOS` / `isLinux`) is used **only**
+for such cosmetic differences (chrome layout, copy), never for behavior.
 
 ## macOS entitlements & Info.plist
 
@@ -90,7 +113,7 @@ cosmetic differences (chrome layout, copy), never for behavior.
 ## Building per platform
 
 The audio backends are `cfg`-gated, so each compiles only on its own OS. CI and
-the release workflow build on both Windows and macOS. See
+the release workflow build on Windows, macOS, and Linux. See
 [Build & release](./build-and-release.md).
 
 ## Related
