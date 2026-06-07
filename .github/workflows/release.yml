@@ -114,3 +114,7 @@ jobs:
           args: ${{ matrix.args }}
           # Per-OS asset names (defined in the matrix) so downloads are clearly labeled.
           assetNamePattern: ${{ matrix.assetNamePattern }}
+          # Our primary Windows download is the NSIS `-setup.exe`, so point the
+          # updater's generic `windows-x86_64` entry at NSIS (not the MSI) — an
+          # NSIS install then upgrades in place instead of spawning a parallel one.
+          updaterJsonPreferNsis: true
