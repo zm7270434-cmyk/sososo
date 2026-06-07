@@ -36,8 +36,9 @@ marker, and recordings starting untitled.
 
 - **Backend (`db.rs`):** external-content FTS5 table `segments_fts(text)` over `segments`, kept in sync by
   `AFTER INSERT/DELETE/UPDATE` triggers (the UPDATE one guarded by `WHEN new.text IS NOT old.text`, so
-  rename-speaker / save-translation don't reindex). `migrate()` backfills the index for pre-existing DBs
-  (index empty + segments present). `search_sessions(query)` groups `MATCH` hits per session, ranks by
+  rename-speaker / save-translation don't reindex). `migrate()` builds the index for pre-existing DBs via
+  a one-time, flag-gated FTS5 `rebuild` (`fts_built` setting) — see Fix below. `search_sessions(query)`
+  groups `MATCH` hits per session, ranks by
   `bm25`, returns `snippet()` (terms wrapped in `[`…`]`) + match count. `to_fts_query` quotes each
   alnum token as a prefix term (`"foo"*`), joined AND — punctuation can't trigger FTS5 syntax errors.
 - **Command/IPC/type:** `search_sessions` command (registered in `lib.rs`), `searchSessions` IPC wrapper,
@@ -64,3 +65,16 @@ marker, and recordings starting untitled.
   `MATCH` all work (rusqlite `bundled` ships FTS5). Probe removed, not committed.
 - Remaining manual smoke (needs GUI + audio + API key): record w/ title → finish → auto-summary → badge →
   search a term → open hit → Ctrl/Cmd+F find.
+
+## Fix (same day): existing transcripts returned no search results
+
+- **Symptom:** search found nothing for words clearly present in saved transcripts.
+- **Root cause:** the first cut gated the backfill on `SELECT count(*) FROM segments_fts == 0`. On an
+  external-content FTS5 table `count(*)` reflects the _content_ table (`segments`), not the inverted
+  index, so the guard was always false → the backfill never ran → the index stayed empty for pre-existing
+  rows (triggers only index new inserts). Confirmed by probing a copy of the real DB: `count(*)=165` yet
+  `MATCH` returned 0, while `INSERT INTO segments_fts(segments_fts) VALUES('rebuild')` made the same query
+  return hits.
+- **Fix:** replaced the count check with a one-time FTS5 `rebuild` gated by a `fts_built` flag in
+  `app_settings`. Runs once when the index is introduced (no-op on a fresh DB); triggers keep it in sync
+  thereafter. Verified broken→fixed→idempotent against a copy of the real database.

@@ -489,13 +489,27 @@ fn migrate(conn: &Connection) -> AppResult<()> {
         }
     }
 
-    // Backfill the FTS index for databases created before it existed (the index
-    // is empty but transcripts are present). New rows stay in sync via triggers.
-    let fts_count: i64 = conn.query_row("SELECT count(*) FROM segments_fts", [], |r| r.get(0))?;
-    let seg_count: i64 = conn.query_row("SELECT count(*) FROM segments", [], |r| r.get(0))?;
-    if fts_count == 0 && seg_count > 0 {
+    // Build the FTS index for databases that predate it. `count(*)` on an
+    // external-content FTS5 table reflects the *content* table (`segments`), not
+    // the inverted index, so it can't tell us whether the index is populated —
+    // gate the one-time `rebuild` (which rebuilds the index from `segments`) on a
+    // settings flag instead. Afterwards the triggers keep the index in sync, so
+    // this never re-runs unless the flag is cleared.
+    let fts_built: Option<String> = conn
+        .query_row(
+            "SELECT value FROM app_settings WHERE key = 'fts_built'",
+            [],
+            |r| r.get(0),
+        )
+        .optional()?;
+    if fts_built.is_none() {
         conn.execute(
-            "INSERT INTO segments_fts(rowid, text) SELECT id, text FROM segments",
+            "INSERT INTO segments_fts(segments_fts) VALUES ('rebuild')",
+            [],
+        )?;
+        conn.execute(
+            "INSERT INTO app_settings (key, value) VALUES ('fts_built', '1') \
+             ON CONFLICT(key) DO UPDATE SET value = excluded.value",
             [],
         )?;
     }
