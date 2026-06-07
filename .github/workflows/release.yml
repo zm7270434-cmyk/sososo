@@ -17,6 +17,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        # The asset names produced below are linked directly from README.md →
+        # "Download" (via /releases/latest/download/<name>). Keep them in sync —
+        # renaming an asset here without updating the README will 404 those
+        # links. Names are intentionally version-less so the README auto-tracks
+        # the latest release and never needs a per-release edit.
         include:
           - os: windows-latest
             args: ''
