@@ -38,6 +38,24 @@ Service). There is no backend, no account, and no telemetry.
 > free virtual device like [BlackHole](https://github.com/ExistentialAudio/BlackHole)
 > — see [macOS system audio setup](#macos-system-audio-setup).
 
+## Download
+
+**Get the latest version for your OS — free, no account or sign-up needed:**
+
+| OS                   | Download                                                                                                                                                                                                                                                                                                              |
+| -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 🪟 **Windows 10/11** | **[Installer (.exe)](https://github.com/yusupsupriyadi/sososo/releases/latest/download/sososo_windows_x64-setup.exe)** · [.msi](https://github.com/yusupsupriyadi/sososo/releases/latest/download/sososo_windows_x64.msi)                                                                                             |
+| 🍎 **macOS 11+**     | **[Universal .dmg](https://github.com/yusupsupriyadi/sososo/releases/latest/download/sososo_macos_universal.dmg)**                                                                                                                                                                                                    |
+| 🐧 **Linux**         | **[.deb](https://github.com/yusupsupriyadi/sososo/releases/latest/download/sososo_linux_amd64.deb)** · [.AppImage](https://github.com/yusupsupriyadi/sososo/releases/latest/download/sososo_linux_amd64.AppImage) · [.rpm](https://github.com/yusupsupriyadi/sososo/releases/latest/download/sososo_linux_x86_64.rpm) |
+
+These links always grab the [latest release](https://github.com/yusupsupriyadi/sososo/releases/latest) — or browse every version on the [Releases page](https://github.com/yusupsupriyadi/sososo/releases).
+
+> [!NOTE]
+> Builds aren't code-signed yet, so your OS may warn on first run — Windows:
+> "More info" → "Run anyway"; macOS: right-click the app → **Open**. After
+> installing, add your free [Deepgram API key](https://console.deepgram.com/signup)
+> in **Settings** to start transcribing.
+
 <p align="center">
   <a href="https://youtu.be/al1_YU_ILXs">
     <img alt="Watch the sososo demo on YouTube" src="https://img.youtube.com/vi/al1_YU_ILXs/maxresdefault.jpg" width="640" />
@@ -77,17 +95,8 @@ Full details in [PRIVACY.md](./PRIVACY.md).
 
 ## Install
 
-### Download a release (recommended)
-
-Grab the latest build for your OS from the
-[Releases page](https://github.com/yusupsupriyadi/sososo/releases) — a Windows
-installer (`.exe` / `.msi`), a macOS disk image (`.dmg`, universal), or a Linux
-package (`.deb` / `.AppImage`).
-
-> [!NOTE]
-> Builds are not yet code-signed. On Windows, SmartScreen may warn on first run
-> ("More info" → "Run anyway"); on macOS, Gatekeeper may block it, so right-click
-> the app and choose **Open**. Signed builds are planned.
+Prebuilt downloads for every OS are in [**Download**](#download) above — that's
+all most people need. To build it yourself:
 
 ### Build from source
 
