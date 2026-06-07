@@ -3,6 +3,7 @@ import type {
   AiProvider,
   ApiService,
   DeviceLists,
+  SearchHit,
   SessionDetail,
   SessionSummary,
   StartResult,
@@ -41,6 +42,11 @@ export const listSessions = (): Promise<SessionSummary[]> => invoke('list_sessio
 
 export const getSession = (id: number): Promise<SessionDetail | null> =>
   invoke('get_session', { id });
+
+/** Full-text search across all transcripts; resolves to one hit per matching
+ *  session (most relevant first) with a highlighted snippet. */
+export const searchSessions = (query: string): Promise<SearchHit[]> =>
+  invoke('search_sessions', { query });
 
 export const deleteSession = (id: number): Promise<void> => invoke('delete_session', { id });
 

@@ -6,7 +6,7 @@ use tauri::{AppHandle, State};
 use tokio_util::sync::CancellationToken;
 
 use crate::audio::devices::{self, DeviceInfo};
-use crate::db::{Db, SessionDetail, SessionSummary};
+use crate::db::{Db, SearchHit, SessionDetail, SessionSummary};
 use crate::error::{AppError, AppResult};
 use crate::state::{ActiveSession, AppState};
 use crate::{ai, keys, session};
@@ -181,6 +181,13 @@ pub fn list_sessions(db: State<'_, Db>) -> AppResult<Vec<SessionSummary>> {
 #[tauri::command]
 pub fn get_session(db: State<'_, Db>, id: i64) -> AppResult<Option<SessionDetail>> {
     db.get_session(id)
+}
+
+/// Full-text search across all saved transcripts (FTS5). Returns one hit per
+/// matching session (most relevant first) with a highlighted snippet.
+#[tauri::command]
+pub fn search_sessions(db: State<'_, Db>, query: String) -> AppResult<Vec<SearchHit>> {
+    db.search_sessions(&query)
 }
 
 /// Delete a recorded session and its transcript (cascades to segments).

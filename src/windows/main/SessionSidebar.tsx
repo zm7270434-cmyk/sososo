@@ -9,6 +9,7 @@ import {
   IconAi,
   IconHistory,
   IconInbox,
+  IconSearch,
   IconSettings,
   IconTranscript,
 } from '../../lib/icons';
@@ -42,6 +43,18 @@ export default function SessionSidebar() {
       >
         <HugeiconsIcon icon={IconAdd} size={16} strokeWidth={2} aria-hidden={true} />
         New recording
+      </NavLink>
+      <NavLink
+        to="/main/search"
+        className={({ isActive }) =>
+          clsx(
+            'mb-0.5 flex cursor-pointer items-center gap-2 rounded-sm border border-glass-border px-2.5 py-[9px] text-left text-[13px] no-underline hover:bg-hover hover:text-fg',
+            isActive ? 'bg-hover text-fg' : 'bg-[rgba(255,255,255,0.04)] text-fg-dim',
+          )
+        }
+      >
+        <HugeiconsIcon icon={IconSearch} size={16} strokeWidth={1.8} aria-hidden={true} />
+        Search
       </NavLink>
       <div className="flex items-center gap-1.5 px-1.5 pt-1 pb-2 text-[11px] tracking-[0.06em] text-fg-faint uppercase">
         <HugeiconsIcon icon={IconHistory} size={12} strokeWidth={2} aria-hidden={true} />

@@ -26,6 +26,7 @@ pub fn run() {
             commands::set_paused,
             commands::list_sessions,
             commands::get_session,
+            commands::search_sessions,
             commands::delete_session,
             commands::rename_session,
             commands::rename_speaker,

@@ -5,6 +5,7 @@
 //! so the mutex is never held long enough to matter. The connection is opened in
 //! `lib.rs setup()` once the app data directory is known.
 
+use std::collections::HashMap;
 use std::path::Path;
 use std::sync::Mutex;
 
@@ -51,6 +52,29 @@ CREATE TABLE IF NOT EXISTS app_settings (
     key   TEXT PRIMARY KEY,
     value TEXT NOT NULL
 );
+
+-- Full-text index over transcript text (FTS5, external-content = `segments`), so
+-- the library can search across every transcript. Triggers keep it in sync; the
+-- AFTER UPDATE one only re-indexes when `text` actually changes (rename-speaker
+-- and save-translation touch other columns). Pre-existing rows are backfilled in
+-- `migrate()`. FTS5 ships with rusqlite's `bundled` SQLite.
+CREATE VIRTUAL TABLE IF NOT EXISTS segments_fts USING fts5(
+    text,
+    content = 'segments',
+    content_rowid = 'id'
+);
+
+CREATE TRIGGER IF NOT EXISTS segments_ai AFTER INSERT ON segments BEGIN
+    INSERT INTO segments_fts(rowid, text) VALUES (new.id, new.text);
+END;
+CREATE TRIGGER IF NOT EXISTS segments_ad AFTER DELETE ON segments BEGIN
+    INSERT INTO segments_fts(segments_fts, rowid, text) VALUES ('delete', old.id, old.text);
+END;
+CREATE TRIGGER IF NOT EXISTS segments_au AFTER UPDATE ON segments
+    WHEN new.text IS NOT old.text BEGIN
+    INSERT INTO segments_fts(segments_fts, rowid, text) VALUES ('delete', old.id, old.text);
+    INSERT INTO segments_fts(rowid, text) VALUES (new.id, new.text);
+END;
 ";
 
 /// One row of the session history list (with a transcript segment count).
@@ -95,6 +119,19 @@ pub struct StoredSegment {
 pub struct SessionDetail {
     pub session: SessionSummary,
     pub segments: Vec<StoredSegment>,
+}
+
+/// One full-text search result: a matching session with a highlighted snippet of
+/// its best-matching line and how many of its lines matched.
+#[derive(Serialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct SearchHit {
+    pub session_id: i64,
+    pub title: String,
+    pub started_at: String,
+    /// Excerpt of the best-matching line with matched terms wrapped in `[`…`]`.
+    pub snippet: String,
+    pub match_count: i64,
 }
 
 /// Tauri-managed handle to the SQLite database.
@@ -237,6 +274,62 @@ impl Db {
             out.push(r?);
         }
         Ok(out)
+    }
+
+    /// Full-text search across every transcript. Returns one hit per matching
+    /// session, most-relevant first (FTS5 `bm25`), each carrying the highlighted
+    /// snippet of its best-matching line and the count of matching lines. `query`
+    /// is raw user input; an empty/operator-only query yields no hits.
+    pub fn search_sessions(&self, query: &str) -> AppResult<Vec<SearchHit>> {
+        let match_query = to_fts_query(query);
+        if match_query.is_empty() {
+            return Ok(Vec::new());
+        }
+        let conn = self.0.lock().unwrap();
+        let mut stmt = conn.prepare(
+            "SELECT seg.session_id, s.title, s.started_at, \
+                    snippet(segments_fts, 0, '[', ']', '…', 12) \
+             FROM segments_fts \
+             JOIN segments seg ON seg.id = segments_fts.rowid \
+             JOIN sessions s ON s.id = seg.session_id \
+             WHERE segments_fts MATCH ?1 \
+             ORDER BY bm25(segments_fts)",
+        )?;
+        let rows = stmt.query_map([match_query], |row| {
+            Ok((
+                row.get::<_, i64>(0)?,
+                row.get::<_, String>(1)?,
+                row.get::<_, String>(2)?,
+                row.get::<_, String>(3)?,
+            ))
+        })?;
+
+        // Rows arrive best-match-first; the first time a session appears is its
+        // top line (snippet kept), later rows of the same session just count.
+        let mut order: Vec<i64> = Vec::new();
+        let mut hits: HashMap<i64, SearchHit> = HashMap::new();
+        for r in rows {
+            let (session_id, title, started_at, snippet) = r?;
+            if let Some(hit) = hits.get_mut(&session_id) {
+                hit.match_count += 1;
+            } else {
+                order.push(session_id);
+                hits.insert(
+                    session_id,
+                    SearchHit {
+                        session_id,
+                        title,
+                        started_at,
+                        snippet,
+                        match_count: 1,
+                    },
+                );
+            }
+        }
+        Ok(order
+            .into_iter()
+            .filter_map(|id| hits.remove(&id))
+            .collect())
     }
 
     /// One session plus its full transcript (chronological), or `None` if missing.
@@ -395,6 +488,17 @@ fn migrate(conn: &Connection) -> AppResult<()> {
             conn.execute(ddl, [])?;
         }
     }
+
+    // Backfill the FTS index for databases created before it existed (the index
+    // is empty but transcripts are present). New rows stay in sync via triggers.
+    let fts_count: i64 = conn.query_row("SELECT count(*) FROM segments_fts", [], |r| r.get(0))?;
+    let seg_count: i64 = conn.query_row("SELECT count(*) FROM segments", [], |r| r.get(0))?;
+    if fts_count == 0 && seg_count > 0 {
+        conn.execute(
+            "INSERT INTO segments_fts(rowid, text) SELECT id, text FROM segments",
+            [],
+        )?;
+    }
     Ok(())
 }
 
@@ -422,4 +526,19 @@ fn row_to_summary(row: &rusqlite::Row<'_>) -> rusqlite::Result<SessionSummary> {
         summarized_at: row.get(8)?,
         segment_count: row.get(9)?,
     })
+}
+
+/// Turn raw user input into a safe FTS5 MATCH expression: each whitespace token
+/// (with embedded quotes stripped, kept only if it has an alphanumeric char)
+/// becomes a quoted prefix term `"foo"*`, joined by spaces (implicit AND).
+/// Quoting stops punctuation/operators from triggering FTS5 syntax errors; the
+/// trailing `*` makes search-as-you-type match prefixes. Empty input → "".
+fn to_fts_query(input: &str) -> String {
+    input
+        .split_whitespace()
+        .map(|t| t.replace('"', ""))
+        .filter(|t| t.chars().any(char::is_alphanumeric))
+        .map(|t| format!("\"{t}\"*"))
+        .collect::<Vec<_>>()
+        .join(" ")
 }

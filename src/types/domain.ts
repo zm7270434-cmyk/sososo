@@ -92,3 +92,14 @@ export interface SessionDetail {
   session: SessionSummary;
   segments: StoredSegment[];
 }
+
+/** One full-text search result: a matching session with a highlighted snippet. */
+export interface SearchHit {
+  sessionId: number;
+  title: string;
+  /** RFC-3339 start timestamp. */
+  startedAt: string;
+  /** Best-matching line excerpt with matched terms wrapped in `[`…`]`. */
+  snippet: string;
+  matchCount: number;
+}

@@ -10,6 +10,7 @@ import RecordingView from './RecordingView';
 import LibraryRoute from './routes/LibraryRoute';
 import SettingsRoute from './routes/SettingsRoute';
 import SessionDetailRoute from './routes/SessionDetailRoute';
+import SearchRoute from './routes/SearchRoute';
 import AboutRoute from './routes/AboutRoute';
 
 export default function MainApp() {
@@ -76,6 +77,7 @@ export default function MainApp() {
           <Routes>
             <Route index element={<LibraryRoute />} />
             <Route path="settings" element={<SettingsRoute />} />
+            <Route path="search" element={<SearchRoute />} />
             <Route path="about" element={<AboutRoute />} />
             <Route path="session/:id" element={<SessionDetailRoute />} />
           </Routes>
