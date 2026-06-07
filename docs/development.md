@@ -9,8 +9,11 @@ conventions.
 - **[Rust](https://rustup.rs)** — stable toolchain, with `rustfmt` + `clippy`
   components. `cargo` is invoked for you by `bun run tauri *`.
 - **Windows 10/11** with [WebView2](https://developer.microsoft.com/microsoft-edge/webview2/)
-  (preinstalled on current Windows), **or macOS 11+** with Xcode Command Line
-  Tools (`xcode-select --install`).
+  (preinstalled on current Windows), **macOS 11+** with Xcode Command Line Tools
+  (`xcode-select --install`), **or Linux** with PulseAudio/PipeWire.
+- **Linux only:** install the WebKitGTK + libpulse dev libraries —
+  `sudo apt-get install -y libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev patchelf libpulse-dev`
+  (Debian/Ubuntu; use your distro's equivalents otherwise).
 - macOS only: a virtual loopback device for system audio — see
   [Platform support → BlackHole](./platform-support.md#macos-system-audio-setup).
 
@@ -49,7 +52,7 @@ There is **no unit-test framework**. Verification is:
    build**.
 2. **`cargo check`** / **`cargo clippy`** (from `src-tauri/`) — Rust compiles and
    is lint-clean. Note the audio backends are `cfg`-gated per OS, so each only
-   compiles on its own platform; CI runs clippy on both Windows and macOS (see
+   compiles on its own platform; CI runs clippy on Windows, macOS, and Linux (see
    [Build & release](./build-and-release.md)).
 3. **`audio_probe`** — confirms the capture pipeline runs and both channels carry
    audio (writes `audio_probe.wav`, prints per-channel RMS). See

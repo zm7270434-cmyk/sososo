@@ -4,9 +4,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-`sososo` is a Windows desktop app for **real-time meeting/audio transcription**. It captures system
-audio (WASAPI loopback) + microphone, streams both to Deepgram for live speech-to-text, and shows
-live captions in a single transparent-glass window that switches to a full transcription view (with
+`sososo` is a cross-platform desktop app (Windows · macOS · Linux) for **real-time meeting/audio
+transcription**. It captures system audio (WASAPI loopback on Windows; CoreAudio + BlackHole on macOS;
+PulseAudio/PipeWire sink monitor on Linux) + microphone, streams both to Deepgram for live
+speech-to-text, and shows live captions in a single transparent-glass window that switches to a full
+transcription view (with
 pause/finish) while recording, plus a library/settings/history UI when idle. User-facing UI copy is
 in **English** (the app was switched from Bahasa Indonesia to English).
 
@@ -71,9 +73,10 @@ behind a transparent window, and native acrylic was tried and removed. Buttons g
 
 `commands::start_session` → `session::spawn_session` → async `run_session` (Tauri/tokio runtime):
 
-1. **Capture** (`audio/capture.rs`): mic and system-loopback each run on a dedicated thread in an
-   **MTA COM apartment**, using WASAPI **polling** mode with `autoconvert` to emit 16 kHz / 16-bit /
-   mono PCM. Bounded crossbeam channels (cap 64) **drop on lag** to favor fresh audio over latency.
+1. **Capture** (`audio/capture/`, cfg-gated per OS): mic and system-loopback each run on a dedicated
+   thread, emitting 16 kHz / 16-bit / mono PCM — Windows via WASAPI **polling** + `autoconvert` (in an
+   **MTA COM apartment**), macOS via cpal + software downmix/resample, Linux via libpulse (PulseAudio
+   converts server-side). Bounded crossbeam channels (cap 64) **drop on lag** to favor fresh audio over latency.
 2. **Mix** (`audio/mixer.rs` `Interleaver`): interleaves mic (channel 0 = "you") + system
    (channel 1 = "remote") into one 2-channel stream, silence-padding the starved channel to bound
    clock drift between the two independent WASAPI clocks. `system_only` mode skips the mic → mono.
@@ -105,7 +108,8 @@ Stop is cooperative via a `tokio_util::CancellationToken`; teardown joins the br
 
 ### Secrets & permissions
 
-- API keys (`deepgram`, `openai`) live in the **Windows Credential Manager** via `keyring` (`keys.rs`).
+- API keys (`deepgram`, `openai`, `gemini`) live in the OS keychain via `keyring` (`keys.rs`) — Windows
+  Credential Manager, macOS Keychain, or the Linux Secret Service (GNOME Keyring/KWallet).
   They are **never** returned to the frontend — only `has_api_key` (a boolean) is exposed.
 - The window capability in `src-tauri/capabilities/main.json` grants the minimal window permissions
   (start-dragging, minimize, close); CSP is set in `tauri.conf.json`.

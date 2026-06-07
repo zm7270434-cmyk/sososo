@@ -6,7 +6,7 @@
 </p>
 
 <p align="center">
-  <b>Real-time meeting &amp; audio transcription for Windows &amp; macOS</b><br />
+  <b>Real-time meeting &amp; audio transcription for Windows, macOS &amp; Linux</b><br />
   Live captions from your system audio <b>and</b> microphone, with AI summaries.
 </p>
 
@@ -27,15 +27,16 @@ can generate an AI summary via [OpenAI](https://openai.com) or
 
 It is a **bring-your-own-key** app: you bring your own Deepgram key plus an
 AI-provider key (OpenAI **or** Google Gemini), stored securely in the OS
-keychain (Windows Credential Manager / macOS Keychain). There is no backend, no
-account, and no telemetry.
+keychain (Windows Credential Manager / macOS Keychain / the Linux Secret
+Service). There is no backend, no account, and no telemetry.
 
 > [!IMPORTANT]
-> **Platforms:** Windows 10/11 and macOS 11+. System audio capture differs per
-> OS: Windows uses WASAPI loopback (no setup); macOS has no built-in loopback,
-> so you route system audio through a free virtual device like
-> [BlackHole](https://github.com/ExistentialAudio/BlackHole) — see
-> [macOS system audio setup](#macos-system-audio-setup). Linux is not supported.
+> **Platforms:** Windows 10/11, macOS 11+, and Linux (PulseAudio or PipeWire).
+> System audio capture differs per OS: Windows uses WASAPI loopback (no setup);
+> Linux captures your default output's **monitor** source automatically (no
+> setup); macOS has no built-in loopback, so you route system audio through a
+> free virtual device like [BlackHole](https://github.com/ExistentialAudio/BlackHole)
+> — see [macOS system audio setup](#macos-system-audio-setup).
 
 <p align="center">
   <a href="https://youtu.be/al1_YU_ILXs">
@@ -71,8 +72,8 @@ This app sends audio and text to third-party services **you** configure:
 
 Your API keys never leave your machine except as auth headers to those
 services, and are stored in the OS keychain (Windows Credential Manager / macOS
-Keychain) — never in the repo or in plaintext config. Full details in
-[PRIVACY.md](./PRIVACY.md).
+Keychain / Linux Secret Service) — never in the repo or in plaintext config.
+Full details in [PRIVACY.md](./PRIVACY.md).
 
 ## Install
 
@@ -80,7 +81,8 @@ Keychain) — never in the repo or in plaintext config. Full details in
 
 Grab the latest build for your OS from the
 [Releases page](https://github.com/yusupsupriyadi/sososo/releases) — a Windows
-installer (`.exe` / `.msi`) or a macOS disk image (`.dmg`, universal).
+installer (`.exe` / `.msi`), a macOS disk image (`.dmg`, universal), or a Linux
+package (`.deb` / `.AppImage`).
 
 > [!NOTE]
 > Builds are not yet code-signed. On Windows, SmartScreen may warn on first run
@@ -94,8 +96,13 @@ installer (`.exe` / `.msi`) or a macOS disk image (`.dmg`, universal).
 - [Bun](https://bun.sh) (package manager — do not use npm/yarn/pnpm)
 - [Rust](https://rustup.rs) (stable toolchain)
 - **Windows 10/11** with [WebView2](https://developer.microsoft.com/microsoft-edge/webview2/)
-  (preinstalled on current Windows), or **macOS 11+** with Xcode Command Line
-  Tools (`xcode-select --install`)
+  (preinstalled on current Windows), **macOS 11+** with Xcode Command Line Tools
+  (`xcode-select --install`), or **Linux** with PulseAudio/PipeWire and the
+  WebKitGTK + libpulse dev libraries
+- **Linux only** — install the build dependencies (Debian/Ubuntu):
+  ```sh
+  sudo apt-get install -y libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev patchelf libpulse-dev
+  ```
 
 ```sh
 bun install
@@ -111,8 +118,8 @@ bun run tauri build   # produce an installer in src-tauri/target/release/bundle
    provider's API key (optional — only needed for summaries and live
    translation).
 3. Keys are saved to the OS keychain (Windows Credential Manager / macOS
-   Keychain). The app only ever checks _whether_ a key exists — it never reads
-   keys back into the UI.
+   Keychain / Linux Secret Service). The app only ever checks _whether_ a key
+   exists — it never reads keys back into the UI.
 
 Get keys from the [Deepgram console](https://console.deepgram.com), the
 [OpenAI dashboard](https://platform.openai.com/api-keys), or
@@ -134,7 +141,9 @@ a free virtual audio device:
 
 > [!NOTE]
 > On Windows none of this is needed — WASAPI loopback captures the chosen output
-> device directly.
+> device directly. On Linux it's automatic too — sososo records your default
+> output's **monitor** source (PulseAudio/PipeWire); pick a specific output in
+> **Settings → Audio Devices** to capture a different one.
 
 ## Development
 
@@ -156,8 +165,9 @@ web files and rustfmt on Rust). See [CONTRIBUTING.md](./CONTRIBUTING.md).
 ## Tech stack
 
 - **Backend:** Tauri 2 (Rust) — audio capture (WASAPI on Windows, CoreAudio via
-  cpal on macOS), Deepgram WS streaming, SQLite persistence, AI summaries &
-  translation via OpenAI or Google Gemini.
+  cpal on macOS, PulseAudio/PipeWire via libpulse on Linux), Deepgram WS
+  streaming, SQLite persistence, AI summaries & translation via OpenAI or Google
+  Gemini.
 - **Frontend:** React 19 · React Router 7 · Zustand 5 · Vite 7 · Tailwind CSS v4
   (TypeScript).
 
