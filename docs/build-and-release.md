@@ -86,9 +86,11 @@ the first updater-enabled one, users no longer download installers from GitHub b
   **Restart now** (`@tauri-apps/plugin-process` `relaunch()`). Rust only registers
   the `updater` + `process` plugins (`src-tauri/src/lib.rs`).
 - On release, `tauri-action` builds **signed** update artifacts (NSIS `-setup.exe`,
-  macOS `.app.tar.gz`, Linux `.AppImage`) + a `.sig` for each, and uploads a merged
-  `latest.json` to the release (its `uploadUpdaterJson`/`uploadUpdaterSignatures`
-  default to on).
+  macOS `.app.tar.gz`, Linux `.AppImage`) and uploads a merged `latest.json` to the
+  release. We set `uploadUpdaterSignatures: false`, so the standalone `.sig` files
+  are **not** attached as release assets — their signature content is already
+  inlined in `latest.json` (the only thing the updater reads at runtime), so the
+  loose `.sig` files would just be confusing clutter on the downloads page.
 
 **Signing keys** (one-time, already configured)
 
@@ -111,8 +113,9 @@ endpoint resolves only to a **published** (not draft) release.
 
 **Verify after publishing**
 
-- The release has a `latest.json` + `.sig` assets, and `latest.json` lists all
-  three platforms with working download URLs.
+- The release has a `latest.json` (no standalone `.sig` assets — see above), and
+  `latest.json` lists all three platforms with a non-empty inlined `signature` and
+  working download URLs.
 - Install an older updater-enabled build, publish a newer one, and confirm the
   in-app banner appears and updates successfully.
 

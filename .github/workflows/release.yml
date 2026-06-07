@@ -88,7 +88,13 @@ jobs:
           {
             echo "RELEASE_BODY<<__CHANGELOG_EOF__"
             if [ -n "$NOTES" ]; then printf '%s\n\n' "$NOTES"; fi
-            echo "See the assets below to download and install. Builds are not code-signed yet, so the OS may warn on first run (Windows SmartScreen / macOS Gatekeeper — on macOS, right-click the app and choose Open)."
+            echo "## Download"
+            echo ""
+            echo "- **Windows:** sososo_windows_x64-setup.exe"
+            echo "- **macOS:** sososo_macos_universal.dmg"
+            echo "- **Linux:** sososo_linux_amd64.AppImage (or .deb / .rpm)"
+            echo ""
+            echo "The other assets (latest.json, .app.tar.gz) are used by the in-app auto-updater — you can ignore them. Builds are not code-signed yet, so the OS may warn on first run (Windows SmartScreen / macOS Gatekeeper — on macOS, right-click the app and choose Open)."
             echo "__CHANGELOG_EOF__"
           } >> "$GITHUB_ENV"
 
@@ -118,3 +124,9 @@ jobs:
           # updater's generic `windows-x86_64` entry at NSIS (not the MSI) — an
           # NSIS install then upgrades in place instead of spawning a parallel one.
           updaterJsonPreferNsis: true
+          # Don't attach the standalone `.sig` files to the release. The updater
+          # reads the signature inlined in `latest.json` (not the `.sig` file) at
+          # runtime, so the loose `.sig` assets are just confusing clutter for
+          # people browsing the downloads. `latest.json` is still uploaded
+          # (uploadUpdaterJson defaults to true), so auto-update is unaffected.
+          uploadUpdaterSignatures: false
