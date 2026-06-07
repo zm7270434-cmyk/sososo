@@ -8,6 +8,7 @@ import { hasApiKey, listDevices, setDevices, setTranscriptionOptions } from '../
 import type { DeviceLists } from '../../../types/domain';
 import { LANGUAGES, TRANSLATE_TARGETS } from '../../../lib/languages';
 import {
+  IconAbout,
   IconAlert,
   IconKey,
   IconLanguage,
@@ -178,6 +179,18 @@ export default function LibraryRoute() {
                     </option>
                   ))}
                 </select>
+                <span className="inline-flex items-start gap-1 text-[11px] leading-snug text-fg-faint">
+                  <HugeiconsIcon
+                    icon={IconAbout}
+                    size={12}
+                    strokeWidth={1.8}
+                    className="mt-px shrink-0"
+                    aria-hidden={true}
+                  />
+                  <span>
+                    Tip: picking a specific language (e.g. English) is more accurate than Auto.
+                  </span>
+                </span>
               </label>
               <div className="flex flex-col gap-[5px]">
                 <span className="inline-flex items-center gap-1.5 text-[12px] text-fg-faint">
@@ -326,8 +339,7 @@ export default function LibraryRoute() {
             </button>
             <p className="mx-auto mt-3.5 max-w-[360px] text-[13px] leading-[1.5] text-fg-faint">
               When you start, this window turns into the live transcription view with <b>Pause</b> &{' '}
-              <b>Finish</b> buttons on top. A specific language (e.g. English/Indonesian) is usually
-              more accurate than Auto.
+              <b>Finish</b> buttons on top.
             </p>
           </>
         )}

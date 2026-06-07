@@ -27,3 +27,11 @@ buttons for a clearer, one-tap choice (better UX than a dropdown for a binary pi
 - `bun test`: 33 pass / 0 fail.
 - Manual: form only renders inside the Tauri window (needs a Deepgram key), so confirm
   visually with `bun run tauri dev`.
+
+## Follow-up: language accuracy tip
+
+- Added a small tip (info icon + `text-[11px] text-fg-faint`) directly **below the Language
+  select**: "Tip: picking a specific language (e.g. English) is more accurate than Auto."
+- Removed the duplicate sentence from the bottom helper paragraph (now only describes the
+  Pause/Finish behavior) so the same advice isn't shown twice.
+- Re-verified: `bun run build` pass, `bun test` 33 pass / 0 fail.
