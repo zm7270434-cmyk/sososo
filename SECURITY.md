@@ -40,4 +40,22 @@ publish an advisory and credit you unless you prefer to remain anonymous.
 - The app's network surface is limited by a Content-Security-Policy and the
   Tauri capability allowlist (`src-tauri/capabilities/`).
 
+## Intellectual property & license enforcement
+
+`sososo` is dual-licensed (AGPL-3.0 + commercial; see
+[LICENSING.md](./LICENSING.md)), and the "sososo" name/logo are trademarks (see
+[TRADEMARK.md](./TRADEMARK.md)). If you believe someone is:
+
+- redistributing sososo (or a derivative) with the copyright/license notices
+  removed or altered,
+- shipping a **closed-source** product built on the AGPL code without a
+  commercial license (an AGPL violation), or
+- using the **"sososo" name or logo** to pass off a fork as the official
+  project,
+
+please report it to **<yusupsupriyadi.cv@gmail.com>**. Confirmed violations are
+handled via a notice to the infringer, then a DMCA takedown (GitHub, app stores,
+hosts) and/or legal action as needed. The public git history serves as the
+timestamped record of original authorship.
+
 Thank you for helping keep users safe.

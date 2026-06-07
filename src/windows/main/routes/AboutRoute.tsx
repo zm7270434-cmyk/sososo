@@ -47,7 +47,7 @@ export default function AboutRoute() {
       </p>
 
       <span className="rounded-full border border-glass-border bg-[rgba(255,255,255,0.06)] px-3 py-1 text-[12px] text-fg-dim">
-        100% free · Open source (MIT)
+        Open source (AGPL-3.0) · Commercial license available
       </span>
 
       <div className="mt-1 flex flex-wrap items-center justify-center gap-3">
@@ -62,8 +62,9 @@ export default function AboutRoute() {
       </div>
 
       <p className="max-w-sm text-[12px] leading-relaxed text-fg-faint">
-        sososo is free and always will be. If it&apos;s useful to you, please give it a star on
-        GitHub — it&apos;s the best way to support the project and helps others discover it.
+        The community edition is free and open source under the AGPL-3.0; a commercial license is
+        available for proprietary use. If it&apos;s useful to you, please give it a star on GitHub —
+        it&apos;s the best way to support the project and helps others discover it.
       </p>
 
       <p className="mt-2 text-[11px] text-fg-faint">

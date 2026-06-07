@@ -11,7 +11,7 @@
 </p>
 
 <p align="center">
-  <a href="./LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-yellow.svg" /></a>
+  <a href="./LICENSING.md"><img alt="License: AGPL-3.0 + Commercial" src="https://img.shields.io/badge/License-AGPL--3.0%20%2B%20Commercial-blue.svg" /></a>
   <a href="https://github.com/yusupsupriyadi/sososo/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/yusupsupriyadi/sososo/actions/workflows/ci.yml/badge.svg" /></a>
   <a href="https://tauri.app"><img alt="Built with Tauri 2" src="https://img.shields.io/badge/built%20with-Tauri%202-24C8DB.svg" /></a>
   <a href="https://deepgram.com"><img alt="Speech-to-text by Deepgram" src="https://img.shields.io/badge/Speech--to--text-Deepgram-13EF93.svg?logo=deepgram&logoColor=black" /></a>
@@ -210,4 +210,17 @@ not exist without their speech API. 💚
 
 ## License
 
-Released under the [MIT License](./LICENSE). © 2026 Yusup Supriyadi.
+`sososo` is **dual-licensed**:
+
+- **Community edition** — [GNU AGPL-3.0](./LICENSE) (free; if you distribute or
+  host a modified version, you must release your source under the AGPL too).
+- **Commercial license** — for closed-source/proprietary use without the AGPL's
+  copyleft. See [LICENSING.md](./LICENSING.md) and
+  [COMMERCIAL-LICENSE.md](./COMMERCIAL-LICENSE.md), or email
+  <yusupsupriyadi.cv@gmail.com>.
+
+The **"sososo" name and logo are trademarks** and are not covered by the code
+license — forks must rebrand (see [TRADEMARK.md](./TRADEMARK.md)). Contributions
+are accepted under the [CLA](./CLA.md).
+
+© 2026 Yusup Supriyadi.

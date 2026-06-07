@@ -65,6 +65,19 @@ and `.gitattributes` (LF line endings).
 - Open a PR against `master`. Fill in the PR template, describe the change, and
   make sure `bun run build`, `format:check`, and `fmt:rust:check` pass.
 - All user-facing UI strings are in **English**.
+- **Sign off every commit** (`git commit -s`) to certify the
+  [DCO](https://developercertificate.org/) and accept the
+  [Contributor License Agreement](./CLA.md).
+
+## Contributor License Agreement (CLA)
+
+`sososo` is **dual-licensed** (AGPL-3.0 + a commercial license — see
+[LICENSING.md](./LICENSING.md)). So the project can keep offering both, all
+contributions are accepted under the [**CLA**](./CLA.md): you keep your
+copyright but grant the maintainer the right to license your contribution under
+**both** the AGPL-3.0 and commercial terms. You accept it by signing off your
+commits (`git commit -s`, which adds a `Signed-off-by` line). Please read
+[CLA.md](./CLA.md) before opening a pull request.
 
 ## Documenting your work
 

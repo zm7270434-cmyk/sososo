@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Relicensed from MIT to GNU AGPL-3.0, and the project is now dual-licensed.**
+  The community edition is AGPL-3.0 (copyleft — distributing or hosting a
+  modified version requires releasing the corresponding source); a separate
+  **commercial license** is available for proprietary use without the AGPL
+  obligations. See `LICENSING.md` and `COMMERCIAL-LICENSE.md`. This change is not
+  retroactive — code already published under MIT remains available under MIT.
+
+### Added
+
+- Licensing & IP-protection docs: `LICENSING.md`, `COMMERCIAL-LICENSE.md`
+  (commercial-terms outline), `TRADEMARK.md` (the "sososo" name/logo are
+  reserved marks — forks must rebrand), `CLA.md` (Contributor License Agreement,
+  required so the project can keep dual-licensing), plus `NOTICE` and `AUTHORS`.
+- `SPDX-License-Identifier: AGPL-3.0-only` headers on source files, and a CLA /
+  DCO `Signed-off-by` requirement in `CONTRIBUTING.md`.
+
 ## [0.7.1] - 2026-06-07
 
 ### Changed
