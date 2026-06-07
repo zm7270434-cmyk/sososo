@@ -7,6 +7,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-06-07
+
+### Added
+
+- **Ask about this transcript (per-session AI chat).** Every saved session now
+  has a chat where you can ask the active AI provider (OpenAI or Gemini) questions
+  about that transcript — e.g. "What were the main decisions?" or "What did each
+  speaker focus on?". The conversation is persisted per session, so it is still
+  there when you reopen the recording, and can be cleared at any time.
+- **Collapsible "Ask" sidebar.** On the session-detail (transcription result)
+  page the chat lives in its own right-hand sidebar card, beside the history
+  sidebar and the transcript/summary — a three-column layout. It collapses to a
+  thin vertical **"Ask"** strip to give the transcript more room, and the
+  collapsed/expanded choice is remembered between sessions and app restarts.
+
+### Changed
+
+- The session-detail page is now a three-column shell (history · transcript &
+  summary · chat). The chat is a real sibling column that the content reflows
+  around, replacing the old inline "Ask about this transcript" section in the
+  middle of the page.
+
+### Internal
+
+- **Test-Driven Development foundation.** Added Rust (`cargo test`) and frontend
+  (`bun test`) suites covering Zustand stores, language/error/`db` logic, and
+  `lib/` helpers; TDD is now the required workflow for new features and fixes.
+- **Stronger CI.** Quality gates enforce the test suites + ESLint on every change,
+  with added `dependency-audit` and `commit-lint` jobs.
+- **Codebase decomposition.** Split the large `commands.rs`, `db.rs`, and `ai.rs`
+  into focused per-domain modules, and extracted session-detail
+  (markdown/highlight/speakers) and settings (styles / AppearanceSection) helpers.
+- The Windows updater now prefers the NSIS artifact; `CLAUDE.md` is no longer
+  tracked in git.
+
 ## [0.6.0] - 2026-06-07
 
 ### Added
@@ -121,7 +156,8 @@ First public release. **Windows only** — macOS and Linux are not yet tested.
 - Formatting SOP — Prettier (with Tailwind class sorting) + rustfmt, enforced by
   a Husky pre-commit hook — plus CI and a Windows release workflow.
 
-[unreleased]: https://github.com/yusupsupriyadi/sososo/compare/v0.6.0...HEAD
+[unreleased]: https://github.com/yusupsupriyadi/sososo/compare/v0.7.0...HEAD
+[0.7.0]: https://github.com/yusupsupriyadi/sososo/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/yusupsupriyadi/sososo/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/yusupsupriyadi/sososo/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/yusupsupriyadi/sososo/compare/v0.3.1...v0.4.0
