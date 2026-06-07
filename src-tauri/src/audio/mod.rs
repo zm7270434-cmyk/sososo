@@ -2,6 +2,10 @@ pub mod capture;
 pub mod devices;
 pub mod mixer;
 
+// Shared PulseAudio introspection used by the Linux capture + device backends.
+#[cfg(target_os = "linux")]
+mod pulse;
+
 /// PCM format we negotiate from WASAPI (via autoconvert) and feed to Deepgram.
 /// Each source is captured as 16 kHz, 16-bit signed, mono; the mixer then
 /// interleaves mic + system into a 2-channel stream.

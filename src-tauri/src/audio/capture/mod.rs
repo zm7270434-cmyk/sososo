@@ -14,6 +14,9 @@ mod platform;
 #[cfg(target_os = "macos")]
 #[path = "macos.rs"]
 mod platform;
+#[cfg(target_os = "linux")]
+#[path = "linux.rs"]
+mod platform;
 
 /// A running capture of one source, delivering 16 kHz / 16-bit / mono PCM as
 /// `Vec<i16>` chunks over `rx`. The realtime capture work runs on its own thread.
@@ -46,6 +49,8 @@ impl Drop for CaptureHandle {
 pub(crate) enum Source {
     /// System output (what you hear). Windows: WASAPI loopback of a render device.
     /// macOS: a capture of an input device that carries system audio (e.g. BlackHole).
+    /// Linux: a PulseAudio/PipeWire sink **monitor** source (the default sink's
+    /// monitor when none is selected).
     Loopback,
     /// Microphone / default input.
     Mic,
@@ -53,7 +58,7 @@ pub(crate) enum Source {
 
 /// Start capturing system audio. `device_id` selects the source device, or `None`
 /// for the system default. (Windows: an output device to loopback; macOS: an input
-/// device carrying system audio.)
+/// device carrying system audio; Linux: a sink monitor source.)
 pub fn start_loopback_capture(device_id: Option<String>) -> AppResult<CaptureHandle> {
     start_capture(Source::Loopback, device_id)
 }
