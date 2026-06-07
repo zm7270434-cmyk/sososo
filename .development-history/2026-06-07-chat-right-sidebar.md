@@ -13,7 +13,12 @@ three side-by-side cards: **sidebar · content · chat**.
   `flex-col` — header / scrollable messages / pinned input with `border-b`/
   `border-t` dividers). Owns all chat state (history, draft, in-flight,
   provider-key gate, error), IPC (`getChatMessages`, `chatSession`, `clearChat`,
-  `getAiProvider`, `hasApiKey`), and auto-scroll-to-newest. No open/close toggle.
+  `getAiProvider`, `hasApiKey`), and auto-scroll-to-newest.
+- **Collapsible** — a `›` button in the header collapses the card into a thin
+  `w-11` strip showing a chat icon + a rotated (`writing-mode: vertical-rl`)
+  "Ask" label; clicking the strip re-expands. State is the persisted
+  `chatCollapsed` flag in `configStore` (survives the per-session remount and
+  app restarts).
 - **`MainApp.tsx`** — renders the chat as the **third shell column**, a sibling of
   `<SessionSidebar>` and `<main>` inside the existing `flex gap-2` row. Detects
   the page with `useMatch('/main/session/:id')` and renders

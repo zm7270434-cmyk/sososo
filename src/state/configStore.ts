@@ -28,6 +28,9 @@ interface ConfigStore {
   /** Auto-generate an AI summary when a recording finishes (only if the active
    *  provider's API key is set). Default on. */
   autoSummarizeOnFinish: boolean;
+  /** Collapse the transcript-chat sidebar (session detail) into a thin "Ask"
+   *  strip. Default false (expanded). */
+  chatCollapsed: boolean;
   setLanguage: (l: LanguageCode) => void;
   setSystemOnly: (s: boolean) => void;
   setInputDevice: (id: string | null) => void;
@@ -38,6 +41,7 @@ interface ConfigStore {
   setTranslateEnabled: (v: boolean) => void;
   setTargetLanguage: (l: LanguageCode) => void;
   setAutoSummarizeOnFinish: (v: boolean) => void;
+  setChatCollapsed: (v: boolean) => void;
 }
 
 /** Bounds for the appearance sliders, also used to clamp persisted values. */
@@ -61,6 +65,7 @@ export const useConfigStore = create<ConfigStore>()(
       translateEnabled: false,
       targetLanguage: 'en',
       autoSummarizeOnFinish: true,
+      chatCollapsed: false,
       setLanguage: (language) => set({ language }),
       setSystemOnly: (systemOnly) => set({ systemOnly }),
       setInputDevice: (inputDevice) => set({ inputDevice }),
@@ -71,6 +76,7 @@ export const useConfigStore = create<ConfigStore>()(
       setTranslateEnabled: (translateEnabled) => set({ translateEnabled }),
       setTargetLanguage: (targetLanguage) => set({ targetLanguage }),
       setAutoSummarizeOnFinish: (autoSummarizeOnFinish) => set({ autoSummarizeOnFinish }),
+      setChatCollapsed: (chatCollapsed) => set({ chatCollapsed }),
     }),
     {
       name: 'sososo-config',
@@ -83,6 +89,7 @@ export const useConfigStore = create<ConfigStore>()(
         translateEnabled: s.translateEnabled,
         targetLanguage: s.targetLanguage,
         autoSummarizeOnFinish: s.autoSummarizeOnFinish,
+        chatCollapsed: s.chatCollapsed,
       }),
     },
   ),

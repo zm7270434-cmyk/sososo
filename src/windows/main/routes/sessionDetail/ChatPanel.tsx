@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { IconAlert, IconChat, IconDelete, IconSend } from '../../../../lib/icons';
+import { IconAlert, IconChat, IconChevronRight, IconDelete, IconSend } from '../../../../lib/icons';
 import {
   chatSession,
   clearChat,
@@ -9,16 +9,20 @@ import {
   getChatMessages,
   hasApiKey,
 } from '../../../../lib/ipc';
+import { useConfigStore } from '../../../../state/configStore';
 import { ChatBubble } from './markdown';
 import type { ChatMessage } from '../../../../types/domain';
 
 /**
- * Always-visible right sidebar on the session-detail page: "ask about this
- * transcript" via the active AI provider. Self-contained — owns its persisted
- * per-session history, draft, in-flight flag, the provider-key gate, a chat
- * error, and the auto-scroll-to-newest behavior. Re-keyed by `sessionId`.
+ * Right sidebar card on the session-detail page: "ask about this transcript"
+ * via the active AI provider. Self-contained — owns its persisted per-session
+ * history, draft, in-flight flag, the provider-key gate, a chat error, and the
+ * auto-scroll-to-newest behavior. Re-keyed by `sessionId`. Collapses into a thin
+ * vertical "Ask" strip via the persisted `chatCollapsed` config flag.
  */
 export default function ChatPanel({ sessionId }: { sessionId: number }) {
+  const collapsed = useConfigStore((s) => s.chatCollapsed);
+  const setCollapsed = useConfigStore((s) => s.setChatCollapsed);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
@@ -88,23 +92,59 @@ export default function ChatPanel({ sessionId }: { sessionId: number }) {
     }
   }
 
+  // Collapsed: a thin vertical strip with a chat icon + rotated "Ask" label;
+  // clicking anywhere on it re-expands the panel.
+  if (collapsed) {
+    return (
+      <aside className="liquid-glass flex w-11 shrink-0 flex-col overflow-hidden rounded-lg">
+        <button
+          onClick={() => setCollapsed(false)}
+          title="Expand transcript chat"
+          aria-label="Expand transcript chat"
+          className="flex h-full w-full cursor-pointer flex-col items-center gap-3 py-4 text-fg-faint transition-colors hover:bg-hover hover:text-fg"
+        >
+          <HugeiconsIcon icon={IconChat} size={17} strokeWidth={1.8} aria-hidden={true} />
+          <span className="text-[12px] font-semibold tracking-[0.18em] text-accent-2 uppercase [writing-mode:vertical-rl]">
+            Ask
+          </span>
+        </button>
+      </aside>
+    );
+  }
+
   return (
     <aside className="liquid-glass flex w-[320px] shrink-0 flex-col overflow-hidden rounded-lg">
-      <div className="flex shrink-0 items-center justify-between gap-2.5 border-b border-glass-border px-4 py-3">
-        <h3 className="m-0 inline-flex items-center gap-1.5 text-[12px] tracking-[0.06em] text-accent-2 uppercase">
-          <HugeiconsIcon icon={IconChat} size={14} strokeWidth={1.8} aria-hidden={true} />
-          Ask about this transcript
+      <div className="flex shrink-0 items-center justify-between gap-2 border-b border-glass-border px-3 py-3">
+        <h3 className="m-0 inline-flex min-w-0 items-center gap-1.5 text-[12px] tracking-[0.06em] text-accent-2 uppercase">
+          <HugeiconsIcon
+            icon={IconChat}
+            size={14}
+            strokeWidth={1.8}
+            className="shrink-0"
+            aria-hidden={true}
+          />
+          <span className="truncate">Ask about this transcript</span>
         </h3>
-        {aiReady && messages.length > 0 && (
+        <div className="flex shrink-0 items-center gap-1">
+          {aiReady && messages.length > 0 && (
+            <button
+              className="inline-flex shrink-0 cursor-pointer items-center gap-1.5 rounded-sm border border-[rgba(255,255,255,0.2)] bg-[rgba(255,255,255,0.06)] px-2 py-1 text-[11.5px] text-fg-faint shadow-liquid hover:bg-hover hover:text-fg-dim"
+              onClick={() => void clearHistory()}
+              title="Clear chat history"
+            >
+              <HugeiconsIcon icon={IconDelete} size={12} strokeWidth={1.8} aria-hidden={true} />
+              Clear
+            </button>
+          )}
           <button
-            className="inline-flex shrink-0 cursor-pointer items-center gap-1.5 rounded-sm border border-[rgba(255,255,255,0.2)] bg-[rgba(255,255,255,0.06)] px-2.5 py-1 text-[11.5px] text-fg-faint shadow-liquid hover:bg-hover hover:text-fg-dim"
-            onClick={() => void clearHistory()}
-            title="Clear chat history"
+            className="inline-flex shrink-0 cursor-pointer items-center rounded-sm p-1 text-fg-faint hover:bg-hover hover:text-fg"
+            onClick={() => setCollapsed(true)}
+            title="Collapse chat"
+            aria-label="Collapse transcript chat"
           >
-            <HugeiconsIcon icon={IconDelete} size={12} strokeWidth={1.8} aria-hidden={true} />
-            Clear
+            <HugeiconsIcon icon={IconChevronRight} size={16} strokeWidth={1.8} aria-hidden={true} />
           </button>
-        )}
+        </div>
       </div>
 
       {!aiReady ? (

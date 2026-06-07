@@ -49,6 +49,7 @@ export {
   BubbleChatIcon as IconChat,
   Sent02Icon as IconSend,
   ArrowDown01Icon as IconChevronDown,
+  ArrowRight01Icon as IconChevronRight,
   // People
   UserMultiple02Icon as IconRemote,
   // Empty / error states
