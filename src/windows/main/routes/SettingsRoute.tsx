@@ -42,6 +42,13 @@ const H3 =
   'mb-3 inline-flex items-center gap-2 text-[12px] uppercase tracking-[0.06em] text-fg-faint';
 const FIELD = 'mb-3.5 flex flex-col gap-1.5';
 const FIELD_LABEL = 'text-[13px] text-fg-dim';
+// Sub-group header inside the API Keys section, used to separate the required
+// speech-to-text key (Deepgram) from the optional AI keys (OpenAI / Gemini).
+const SUBHEAD = 'text-[12.5px] font-semibold text-fg';
+const BADGE_REQ =
+  'inline-flex items-center rounded-full border border-[rgba(110,168,254,0.45)] bg-[rgba(110,168,254,0.16)] px-1.5 py-px text-[10px] font-semibold uppercase tracking-[0.04em] text-accent not-italic';
+const BADGE_OPT =
+  'inline-flex items-center rounded-full border border-glass-border bg-[rgba(255,255,255,0.06)] px-1.5 py-px text-[10px] font-semibold uppercase tracking-[0.04em] text-fg-faint not-italic';
 
 // Open external links in the system browser (Tauri), with a plain-web fallback
 // so the links still work under `vite dev` outside the Tauri webview.
@@ -172,6 +179,26 @@ export default function SettingsRoute() {
           <HugeiconsIcon icon={IconKey} size={13} strokeWidth={1.8} aria-hidden={true} />
           API Keys
         </h3>
+        {/* Many users confuse Deepgram with the AI keys and fill in only one,
+            thinking they're alternatives. Make explicit that Deepgram is the
+            required transcription engine and the AI keys are a separate optional add-on. */}
+        <div className="mb-4 flex flex-col gap-1.5 rounded-sm border border-[rgba(255,255,255,0.14)] bg-[rgba(255,255,255,0.04)] px-3 py-2.5 text-[12px] leading-[1.55] text-fg-dim">
+          <span>
+            <b className="text-fg">Deepgram</b> and the <b className="text-fg">AI keys</b> (OpenAI /
+            Gemini) are <b className="text-fg">two different services, not alternatives</b> — you
+            don&apos;t choose one or the other.
+          </span>
+          <span>
+            <b className="text-accent">Deepgram is required</b> — it powers live transcription, the
+            app&apos;s core feature. The AI keys are <b className="text-fg">optional</b> and only
+            add AI summaries &amp; live translation on top.
+          </span>
+        </div>
+        {/* Group 1 — the required speech-to-text key */}
+        <div className="mb-2 flex items-center gap-2">
+          <span className={SUBHEAD}>Speech-to-text engine</span>
+          <span className={BADGE_REQ}>Required</span>
+        </div>
         <label className={FIELD}>
           <span className={FIELD_LABEL}>
             Deepgram API Key{' '}
@@ -222,6 +249,15 @@ export default function SettingsRoute() {
             Sign up, create an API key in the Deepgram console, then paste it above.
           </span>
         </div>
+        {/* Group 2 — the optional AI keys (summaries + live translation) */}
+        <div className="mt-5 mb-2 flex items-center gap-2">
+          <span className={SUBHEAD}>AI summaries &amp; translation</span>
+          <span className={BADGE_OPT}>Optional</span>
+        </div>
+        <p className="mb-3 text-[11.5px] leading-[1.5] text-fg-faint">
+          These are separate from Deepgram. Skip them entirely if you only need transcription —
+          recording and live captions work with the Deepgram key alone.
+        </p>
         <label className={FIELD}>
           <span className={FIELD_LABEL}>
             OpenAI API Key{' '}
