@@ -38,6 +38,13 @@ export const setTranscriptionOptions = (
 /** Pause/resume the active session (backend stops/forwards audio to Deepgram). */
 export const setPaused = (paused: boolean): Promise<void> => invoke('set_paused', { paused });
 
+// --- App behavior ---
+
+/** Sync the close-to-tray pref: when enabled, closing the window hides the app
+ *  to the system tray instead of quitting (recording keeps running). */
+export const setCloseToTray = (enabled: boolean): Promise<void> =>
+  invoke('set_close_to_tray', { enabled });
+
 // --- Video recording (Windows) ---
 
 /** List capturable windows for the Start-screen video picker. */

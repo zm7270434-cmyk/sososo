@@ -31,6 +31,7 @@ import { useUpdateStore } from '../../../state/updateStore';
 import { checkForUpdate, downloadAndInstall, restartApp } from '../../../lib/updater';
 import type { AiProvider, ApiService, DeviceLists } from '../../../types/domain';
 import { AppearanceSection } from './settings/AppearanceSection';
+import { BehaviorSection } from './settings/BehaviorSection';
 import { deriveUpdateStatus } from './settings/updateStatus';
 import {
   BADGE_OPT,
@@ -437,6 +438,8 @@ export default function SettingsRoute() {
       </section>
 
       <AppearanceSection />
+
+      <BehaviorSection />
 
       <section className="mb-7">
         <h3 className={H3}>

@@ -30,6 +30,9 @@ pub struct AppState {
     /// The window to record (raw HWND as a decimal string), or `None` if none is
     /// selected. Mirrors `video::WindowInfo::id`.
     pub video_window: Mutex<Option<String>>,
+    /// When true (the default), closing the window hides the app to the system
+    /// tray instead of quitting. Synced from Settings → Behavior.
+    pub close_to_tray: Mutex<bool>,
 }
 
 impl Default for AppState {
@@ -42,6 +45,7 @@ impl Default for AppState {
             system_only: Mutex::new(false),
             video_enabled: Mutex::new(false),
             video_window: Mutex::new(None),
+            close_to_tray: Mutex::new(true),
         }
     }
 }

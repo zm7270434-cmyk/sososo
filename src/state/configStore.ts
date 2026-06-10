@@ -35,6 +35,9 @@ interface ConfigStore {
   /** Collapse the transcript-chat sidebar (session detail) into a thin "Ask"
    *  strip. Default false (expanded). */
   chatCollapsed: boolean;
+  /** Closing the window hides the app to the system tray instead of quitting
+   *  (recording keeps running in the background). Default on. */
+  closeToTray: boolean;
   setLanguage: (l: LanguageCode) => void;
   setSystemOnly: (s: boolean) => void;
   setInputDevice: (id: string | null) => void;
@@ -48,6 +51,7 @@ interface ConfigStore {
   setTargetLanguage: (l: LanguageCode) => void;
   setAutoSummarizeOnFinish: (v: boolean) => void;
   setChatCollapsed: (v: boolean) => void;
+  setCloseToTray: (v: boolean) => void;
 }
 
 /** Bounds for the appearance sliders, also used to clamp persisted values. */
@@ -74,6 +78,7 @@ export const useConfigStore = create<ConfigStore>()(
       targetLanguage: 'en',
       autoSummarizeOnFinish: true,
       chatCollapsed: false,
+      closeToTray: true,
       setLanguage: (language) => set({ language }),
       setSystemOnly: (systemOnly) => set({ systemOnly }),
       setInputDevice: (inputDevice) => set({ inputDevice }),
@@ -87,6 +92,7 @@ export const useConfigStore = create<ConfigStore>()(
       setTargetLanguage: (targetLanguage) => set({ targetLanguage }),
       setAutoSummarizeOnFinish: (autoSummarizeOnFinish) => set({ autoSummarizeOnFinish }),
       setChatCollapsed: (chatCollapsed) => set({ chatCollapsed }),
+      setCloseToTray: (closeToTray) => set({ closeToTray }),
     }),
     {
       name: 'sososo-config',
@@ -101,6 +107,7 @@ export const useConfigStore = create<ConfigStore>()(
         autoSummarizeOnFinish: s.autoSummarizeOnFinish,
         chatCollapsed: s.chatCollapsed,
         videoEnabled: s.videoEnabled,
+        closeToTray: s.closeToTray,
       }),
     },
   ),

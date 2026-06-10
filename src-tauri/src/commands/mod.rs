@@ -4,6 +4,7 @@
 
 mod apikeys;
 mod assistant;
+mod behavior;
 mod devices;
 mod history;
 mod session;
@@ -11,6 +12,7 @@ mod video;
 
 pub use apikeys::*;
 pub use assistant::*;
+pub use behavior::*;
 pub use devices::*;
 pub use history::*;
 pub use session::*;

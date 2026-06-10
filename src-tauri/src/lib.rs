@@ -9,6 +9,7 @@ mod events;
 mod keys;
 mod session;
 mod state;
+mod tray;
 // `pub` (like `audio`) so the `thumb_probe` example can drive `list_windows`.
 pub mod video;
 
@@ -49,7 +50,25 @@ pub fn run() {
             commands::get_chat_messages,
             commands::chat_session,
             commands::clear_chat,
+            commands::set_close_to_tray,
         ])
+        // Close-to-tray: intercept the window close and hide instead, so the app
+        // (and any running recording) stays alive in the system tray. Quitting
+        // for real happens from the tray menu — or here, when the pref is off.
+        .on_window_event(|window, event| {
+            if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+                let close_to_tray = *window
+                    .app_handle()
+                    .state::<state::AppState>()
+                    .close_to_tray
+                    .lock()
+                    .unwrap();
+                if close_to_tray {
+                    api.prevent_close();
+                    let _ = window.hide();
+                }
+            }
+        })
         .setup(|app| {
             // Open (creating if needed) the SQLite history database in the app
             // data dir, then hand it to Tauri as managed state (Milestone D).
@@ -61,6 +80,9 @@ pub fn run() {
             std::fs::create_dir_all(&data_dir)?;
             let db = db::Db::open(&data_dir.join("sososo.db"))?;
             app.manage(db);
+
+            // System tray: open/quit + the way back in while closed-to-tray.
+            tray::setup(app)?;
 
             // Transparent glass: the window is `transparent: true` with no native
             // acrylic/vibrancy, so the desktop behind shows through sharply. The tint

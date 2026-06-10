@@ -5,6 +5,7 @@ import { useSessionStore } from '../../state/sessionStore';
 import { useTranscriptStore } from '../../state/transcriptStore';
 import { useConfigStore } from '../../state/configStore';
 import { checkOnLaunch } from '../../lib/updater';
+import { setCloseToTray } from '../../lib/ipc';
 import Titlebar from './Titlebar';
 import UpdateBanner from './UpdateBanner';
 import SessionSidebar from './SessionSidebar';
@@ -22,6 +23,7 @@ export default function MainApp() {
   const sessionId = useSessionStore((s) => s.sessionId);
   const uiScale = useConfigStore((s) => s.uiScale);
   const glassOpacity = useConfigStore((s) => s.glassOpacity);
+  const closeToTray = useConfigStore((s) => s.closeToTray);
   const navigate = useNavigate();
   const prev = useRef(state);
   // The transcription-result page (session detail) gets a third shell column:
@@ -60,6 +62,13 @@ export default function MainApp() {
   useEffect(() => {
     document.documentElement.style.setProperty('--glass-alpha', String(glassOpacity));
   }, [glassOpacity]);
+
+  // Sync the close-to-tray pref to the backend (it's enforced in Rust on the
+  // window-close event) — on mount and whenever the setting changes. Fails
+  // silently outside a Tauri webview (plain `vite dev`).
+  useEffect(() => {
+    setCloseToTray(closeToTray).catch(() => {});
+  }, [closeToTray]);
 
   // Check GitHub Releases for a newer version once, shortly after launch. Silent:
   // failures (offline, or plain `vite dev` outside Tauri) stay invisible; an
