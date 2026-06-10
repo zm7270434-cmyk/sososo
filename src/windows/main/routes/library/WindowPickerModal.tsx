@@ -3,6 +3,7 @@ import { HugeiconsIcon } from '@hugeicons/react';
 import type { WindowInfo } from '../../../../types/domain';
 import { filterWindows, prettyAppName } from '../../../../lib/windowPicker';
 import {
+  IconAbout,
   IconCheck,
   IconClose,
   IconRegenerate,
@@ -220,6 +221,22 @@ export default function WindowPickerModal({
               })}
             </div>
           )}
+        </div>
+
+        <div className="border-t border-glass-border px-4 py-2.5">
+          <span className="inline-flex items-start gap-1.5 text-[10.5px] leading-snug text-fg-faint">
+            <HugeiconsIcon
+              icon={IconAbout}
+              size={12}
+              strokeWidth={1.8}
+              className="mt-px shrink-0"
+              aria-hidden={true}
+            />
+            <span>
+              Capture is per window. To record a single browser tab (like sharing a tab in Google
+              Meet), drag that tab out into its own window first, then pick it here.
+            </span>
+          </span>
         </div>
       </div>
     </div>

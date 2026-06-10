@@ -50,6 +50,16 @@ plain `<select>` of window titles, hard to scan and easy to mispick.
   over title/raw app/pretty app) + `prettyAppName` ("chrome.exe" → "Chrome").
 - `types/domain.ts`: `WindowInfo.thumbnail?: string | null`.
 
+## Follow-up: per-window vs per-tab
+
+- User asked why Chrome tabs don't appear individually (à la Google Meet's
+  "share this tab"). That picker runs **inside** the browser (WebRTC
+  `getDisplayMedia`); externally the OS only exposes top-level windows (HWNDs)
+  to Windows.Graphics.Capture, and background tabs aren't even rendered — so
+  per-tab capture is impossible for any desktop recorder (OBS/Zoom desktop have
+  the same limit). Standard answer shipped in the dialog footer: drag the tab
+  out into its own window, then pick that window.
+
 ## Verification
 
 - `bun test` 46 pass · `bun run build` (strict tsc) ok · eslint: no new
