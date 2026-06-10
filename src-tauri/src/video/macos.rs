@@ -57,6 +57,9 @@ pub fn list_windows() -> AppResult<Vec<WindowInfo>> {
             id: window.window_id().to_string(),
             title,
             app,
+            // No thumbnails on macOS yet (would need SCScreenshotManager); the
+            // picker shows a placeholder card instead.
+            thumbnail: None,
         });
     }
     Ok(out)

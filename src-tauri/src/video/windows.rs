@@ -16,8 +16,18 @@ use std::sync::Arc;
 use std::thread::{self, JoinHandle};
 use std::time::{Duration, Instant};
 
+use base64::Engine as _;
 use crossbeam_channel::{bounded, Receiver, Sender};
 use wasapi::{DeviceEnumerator, Direction, SampleType, StreamMode, WaveFormat};
+use windows::Win32::Foundation::{HWND, RECT};
+use windows::Win32::Graphics::Gdi::{
+    CreateCompatibleDC, CreateDIBSection, DeleteDC, DeleteObject, GdiFlush, SelectObject,
+    BITMAPINFO, BITMAPINFOHEADER, BI_RGB, DIB_RGB_COLORS, HGDIOBJ,
+};
+use windows::Win32::Storage::Xps::{PrintWindow, PRINT_WINDOW_FLAGS};
+use windows::Win32::UI::WindowsAndMessaging::{
+    GetWindowRect, GetWindowThreadProcessId, IsHungAppWindow, IsIconic,
+};
 use windows_capture::capture::{CaptureControl, Context, GraphicsCaptureApiHandler};
 use windows_capture::encoder::{
     AudioSettingsBuilder, ContainerSettingsBuilder, VideoEncoder, VideoSettingsBuilder,
@@ -57,10 +67,13 @@ type HandlerError = Box<dyn std::error::Error + Send + Sync>;
 
 /// List capturable top-level windows. `Window::enumerate` already filters to
 /// visible, non-tool, non-child windows owned by other processes; we additionally
-/// drop untitled ones so the picker stays meaningful.
+/// drop untitled ones and our own windows (recording the picker itself makes no
+/// sense), attach a JPEG thumbnail per window so the picker can show them
+/// visually, and sort by app then title so windows group naturally.
 pub fn list_windows() -> AppResult<Vec<WindowInfo>> {
     let windows =
         Window::enumerate().map_err(|e| AppError::Video(format!("enumerate windows: {e}")))?;
+    let own_pid = std::process::id();
 
     let mut out = Vec::new();
     for w in windows {
@@ -68,13 +81,24 @@ pub fn list_windows() -> AppResult<Vec<WindowInfo>> {
         if title.trim().is_empty() {
             continue;
         }
+        let hwnd = HWND(w.as_raw_hwnd());
+        let mut pid = 0u32;
+        unsafe { GetWindowThreadProcessId(hwnd, Some(&mut pid)) };
+        if pid == own_pid {
+            continue;
+        }
         let app = w.process_name().unwrap_or_default();
         out.push(WindowInfo {
             id: (w.as_raw_hwnd() as isize).to_string(),
             title,
             app,
+            thumbnail: capture_thumbnail(hwnd),
         });
     }
+    out.sort_by(|a, b| {
+        let app = a.app.to_lowercase().cmp(&b.app.to_lowercase());
+        app.then_with(|| a.title.to_lowercase().cmp(&b.title.to_lowercase()))
+    });
     Ok(out)
 }
 
@@ -430,6 +454,135 @@ impl VideoRecorder {
     }
 }
 
+// ---------------------------------------------------------------------------
+// Window thumbnails (for the Start-screen picker)
+// ---------------------------------------------------------------------------
+
+/// `PrintWindow` flag asking DWM for the full composed content — required for
+/// GPU-rendered windows (Chrome, Electron, UWP apps), which come out black
+/// without it. Defined since Windows 8.1 but not surfaced by the `windows`
+/// crate's metadata, so declared locally.
+/// <https://learn.microsoft.com/windows/win32/api/winuser/nf-winuser-printwindow>
+const PW_RENDERFULLCONTENT: PRINT_WINDOW_FLAGS = PRINT_WINDOW_FLAGS(2);
+
+/// Thumbnail bounding box (px) for the picker grid, and the JPEG quality —
+/// together they keep each entry roughly 10–25 KB over IPC.
+const THUMB_MAX_W: u32 = 320;
+const THUMB_MAX_H: u32 = 200;
+const THUMB_JPEG_QUALITY: u8 = 70;
+
+/// Snapshot one window into a small JPEG data URL via `PrintWindow` into a
+/// 32-bpp DIB — the standard window-picker technique (it sees occluded windows,
+/// unlike a screen BitBlt). Returns `None` for anything that can't produce a
+/// useful image: minimized (stale surface), hung (PrintWindow would block on the
+/// window's message loop), zero-sized, or rendered all-black (DRM/protected).
+fn capture_thumbnail(hwnd: HWND) -> Option<String> {
+    unsafe {
+        if IsIconic(hwnd).as_bool() || IsHungAppWindow(hwnd).as_bool() {
+            return None;
+        }
+        let mut rect = RECT::default();
+        GetWindowRect(hwnd, &mut rect).ok()?;
+        let w = rect.right.saturating_sub(rect.left).max(0) as u32;
+        let h = rect.bottom.saturating_sub(rect.top).max(0) as u32;
+        if w < 16 || h < 16 {
+            return None;
+        }
+
+        let mem_dc = CreateCompatibleDC(None);
+        if mem_dc.is_invalid() {
+            return None;
+        }
+        // Top-down (negative height) BGRA DIB so rows read out in natural order.
+        let bmi = BITMAPINFO {
+            bmiHeader: BITMAPINFOHEADER {
+                biSize: std::mem::size_of::<BITMAPINFOHEADER>() as u32,
+                biWidth: w as i32,
+                biHeight: -(h as i32),
+                biPlanes: 1,
+                biBitCount: 32,
+                biCompression: BI_RGB.0,
+                ..Default::default()
+            },
+            ..Default::default()
+        };
+        let mut bits: *mut std::ffi::c_void = std::ptr::null_mut();
+        let Ok(dib) = CreateDIBSection(None, &bmi, DIB_RGB_COLORS, &mut bits, None, 0) else {
+            let _ = DeleteDC(mem_dc);
+            return None;
+        };
+        let prev = SelectObject(mem_dc, HGDIOBJ::from(dib));
+
+        let printed = PrintWindow(hwnd, mem_dc, PW_RENDERFULLCONTENT).as_bool();
+        let _ = GdiFlush();
+
+        // Copy the pixels out before tearing the GDI objects down.
+        let pixels = printed.then(|| {
+            std::slice::from_raw_parts(bits as *const u8, (w as usize) * (h as usize) * 4).to_vec()
+        });
+
+        SelectObject(mem_dc, prev);
+        let _ = DeleteObject(HGDIOBJ::from(dib));
+        let _ = DeleteDC(mem_dc);
+
+        let pixels = pixels?;
+        if is_blank_bgra(&pixels) {
+            return None;
+        }
+        encode_thumbnail_jpeg(&pixels, w, h)
+    }
+}
+
+/// BGRA pixels → aspect-fit RGB thumbnail → JPEG → `data:image/jpeg;base64,…`.
+fn encode_thumbnail_jpeg(bgra: &[u8], w: u32, h: u32) -> Option<String> {
+    let mut rgb = Vec::with_capacity((w as usize) * (h as usize) * 3);
+    for px in bgra.chunks_exact(4) {
+        rgb.extend_from_slice(&[px[2], px[1], px[0]]);
+    }
+    let full = image::RgbImage::from_raw(w, h, rgb)?;
+    let (tw, th) = fit_thumb_size(w, h, THUMB_MAX_W, THUMB_MAX_H);
+    let thumb = image::imageops::thumbnail(&full, tw, th);
+
+    let mut jpeg = Vec::new();
+    image::codecs::jpeg::JpegEncoder::new_with_quality(
+        std::io::Cursor::new(&mut jpeg),
+        THUMB_JPEG_QUALITY,
+    )
+    .encode_image(&thumb)
+    .ok()?;
+    Some(format!(
+        "data:image/jpeg;base64,{}",
+        base64::engine::general_purpose::STANDARD.encode(&jpeg)
+    ))
+}
+
+/// Aspect-fit `(w, h)` into `(max_w, max_h)` without ever upscaling, clamping
+/// each side to at least 1px so degenerate window sizes can't yield a zero
+/// dimension (which the JPEG encoder rejects).
+fn fit_thumb_size(w: u32, h: u32, max_w: u32, max_h: u32) -> (u32, u32) {
+    let scale = f64::min(
+        1.0,
+        f64::min(
+            f64::from(max_w) / f64::from(w.max(1)),
+            f64::from(max_h) / f64::from(h.max(1)),
+        ),
+    );
+    let out_w = (f64::from(w) * scale).round() as u32;
+    let out_h = (f64::from(h) * scale).round() as u32;
+    (out_w.max(1), out_h.max(1))
+}
+
+/// `true` when a BGRA buffer carries no visible content — every color channel
+/// at or below a small threshold. `PrintWindow` yields all-black for windows it
+/// cannot render (DRM-protected, some GPU surfaces); those thumbnails are worse
+/// than a placeholder, so the caller drops them.
+fn is_blank_bgra(pixels: &[u8]) -> bool {
+    const NEAR_BLACK: u8 = 8;
+    pixels
+        .chunks_exact(4)
+        .all(|px| px[0] <= NEAR_BLACK && px[1] <= NEAR_BLACK && px[2] <= NEAR_BLACK)
+}
+
 /// Start recording `cfg.window_id` (a raw HWND, as a decimal string) to
 /// `cfg.out_path`, muxing mic + system audio. `cfg.out_path`'s parent directory
 /// must already exist.
@@ -491,4 +644,48 @@ pub fn start_window_recording(cfg: VideoStartConfig) -> AppResult<VideoRecorder>
         _sys: sys,
         out_path: cfg.out_path,
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{fit_thumb_size, is_blank_bgra};
+
+    #[test]
+    fn fit_thumb_size_downscales_landscape_to_the_box() {
+        assert_eq!(fit_thumb_size(1920, 1080, 320, 180), (320, 180));
+    }
+
+    #[test]
+    fn fit_thumb_size_fits_portrait_by_height() {
+        // 1080x1920 limited by height: 1080 * (180/1920) = 101.25 -> 101.
+        assert_eq!(fit_thumb_size(1080, 1920, 320, 180), (101, 180));
+    }
+
+    #[test]
+    fn fit_thumb_size_never_upscales_small_windows() {
+        assert_eq!(fit_thumb_size(200, 100, 320, 180), (200, 100));
+    }
+
+    #[test]
+    fn fit_thumb_size_clamps_degenerate_sizes_to_at_least_one_pixel() {
+        let (w, h) = fit_thumb_size(10_000, 1, 320, 180);
+        assert_eq!((w, h), (320, 1));
+        assert!(w >= 1 && h >= 1);
+    }
+
+    #[test]
+    fn is_blank_bgra_detects_black_and_near_black_frames() {
+        // All-zero (fully black) and uniform near-black noise are both "blank".
+        assert!(is_blank_bgra(&[0u8; 4 * 16]));
+        assert!(is_blank_bgra(&[5u8; 4 * 16]));
+        assert!(is_blank_bgra(&[]));
+    }
+
+    #[test]
+    fn is_blank_bgra_keeps_frames_with_real_content() {
+        // One bright green pixel (BGRA) among black ones.
+        let mut px = vec![0u8; 4 * 16];
+        px[4 * 7 + 1] = 200; // G of pixel 7
+        assert!(!is_blank_bgra(&px));
+    }
 }

@@ -39,6 +39,11 @@ pub struct WindowInfo {
     pub title: String,
     /// The owning process/executable name (e.g. "Zoom.exe", "chrome.exe").
     pub app: String,
+    /// Small JPEG preview as a `data:image/jpeg;base64,…` URL, so the picker can
+    /// show windows visually (Zoom-style). `None` when the window can't be
+    /// snapshotted (minimized, hung, DRM-black) or on platforms without
+    /// thumbnail support yet (macOS) — the UI falls back to a placeholder.
+    pub thumbnail: Option<String>,
 }
 
 /// Everything the backend needs to record one window with a muxed mic+system

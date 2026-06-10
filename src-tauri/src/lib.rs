@@ -9,7 +9,8 @@ mod events;
 mod keys;
 mod session;
 mod state;
-mod video;
+// `pub` (like `audio`) so the `thumb_probe` example can drive `list_windows`.
+pub mod video;
 
 use tauri::Manager;
 

@@ -15,6 +15,8 @@ import {
 import type { DeviceLists, WindowInfo } from '../../../types/domain';
 import { LANGUAGES, TRANSLATE_TARGETS } from '../../../lib/languages';
 import { isLinux } from '../../../lib/platform';
+import { prettyAppName } from '../../../lib/windowPicker';
+import WindowPickerModal from './library/WindowPickerModal';
 import {
   IconAbout,
   IconAlert,
@@ -22,7 +24,6 @@ import {
   IconLanguage,
   IconMic,
   IconRecord,
-  IconRegenerate,
   IconRemote,
   IconRename,
   IconSettings,
@@ -92,7 +93,11 @@ export default function LibraryRoute() {
   const [openaiReady, setOpenaiReady] = useState<boolean | null>(null);
   const [devices, setDeviceLists] = useState<DeviceLists | null>(null);
   const [windows, setWindows] = useState<WindowInfo[]>([]);
+  const [windowsLoading, setWindowsLoading] = useState(false);
+  const [pickerOpen, setPickerOpen] = useState(false);
   const [title, setTitle] = useState('');
+
+  const selectedWindow = windows.find((w) => w.id === videoWindowId) ?? null;
 
   useEffect(() => {
     hasApiKey('deepgram')
@@ -137,16 +142,23 @@ export default function LibraryRoute() {
     void setVideoOptions(videoEnabled, videoWindowId ?? '');
   }, [videoEnabled, videoWindowId]);
 
-  // (Re)load the capturable window list whenever recording is switched on.
+  // (Re)load the capturable window list whenever recording is switched on (the
+  // selected-window preview needs it) and on every picker open (fresh thumbnails).
   useEffect(() => {
     if (!VIDEO_SUPPORTED || !videoEnabled) return;
     refreshWindows();
   }, [videoEnabled]);
+  useEffect(() => {
+    if (!pickerOpen) return;
+    refreshWindows();
+  }, [pickerOpen]);
 
   function refreshWindows() {
+    setWindowsLoading(true);
     listWindows()
       .then(setWindows)
-      .catch(() => setWindows([]));
+      .catch(() => setWindows([]))
+      .finally(() => setWindowsLoading(false));
   }
 
   function onLanguage(e: React.ChangeEvent<HTMLSelectElement>) {
@@ -307,7 +319,15 @@ export default function LibraryRoute() {
                       type="checkbox"
                       className="h-4 w-4 shrink-0 cursor-pointer accent-[#6ea8fe]"
                       checked={videoEnabled}
-                      onChange={(e) => setVideoEnabled(e.target.checked)}
+                      onChange={(e) => {
+                        const on = e.target.checked;
+                        setVideoEnabled(on);
+                        // Zoom-style flow: switching recording on goes straight
+                        // to the picker when no window is chosen yet.
+                        if (on && useConfigStore.getState().videoWindowId == null) {
+                          setPickerOpen(true);
+                        }
+                      }}
                     />
                     <span className="inline-flex items-center gap-1.5 text-[13px] text-fg">
                       <HugeiconsIcon
@@ -321,35 +341,87 @@ export default function LibraryRoute() {
                   </label>
                   {videoEnabled && (
                     <>
-                      <div className="flex items-center gap-1.5">
-                        <select
-                          className={`${SELECT} min-w-0 flex-1`}
-                          value={videoWindowId ?? ''}
-                          onChange={(e) => setVideoWindowId(e.target.value || null)}
-                          aria-label="Window to record"
-                        >
-                          <option value="">Select a window…</option>
-                          {windows.map((w) => (
-                            <option key={w.id} value={w.id}>
-                              {w.app ? `${w.app} — ${w.title}` : w.title}
-                            </option>
-                          ))}
-                        </select>
+                      {videoWindowId == null ? (
                         <button
                           type="button"
-                          className="inline-flex shrink-0 cursor-pointer items-center justify-center rounded-sm border border-glass-border bg-[rgba(255,255,255,0.05)] p-[9px] text-fg-dim shadow-liquid hover:bg-hover hover:text-fg"
-                          onClick={refreshWindows}
-                          title="Refresh window list"
-                          aria-label="Refresh window list"
+                          onClick={() => setPickerOpen(true)}
+                          className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-sm border border-dashed border-[rgba(110,168,254,0.45)] bg-[rgba(110,168,254,0.08)] px-3 py-3 text-[12.5px] font-medium text-[#9ec5ff] transition duration-[120ms] hover:bg-[rgba(110,168,254,0.16)] active:scale-[0.98]"
                         >
                           <HugeiconsIcon
-                            icon={IconRegenerate}
-                            size={14}
+                            icon={IconWindow}
+                            size={15}
                             strokeWidth={1.8}
                             aria-hidden={true}
                           />
+                          Choose a window…
                         </button>
-                      </div>
+                      ) : selectedWindow ? (
+                        <div className="flex items-center gap-2.5 rounded-sm border border-glass-border bg-[rgba(255,255,255,0.04)] p-1.5">
+                          <div className="aspect-video h-[52px] shrink-0 overflow-hidden rounded-[4px] border border-glass-border bg-[rgba(0,0,0,0.45)]">
+                            {selectedWindow.thumbnail ? (
+                              <img
+                                src={selectedWindow.thumbnail}
+                                alt=""
+                                className="h-full w-full object-contain"
+                                draggable={false}
+                              />
+                            ) : (
+                              <div className="flex h-full w-full items-center justify-center">
+                                <HugeiconsIcon
+                                  icon={IconWindow}
+                                  size={18}
+                                  strokeWidth={1.5}
+                                  className="text-fg-faint"
+                                  aria-hidden={true}
+                                />
+                              </div>
+                            )}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="truncate text-[12px] leading-tight font-semibold text-fg">
+                              {prettyAppName(selectedWindow.app) || selectedWindow.title}
+                            </div>
+                            <div className="truncate text-[11px] leading-tight text-fg-faint">
+                              {selectedWindow.title}
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setPickerOpen(true)}
+                            className="shrink-0 cursor-pointer rounded-sm border border-glass-border bg-[rgba(255,255,255,0.05)] px-2.5 py-[7px] text-[11.5px] font-medium text-fg-dim shadow-liquid hover:bg-hover hover:text-fg"
+                          >
+                            Change
+                          </button>
+                        </div>
+                      ) : windowsLoading ? (
+                        <div className="flex animate-pulse items-center gap-2.5 rounded-sm border border-glass-border bg-[rgba(255,255,255,0.04)] p-1.5">
+                          <div className="aspect-video h-[52px] shrink-0 rounded-[4px] bg-[rgba(255,255,255,0.07)]" />
+                          <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+                            <div className="h-[10px] w-1/3 rounded-full bg-[rgba(255,255,255,0.07)]" />
+                            <div className="h-[9px] w-2/3 rounded-full bg-[rgba(255,255,255,0.05)]" />
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2 rounded-sm border border-[rgba(255,180,84,0.25)] bg-[rgba(255,180,84,0.08)] p-2">
+                          <HugeiconsIcon
+                            icon={IconAlert}
+                            size={14}
+                            strokeWidth={1.8}
+                            className="shrink-0 text-[#ffb454]"
+                            aria-hidden={true}
+                          />
+                          <span className="min-w-0 flex-1 text-[11px] leading-snug text-[#ffb454]">
+                            That window is no longer open.
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => setPickerOpen(true)}
+                            className="shrink-0 cursor-pointer rounded-sm border border-glass-border bg-[rgba(255,255,255,0.05)] px-2.5 py-[7px] text-[11.5px] font-medium text-fg-dim shadow-liquid hover:bg-hover hover:text-fg"
+                          >
+                            Choose another
+                          </button>
+                        </div>
+                      )}
                       {videoWindowId == null ? (
                         <span className="inline-flex items-start gap-1 text-[11px] leading-snug text-[#ffb454]">
                           <HugeiconsIcon
@@ -394,6 +466,18 @@ export default function LibraryRoute() {
                     </>
                   )}
                 </div>
+              )}
+
+              {VIDEO_SUPPORTED && (
+                <WindowPickerModal
+                  open={pickerOpen}
+                  windows={windows}
+                  loading={windowsLoading}
+                  selectedId={videoWindowId}
+                  onSelect={(id) => setVideoWindowId(id)}
+                  onRefresh={refreshWindows}
+                  onClose={() => setPickerOpen(false)}
+                />
               )}
 
               <div className="mt-0.5 flex flex-col gap-2 rounded-sm border border-glass-border bg-[rgba(255,255,255,0.03)] p-2.5">

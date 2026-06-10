@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Visual window picker for video recording (Windows).** The Start screen's
+  "Record video of a window" selector is no longer a plain dropdown of window
+  titles: choosing now opens a Zoom-style dialog showing a **live thumbnail of
+  every open window** with its app name and title, plus search and refresh.
+  The picked window stays visible on the Start screen as a small preview card
+  with a **Change** button, turning the toggle on goes straight to the picker,
+  and a closed window is flagged with a "no longer open" warning. Windows that
+  can't be previewed (minimized or protected) show a placeholder card; the
+  app's own window is no longer listed. On macOS the new picker UI appears
+  without thumbnails yet.
+
 ## [0.8.0] - 2026-06-10
 
 ### Added

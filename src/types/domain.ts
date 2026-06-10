@@ -16,6 +16,9 @@ export interface WindowInfo {
   title: string;
   /** Owning process/executable name (e.g. "Zoom.exe"). */
   app: string;
+  /** Small JPEG preview as a data URL, or null/absent when the window can't be
+   *  snapshotted (minimized, protected) or the platform has no thumbnails yet. */
+  thumbnail?: string | null;
 }
 
 export type SessionStateName =
