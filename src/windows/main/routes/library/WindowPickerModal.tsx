@@ -52,6 +52,18 @@ export default function WindowPickerModal({
     return () => window.removeEventListener('keydown', onKey);
   }, [open, close]);
 
+  // Refresh when the app regains focus while the picker is open: the main use
+  // is popping a browser tab out into its own window (you leave to drag it,
+  // come back, and the new window should already be in the list).
+  useEffect(() => {
+    if (!open) return;
+    const onFocus = () => {
+      if (!loading) onRefresh();
+    };
+    window.addEventListener('focus', onFocus);
+    return () => window.removeEventListener('focus', onFocus);
+  }, [open, loading, onRefresh]);
+
   if (!open) return null;
 
   const visible = filterWindows(windows, query);
@@ -129,7 +141,7 @@ export default function WindowPickerModal({
         </div>
 
         <div className="min-h-0 flex-1 overflow-y-auto p-4">
-          {loading ? (
+          {loading && windows.length === 0 ? (
             <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3" aria-label="Loading windows">
               {Array.from({ length: 6 }, (_, i) => (
                 <div
@@ -233,8 +245,9 @@ export default function WindowPickerModal({
               aria-hidden={true}
             />
             <span>
-              Capture is per window. To record a single browser tab (like sharing a tab in Google
-              Meet), drag that tab out into its own window first, then pick it here.
+              Capture is per window, so a browser appears once — showing its active tab. To record
+              one tab (like sharing a tab in Google Meet): drag that tab out into its own window,
+              then come back here — the new window shows up automatically.
             </span>
           </span>
         </div>

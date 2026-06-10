@@ -59,6 +59,11 @@ plain `<select>` of window titles, hard to scan and easy to mispick.
   per-tab capture is impossible for any desktop recorder (OBS/Zoom desktop have
   the same limit). Standard answer shipped in the dialog footer: drag the tab
   out into its own window, then pick that window.
+- Follow-up report ("other tabs don't appear"): the Chrome entry IS the whole
+  window, titled by its active tab — clarified the tip wording, and the picker
+  now **auto-refreshes when the app regains focus** so a freshly popped-out tab
+  window appears without pressing refresh. The skeleton now only shows when the
+  list is empty (background refreshes keep the old grid — no flash).
 
 ## Verification
 

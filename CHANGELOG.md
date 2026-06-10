@@ -20,7 +20,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   app's own window is no longer listed. On macOS the new picker UI appears
   without thumbnails yet. The dialog also notes that capture is per window —
   to record a single browser tab (like sharing a tab in Google Meet), pop the
-  tab out into its own window and pick that.
+  tab out into its own window and pick that; the list refreshes itself when
+  you come back to the app, so the new window is already there.
 
 ## [0.8.0] - 2026-06-10
 
