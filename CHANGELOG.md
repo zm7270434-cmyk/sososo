@@ -18,10 +18,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   and a closed window is flagged with a "no longer open" warning. Windows that
   can't be previewed (minimized or protected) show a placeholder card; the
   app's own window is no longer listed. On macOS the new picker UI appears
-  without thumbnails yet. The dialog also notes that capture is per window —
-  to record a single browser tab (like sharing a tab in Google Meet), pop the
-  tab out into its own window and pick that; the list refreshes itself when
-  you come back to the app, so the new window is already there.
+  without thumbnails yet. Capture is per window (browser tabs can't be listed
+  or recorded from outside the browser), so when a browser is open the dialog
+  shows a "Recording a single browser tab?" banner: drag the tab out into its
+  own window — the list refreshes itself when you come back to the app, so the
+  new window is already there to pick.
 
 ## [0.8.0] - 2026-06-10
 

@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 
-import { filterWindows, prettyAppName } from './windowPicker';
+import { filterWindows, isBrowserApp, prettyAppName } from './windowPicker';
 import type { WindowInfo } from '../types/domain';
 
 const WINDOWS: WindowInfo[] = [
@@ -50,5 +50,30 @@ describe('prettyAppName', () => {
   test('handles names without .exe and empty input', () => {
     expect(prettyAppName('firefox')).toBe('Firefox');
     expect(prettyAppName('')).toBe('');
+  });
+});
+
+describe('isBrowserApp', () => {
+  test('recognizes common Windows browser executables, case-insensitively', () => {
+    expect(isBrowserApp('chrome.exe')).toBe(true);
+    expect(isBrowserApp('msedge.exe')).toBe(true);
+    expect(isBrowserApp('Firefox.exe')).toBe(true);
+    expect(isBrowserApp('BRAVE.EXE')).toBe(true);
+    expect(isBrowserApp('opera.exe')).toBe(true);
+    expect(isBrowserApp('vivaldi.exe')).toBe(true);
+  });
+
+  test('recognizes macOS-style application names', () => {
+    expect(isBrowserApp('Google Chrome')).toBe(true);
+    expect(isBrowserApp('Safari')).toBe(true);
+    expect(isBrowserApp('Microsoft Edge')).toBe(true);
+    expect(isBrowserApp('Arc')).toBe(true);
+  });
+
+  test('does not flag non-browser apps', () => {
+    expect(isBrowserApp('Zoom.exe')).toBe(false);
+    expect(isBrowserApp('Code.exe')).toBe(false);
+    expect(isBrowserApp('slack.exe')).toBe(false);
+    expect(isBrowserApp('')).toBe(false);
   });
 });

@@ -64,6 +64,17 @@ plain `<select>` of window titles, hard to scan and easy to mispick.
   now **auto-refreshes when the app regains focus** so a freshly popped-out tab
   window appears without pressing refresh. The skeleton now only shows when the
   list is empty (background refreshes keep the old grid — no flash).
+- User confirmed the want is true per-tab; offered the two real paths
+  (pop-out now vs a companion Chrome extension with `chrome.tabCapture` +
+  native messaging later) — **user chose pop-out**. Hardened the flow:
+  - Focus-refresh now subscribes to **both** the DOM `focus` event and Tauri's
+    native `onFocusChanged` (new `lib/window.ts onWindowFocused` wrapper —
+    the DOM event alone can miss frame-only focus), 500 ms throttle dedupes a
+    double fire.
+  - When a known browser is in the list (`isBrowserApp`, TDD: exe + macOS app
+    names), the dialog shows an accented **"Recording a single browser tab?"**
+    banner with the drag-out instruction; the footer keeps the generic
+    per-window note.
 
 ## Verification
 

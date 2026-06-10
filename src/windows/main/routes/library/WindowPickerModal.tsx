@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { HugeiconsIcon } from '@hugeicons/react';
 import type { WindowInfo } from '../../../../types/domain';
-import { filterWindows, prettyAppName } from '../../../../lib/windowPicker';
+import { filterWindows, isBrowserApp, prettyAppName } from '../../../../lib/windowPicker';
+import { onWindowFocused } from '../../../../lib/window';
 import {
   IconAbout,
   IconCheck,
@@ -54,19 +55,37 @@ export default function WindowPickerModal({
 
   // Refresh when the app regains focus while the picker is open: the main use
   // is popping a browser tab out into its own window (you leave to drag it,
-  // come back, and the new window should already be in the list).
+  // come back, and the new window should already be in the list). Subscribed to
+  // both the DOM `focus` event and Tauri's native focus event — only one may
+  // fire depending on where the click lands — with a short throttle so a
+  // double fire triggers a single reload.
+  const lastFocusRefresh = useRef(0);
   useEffect(() => {
     if (!open) return;
-    const onFocus = () => {
-      if (!loading) onRefresh();
+    const refresh = () => {
+      const now = Date.now();
+      if (now - lastFocusRefresh.current < 500) return;
+      lastFocusRefresh.current = now;
+      onRefresh();
     };
-    window.addEventListener('focus', onFocus);
-    return () => window.removeEventListener('focus', onFocus);
-  }, [open, loading, onRefresh]);
+    window.addEventListener('focus', refresh);
+    let unlisten: (() => void) | undefined;
+    let unmounted = false;
+    void onWindowFocused(refresh).then((fn) => {
+      if (unmounted) fn();
+      else unlisten = fn;
+    });
+    return () => {
+      unmounted = true;
+      window.removeEventListener('focus', refresh);
+      unlisten?.();
+    };
+  }, [open, onRefresh]);
 
   if (!open) return null;
 
   const visible = filterWindows(windows, query);
+  const hasBrowser = windows.some((w) => isBrowserApp(w.app));
 
   return (
     <div
@@ -138,6 +157,21 @@ export default function WindowPickerModal({
               aria-label="Search windows"
             />
           </div>
+          {hasBrowser && (
+            <div className="mt-2.5 flex items-start gap-1.5 rounded-sm border border-[rgba(110,168,254,0.35)] bg-[rgba(110,168,254,0.12)] px-2.5 py-2 text-[11px] leading-snug text-[#9ec5ff]">
+              <HugeiconsIcon
+                icon={IconAbout}
+                size={13}
+                strokeWidth={1.8}
+                className="mt-px shrink-0"
+                aria-hidden={true}
+              />
+              <span>
+                <b>Recording a single browser tab?</b> Drag that tab out of the browser into its own
+                window, then come back here — the new window appears in this list automatically.
+              </span>
+            </div>
+          )}
         </div>
 
         <div className="min-h-0 flex-1 overflow-y-auto p-4">
@@ -245,9 +279,8 @@ export default function WindowPickerModal({
               aria-hidden={true}
             />
             <span>
-              Capture is per window, so a browser appears once — showing its active tab. To record
-              one tab (like sharing a tab in Google Meet): drag that tab out into its own window,
-              then come back here — the new window shows up automatically.
+              Capture is per window: a browser is listed once, titled by its active tab — other tabs
+              can&apos;t be listed or recorded from outside the browser.
             </span>
           </span>
         </div>

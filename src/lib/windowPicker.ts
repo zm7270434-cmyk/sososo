@@ -7,6 +7,29 @@ export function prettyAppName(app: string): string {
   return base ? base.charAt(0).toUpperCase() + base.slice(1) : '';
 }
 
+/** Known browsers — Windows executable names and macOS application names,
+ *  normalized to lowercase without the .exe suffix. Used to surface the
+ *  "drag a tab out to record just that tab" tip when one is in the list. */
+const BROWSER_APPS = new Set([
+  'chrome',
+  'google chrome',
+  'msedge',
+  'microsoft edge',
+  'firefox',
+  'safari',
+  'brave',
+  'brave browser',
+  'opera',
+  'opera_gx',
+  'vivaldi',
+  'arc',
+]);
+
+/** Whether a window's owning app is a known web browser. */
+export function isBrowserApp(app: string): boolean {
+  return BROWSER_APPS.has(app.replace(/\.exe$/i, '').toLowerCase());
+}
+
 /** Case-insensitive substring filter over a window's title, raw process name,
  *  and prettified app name. An empty/whitespace query keeps everything. */
 export function filterWindows(windows: WindowInfo[], query: string): WindowInfo[] {

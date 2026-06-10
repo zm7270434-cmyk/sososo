@@ -81,6 +81,20 @@ export async function onWindowResized(cb: () => void): Promise<() => void> {
   }
 }
 
+/** Subscribe to the native window gaining focus (fires even when the DOM
+ *  `focus` event doesn't, e.g. focus returning to the window frame). Returns an
+ *  unlisten function — a no-op outside a Tauri webview. */
+export async function onWindowFocused(cb: () => void): Promise<() => void> {
+  try {
+    return await getCurrentWindow().onFocusChanged(({ payload: focused }) => {
+      if (focused) cb();
+    });
+  } catch (e) {
+    console.warn('onWindowFocused failed (not in Tauri?)', e);
+    return () => {};
+  }
+}
+
 export async function setAlwaysOnTop(value: boolean): Promise<void> {
   try {
     await getCurrentWindow().setAlwaysOnTop(value);
