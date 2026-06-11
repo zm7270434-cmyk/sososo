@@ -7,6 +7,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **System tray with close-to-tray.** sososo now lives in the system tray: a
+  tray icon with an **Open / Quit** menu (left-click reopens the window). By
+  default, **closing the window hides the app to the tray instead of
+  quitting**, so an active recording keeps running in the background — the X
+  no longer kills a meeting transcription. Quitting from the tray during a
+  recording finishes the session cleanly first. The behavior can be turned off
+  in the new **Settings → Behavior** section (then closing quits, as before).
+- **Global shortcut to start/stop recording** — `Ctrl+Alt+R` (`Ctrl+Cmd+R` on
+  macOS) works while **any** app has focus, even with sososo hidden in the
+  tray: it starts a recording when idle and finishes the running one (presses
+  during startup/shutdown are ignored, so it can never double-start). When a
+  press starts a session, the window is brought forward so the recording
+  widget is visible. If another app already owns the combo (screen recorders
+  like to claim it), sososo falls back to `Ctrl+Alt+Shift+R` — Settings →
+  Behavior always shows the combo that's actually active, or a warning when
+  both are taken. Can be disabled there too, which releases the keys back to
+  other apps.
+- **Meeting auto-detection (Windows).** While idle, sososo checks your open
+  windows every few seconds for an active **Zoom, Microsoft Teams, Google
+  Meet, or Webex** meeting (native apps and browser tabs). When one appears, a
+  banner offers one-click **Start recording**, plus a system notification when
+  the app is unfocused or in the tray. Dismissing — or recording — the meeting
+  snoozes the prompt until that meeting ends, so it never nags about the same
+  one twice. Idle Zoom/Teams windows don't trigger it; matching happens
+  locally on window titles only (nothing leaves your device). On-by-default
+  toggle in Settings → Behavior.
+
 ### Changed
 
 - **Visual window picker for video recording (Windows).** The Start screen's
