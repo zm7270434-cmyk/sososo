@@ -83,3 +83,12 @@ The page reuses the app's exact visual language so the marketing matches the pro
 ## Out of scope
 
 Custom domain, analytics, docs site, i18n, screenshots pipeline.
+
+## Addendum (2026-06-11): video recording + transcript chat
+
+Two showcase sections added after Features (user request), both as faithful CSS recreations of the
+in-app UI rather than screenshots: `#video` (window-picker grid + REC status row; MP4 with mixed
+mic + system audio, Windows & macOS) and `#chat` (the per-session "Ask about this transcript"
+panel: blue user bubbles, glass assistant bubble, purple Send). Features bento grows to 6 small
+cards (3-col) linking to the sections; hero/how-it-works/meta copy mention both features. Static
+markup only — no new JS or tests.

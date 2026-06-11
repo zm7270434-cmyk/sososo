@@ -43,3 +43,19 @@ path-filtered workflows make a monorepo site cheap. Design spec:
 - Manual browser pass (vite preview): OS-detect CTA, live version `v0.8.0` + stars from the API,
   caption loop (stream → finalize → trim → summary → repeat), pause freezes / stop restarts,
   YouTube iframe swap, no horizontal scroll, reduced-motion static state.
+
+## Follow-up (same day): video recording + transcript chat showcases
+
+- Two new sections after Features, with **faithful CSS recreations of the in-app UI** (classes
+  mirrored from `WindowPickerModal.tsx`, `RecordingView.tsx`, `ChatPanel.tsx`/`markdown.tsx`):
+  - `#video` — window-picker mock (search field, 3 abstract thumbnails, Zoom selected with
+    accent ring + check badge, browser-tab pop-out tip) + the REC status row; copy covers MP4 with
+    mixed mic + system audio, Windows & macOS, best-effort design.
+  - `#chat` — session ChatPanel mock (purple header "Ask about this transcript", Clear chip, blue
+    user bubbles / glass assistant bubble, "Thinking…", input + purple Send); copy covers the
+    per-session notetaker, OpenAI/Gemini key, persisted history.
+- Features bento: small cards 4 → 6 (3-col rows) adding "Window video recording" and "Chat with
+  the transcript", each anchor-linked to its section.
+- Hero subcopy, how-it-works step 03, and meta/OG descriptions now mention video + chat.
+- Static mockups only — no new JS/logic (no new tests needed). Verified: bun test 76 pass, lint
+  0 errors, website build green, browser pass over both sections.

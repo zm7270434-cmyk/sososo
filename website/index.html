@@ -6,7 +6,7 @@
     <title>sososo — live captions for every meeting</title>
     <meta
       name="description"
-      content="Free, open-source desktop app that captures system audio + microphone and turns them into live, speaker-separated captions with AI summaries. Windows, macOS & Linux. No account, no telemetry."
+      content="Free, open-source desktop app for live meeting captions: system audio + mic, speaker-separated, with window video recording, AI summaries, and chat over your transcripts. Windows, macOS & Linux."
     />
     <link rel="icon" type="image/png" href="./sososo_icon.png" />
     <link rel="apple-touch-icon" href="./sososo_icon.png" />
@@ -15,7 +15,7 @@
     <meta property="og:title" content="sososo — live captions for every meeting" />
     <meta
       property="og:description"
-      content="Open-source, real-time meeting transcription for Windows, macOS & Linux. System audio + mic, live captions, AI summaries. Bring your own keys — no account, no telemetry."
+      content="Open-source, real-time meeting transcription for Windows, macOS & Linux. Live captions, window video recording, AI summaries, and chat over your transcripts — bring your own keys, no account, no telemetry."
     />
     <meta property="og:url" content="https://yusupsupriyadi.github.io/sososo/" />
     <meta property="og:image" content="https://yusupsupriyadi.github.io/sososo/og.png" />
@@ -109,10 +109,10 @@
               <span class="text-accent-2">hear</span> — and <span class="text-accent">say</span>.
             </h1>
             <p class="mt-6 max-w-[54ch] text-[16.5px] leading-relaxed text-fg-dim">
-              sososo is a free, open-source desktop app that captures your system audio and
-              microphone, streams both to Deepgram for live speaker-separated captions, and ends
-              every session with an AI summary. No account. No backend. Your keys stay on your
-              machine.
+              sososo is a free, open-source desktop app that turns system audio + microphone into
+              live, speaker-separated captions — and can record the meeting window to video. Every
+              session ends with an AI summary and a transcript you can chat with. No account. No
+              backend. Your keys stay on your machine.
             </p>
             <div class="mt-9 flex flex-wrap items-center gap-3.5">
               <a
@@ -377,7 +377,7 @@
             </article>
 
             <!-- four small cards -->
-            <article class="liquid-glass rounded-lg p-6 md:col-span-3" data-reveal>
+            <article class="liquid-glass rounded-lg p-6 md:col-span-4" data-reveal>
               <svg
                 viewBox="0 0 24 24"
                 class="h-5 w-5 text-accent"
@@ -397,7 +397,7 @@
               </p>
             </article>
 
-            <article class="liquid-glass rounded-lg p-6 md:col-span-3" data-reveal>
+            <article class="liquid-glass rounded-lg p-6 md:col-span-4" data-reveal>
               <svg
                 viewBox="0 0 24 24"
                 class="h-5 w-5 text-accent"
@@ -418,7 +418,7 @@
               </p>
             </article>
 
-            <article class="liquid-glass rounded-lg p-6 md:col-span-3" data-reveal>
+            <article class="liquid-glass rounded-lg p-6 md:col-span-4" data-reveal>
               <svg
                 viewBox="0 0 24 24"
                 class="h-5 w-5 text-accent"
@@ -439,7 +439,53 @@
               </p>
             </article>
 
-            <article class="liquid-glass rounded-lg p-6 md:col-span-3" data-reveal>
+            <article class="liquid-glass rounded-lg p-6 md:col-span-4" data-reveal>
+              <svg
+                viewBox="0 0 24 24"
+                class="h-5 w-5 text-accent"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <rect x="2" y="6" width="13" height="12" rx="2.5" />
+                <path d="m15 10.5 6-3.5v10l-6-3.5" />
+              </svg>
+              <h3 class="mt-4 text-[15.5px] font-semibold">Window video recording</h3>
+              <p class="mt-1.5 text-[13px] leading-relaxed text-fg-dim">
+                Save the meeting as an MP4 — your picked window plus mixed mic + system audio
+                (Windows & macOS).
+                <a href="#video" class="underline underline-offset-4 hover:text-fg">See how ↓</a>
+              </p>
+            </article>
+
+            <article class="liquid-glass rounded-lg p-6 md:col-span-4" data-reveal>
+              <svg
+                viewBox="0 0 24 24"
+                class="h-5 w-5 text-accent"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <path
+                  d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5c-1.4 0-2.7-.33-3.86-.92L3 21l1.92-5.64A8.5 8.5 0 1 1 21 11.5z"
+                />
+              </svg>
+              <h3 class="mt-4 text-[15.5px] font-semibold">Chat with the transcript</h3>
+              <p class="mt-1.5 text-[13px] leading-relaxed text-fg-dim">
+                A per-session notetaker that answers from what was actually said.
+                <a href="#chat" class="underline underline-offset-4 hover:text-fg"
+                  >Try the idea ↓</a
+                >
+              </p>
+            </article>
+
+            <article class="liquid-glass rounded-lg p-6 md:col-span-4" data-reveal>
               <svg
                 viewBox="0 0 24 24"
                 class="h-5 w-5 text-accent"
@@ -459,6 +505,327 @@
                 a local SQLite file.
               </p>
             </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================ VIDEO RECORDING ============================ -->
+      <section id="video" class="scroll-mt-28 px-6 pt-28">
+        <div class="mx-auto grid max-w-[1120px] items-center gap-12 lg:grid-cols-2">
+          <div>
+            <p class="font-mono text-[11.5px] tracking-[0.22em] text-accent uppercase" data-reveal>
+              Video recording
+            </p>
+            <h2
+              class="font-display font-expanded mt-4 max-w-[18ch] text-[clamp(28px,3.8vw,44px)] leading-[1.05] font-extrabold"
+              data-reveal
+            >
+              Capture the window, not just the words.
+            </h2>
+            <p class="mt-6 max-w-[54ch] text-[15px] leading-relaxed text-fg-dim" data-reveal>
+              Flip on <span class="font-medium text-fg">Record video</span>, pick the meeting window
+              from a Zoom-style thumbnail grid, and sososo saves an MP4 alongside the transcript —
+              the window's video with mic + system audio mixed in. When you finish, it plays back
+              right on the session page.
+            </p>
+            <p class="mt-6 font-mono text-[12px] leading-relaxed text-fg-faint" data-reveal>
+              Windows & macOS · best-effort by design — a video hiccup never breaks the
+              transcription
+            </p>
+          </div>
+
+          <figure class="flex flex-col items-center" data-reveal>
+            <!-- window picker, as in the app -->
+            <div
+              class="liquid-glass w-full max-w-[460px] overflow-hidden rounded-lg"
+              aria-hidden="true"
+            >
+              <div class="flex items-center justify-between border-b border-glass-border px-4 py-3">
+                <span class="text-[13px] font-semibold">Choose a window to record</span>
+                <svg
+                  viewBox="0 0 24 24"
+                  class="h-3.5 w-3.5 text-fg-faint"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M21 12a9 9 0 1 1-2.64-6.36M21 3v6h-6" />
+                </svg>
+              </div>
+              <div class="px-4 pt-3">
+                <div
+                  class="flex items-center gap-2 rounded-sm border border-glass-border bg-[rgba(255,255,255,0.06)] px-3 py-2 text-[12.5px] text-fg-faint"
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    class="h-3.5 w-3.5"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                  >
+                    <circle cx="11" cy="11" r="7" />
+                    <path d="m21 21-4.3-4.3" />
+                  </svg>
+                  Search windows…
+                </div>
+              </div>
+              <div class="grid grid-cols-3 gap-2.5 px-4 py-3.5">
+                <!-- Zoom — selected -->
+                <span
+                  class="flex flex-col gap-1.5 rounded-[8px] border border-[rgba(110,168,254,0.55)] bg-[rgba(110,168,254,0.16)] p-1.5 shadow-liquid"
+                >
+                  <span
+                    class="relative block aspect-video w-full overflow-hidden rounded-[5px] border border-glass-border bg-[rgba(0,0,0,0.45)]"
+                  >
+                    <span class="grid h-full grid-cols-2 gap-1 p-1.5">
+                      <span
+                        class="flex items-center justify-center rounded-[3px] bg-[rgba(110,168,254,0.16)]"
+                        ><span class="h-2 w-2 rounded-full bg-white/25"></span
+                      ></span>
+                      <span
+                        class="flex items-center justify-center rounded-[3px] bg-[rgba(183,148,246,0.14)]"
+                        ><span class="h-2 w-2 rounded-full bg-white/25"></span
+                      ></span>
+                      <span class="flex items-center justify-center rounded-[3px] bg-white/8"
+                        ><span class="h-2 w-2 rounded-full bg-white/25"></span
+                      ></span>
+                      <span class="flex items-center justify-center rounded-[3px] bg-white/5"
+                        ><span class="h-2 w-2 rounded-full bg-white/25"></span
+                      ></span>
+                    </span>
+                    <span
+                      class="absolute top-1 right-1 inline-flex items-center justify-center rounded-full bg-accent p-[3px]"
+                    >
+                      <svg
+                        viewBox="0 0 24 24"
+                        class="h-2 w-2 text-[#0b1626]"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="3.5"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      >
+                        <path d="m4.5 12.5 5 5 10-11" />
+                      </svg>
+                    </span>
+                  </span>
+                  <span class="flex min-w-0 flex-col gap-px px-0.5 pb-0.5">
+                    <span class="truncate text-[12px] leading-tight font-semibold">Zoom</span>
+                    <span class="truncate text-[10.5px] leading-tight text-fg-faint"
+                      >Weekly sync — Zoom Meeting</span
+                    >
+                  </span>
+                </span>
+                <!-- Chrome / Meet -->
+                <span
+                  class="flex flex-col gap-1.5 rounded-[8px] border border-glass-border bg-[rgba(255,255,255,0.04)] p-1.5"
+                >
+                  <span
+                    class="block aspect-video w-full overflow-hidden rounded-[5px] border border-glass-border bg-[rgba(0,0,0,0.45)]"
+                  >
+                    <span class="flex h-full flex-col gap-1 p-1.5">
+                      <span class="h-1 w-2/3 rounded-full bg-white/12"></span>
+                      <span class="grid flex-1 grid-cols-2 gap-1">
+                        <span class="rounded-[3px] bg-[rgba(88,214,141,0.13)]"></span>
+                        <span class="rounded-[3px] bg-white/8"></span>
+                      </span>
+                    </span>
+                  </span>
+                  <span class="flex min-w-0 flex-col gap-px px-0.5 pb-0.5">
+                    <span class="truncate text-[12px] leading-tight font-semibold">Chrome</span>
+                    <span class="truncate text-[10.5px] leading-tight text-fg-faint"
+                      >Meet — abc-defg-hij</span
+                    >
+                  </span>
+                </span>
+                <!-- Slack -->
+                <span
+                  class="flex flex-col gap-1.5 rounded-[8px] border border-glass-border bg-[rgba(255,255,255,0.04)] p-1.5"
+                >
+                  <span
+                    class="block aspect-video w-full overflow-hidden rounded-[5px] border border-glass-border bg-[rgba(0,0,0,0.45)]"
+                  >
+                    <span class="flex h-full gap-1 p-1.5">
+                      <span class="h-full w-1/4 rounded-[3px] bg-[rgba(183,148,246,0.15)]"></span>
+                      <span class="flex flex-1 flex-col justify-center gap-1">
+                        <span class="h-1 w-full rounded-full bg-white/12"></span>
+                        <span class="h-1 w-3/4 rounded-full bg-white/9"></span>
+                        <span class="h-1 w-5/6 rounded-full bg-white/6"></span>
+                      </span>
+                    </span>
+                  </span>
+                  <span class="flex min-w-0 flex-col gap-px px-0.5 pb-0.5">
+                    <span class="truncate text-[12px] leading-tight font-semibold">Slack</span>
+                    <span class="truncate text-[10.5px] leading-tight text-fg-faint"
+                      >#launch — Slack</span
+                    >
+                  </span>
+                </span>
+              </div>
+              <div
+                class="border-t border-glass-border px-4 py-2.5 text-[10.5px] leading-snug text-fg-faint"
+              >
+                Recording a single browser tab? Drag it out into its own window, then pick it here.
+              </div>
+            </div>
+
+            <!-- recording status row, as in the app -->
+            <div
+              class="liquid-glass mt-3.5 flex w-full max-w-[460px] items-center gap-2 rounded-md px-3.5 py-[9px]"
+              aria-hidden="true"
+            >
+              <span class="h-[9px] w-[9px] shrink-0 animate-rec-pulse rounded-full bg-rec"></span>
+              <span class="text-[12px] font-semibold text-fg-dim">Recording</span>
+              <span class="inline-flex items-center gap-1 text-[11px] font-semibold text-rec">
+                <svg
+                  viewBox="0 0 24 24"
+                  class="h-3 w-3"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <rect x="2" y="6" width="13" height="12" rx="2.5" />
+                  <path d="m15 10.5 6-3.5v10l-6-3.5" />
+                </svg>
+                REC
+              </span>
+              <span class="ml-auto font-mono text-[12px] text-fg-dim tabular-nums">12:31</span>
+            </div>
+            <figcaption class="mt-4 text-center font-mono text-[10.5px] text-fg-faint">
+              The window picker and REC status — as they look in the app.
+            </figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <!-- ============================ TRANSCRIPT CHAT ============================ -->
+      <section id="chat" class="scroll-mt-28 px-6 pt-28">
+        <div class="mx-auto grid max-w-[1120px] items-center gap-12 lg:grid-cols-2">
+          <figure class="order-2 flex flex-col items-center lg:order-1" data-reveal>
+            <!-- the session chat panel, as in the app -->
+            <aside
+              class="liquid-glass flex w-full max-w-[380px] flex-col overflow-hidden rounded-lg"
+              aria-hidden="true"
+            >
+              <div
+                class="flex items-center justify-between gap-2 border-b border-glass-border px-3 py-3"
+              >
+                <span
+                  class="inline-flex min-w-0 items-center gap-1.5 text-[12px] tracking-[0.06em] text-accent-2 uppercase"
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    class="h-3.5 w-3.5 shrink-0"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.8"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path
+                      d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5c-1.4 0-2.7-.33-3.86-.92L3 21l1.92-5.64A8.5 8.5 0 1 1 21 11.5z"
+                    />
+                  </svg>
+                  <span class="truncate">Ask about this transcript</span>
+                </span>
+                <span
+                  class="inline-flex shrink-0 items-center gap-1.5 rounded-sm border border-[rgba(255,255,255,0.2)] bg-[rgba(255,255,255,0.06)] px-2 py-1 text-[11.5px] text-fg-faint shadow-liquid"
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    class="h-3 w-3"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M3 6h18M8 6V4h8v2m1 0-1 14H8L7 6" />
+                  </svg>
+                  Clear
+                </span>
+              </div>
+              <div class="flex flex-col gap-2.5 px-4 py-3.5">
+                <p
+                  class="max-w-[85%] self-end rounded-lg rounded-br-sm border border-[rgba(110,168,254,0.35)] bg-[rgba(110,168,254,0.18)] px-3 py-2 text-[13px] leading-[1.5]"
+                >
+                  What did we decide about the launch?
+                </p>
+                <p
+                  class="max-w-[92%] self-start rounded-lg rounded-bl-sm border border-glass-border bg-[rgba(255,255,255,0.05)] px-3.5 py-2.5 text-[13px] leading-[1.5] text-fg-dim"
+                >
+                  Ship <span class="font-medium text-fg">v0.9 on Friday</span>. Sarah owns the
+                  rollout checklist, and you're drafting the changelog right after the call.
+                </p>
+                <p
+                  class="max-w-[85%] self-end rounded-lg rounded-br-sm border border-[rgba(110,168,254,0.35)] bg-[rgba(110,168,254,0.18)] px-3 py-2 text-[13px] leading-[1.5]"
+                >
+                  Did anyone push back on pricing?
+                </p>
+                <p
+                  class="max-w-[85%] self-start rounded-lg rounded-bl-sm border border-glass-border bg-[rgba(255,255,255,0.06)] px-3 py-2 text-[13px] text-fg-faint italic"
+                >
+                  Thinking…
+                </p>
+              </div>
+              <div class="border-t border-glass-border px-3 py-3">
+                <div class="flex items-end gap-2">
+                  <span
+                    class="min-h-[38px] flex-1 rounded-sm border border-glass-border bg-[rgba(255,255,255,0.06)] px-3 py-2 text-[13px] leading-[1.5] text-fg-faint"
+                  >
+                    Ask about this transcript…
+                  </span>
+                  <span
+                    class="inline-flex h-[38px] shrink-0 items-center gap-1.5 rounded-sm border border-[rgba(167,139,250,0.5)] bg-[rgba(167,139,250,0.16)] px-3.5 text-[13px] font-medium text-[#d6c6ff] shadow-liquid"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      class="h-3.5 w-3.5"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <path d="M22 2 11 13M22 2l-7 20-4-9-9-4z" />
+                    </svg>
+                    Send
+                  </span>
+                </div>
+              </div>
+            </aside>
+            <figcaption class="mt-4 text-center font-mono text-[10.5px] text-fg-faint">
+              The per-session chat panel — as it looks in the app.
+            </figcaption>
+          </figure>
+
+          <div class="order-1 lg:order-2">
+            <p
+              class="font-mono text-[11.5px] tracking-[0.22em] text-accent-2 uppercase"
+              data-reveal
+            >
+              Transcript chat
+            </p>
+            <h2
+              class="font-display font-expanded mt-4 max-w-[18ch] text-[clamp(28px,3.8vw,44px)] leading-[1.05] font-extrabold"
+              data-reveal
+            >
+              Ask your meeting anything — after it ends.
+            </h2>
+            <p class="mt-6 max-w-[54ch] text-[15px] leading-relaxed text-fg-dim" data-reveal>
+              Every session has a built-in notetaker: a chat panel grounded in that session's
+              transcript. Ask what was decided, who owns what, or what you missed while you were
+              away — answers come from your own OpenAI or Gemini key and the conversation is saved
+              with the session.
+            </p>
+            <p class="mt-6 font-mono text-[12px] leading-relaxed text-fg-faint" data-reveal>
+              Markdown answers · history persisted per session · needs an OpenAI or Gemini key
+            </p>
           </div>
         </div>
       </section>
@@ -513,8 +880,8 @@
               <h3 class="mt-3 text-[17px] font-semibold">Hit record</h3>
               <p class="mt-2 text-[14px] leading-relaxed text-fg-dim">
                 Press <span class="font-mono text-[12.5px]">Ctrl+Alt+R</span> from anywhere. Live
-                captions float over your meeting; finishing a session writes the transcript and an
-                AI summary to your library.
+                captions float over your meeting; finishing writes the transcript, the video (if you
+                recorded one), and an AI summary to your library — ready to chat with.
               </p>
             </div>
           </div>
