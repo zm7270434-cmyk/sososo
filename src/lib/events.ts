@@ -9,3 +9,8 @@ export const onSessionState = (cb: (e: SessionStateEvent) => void): Promise<Unli
 
 export const onTranscriptSegment = (cb: (e: TranscriptSegmentEvent) => void): Promise<UnlistenFn> =>
   listen<TranscriptSegmentEvent>('transcript://segment', (ev) => cb(ev.payload));
+
+/** Global hotkey / tray "toggle recording" press (no payload). The listener
+ *  decides start/stop/ignore from the session state (`lib/recordingToggle.ts`). */
+export const onRecordingToggle = (cb: () => void): Promise<UnlistenFn> =>
+  listen('recording://toggle', () => cb());

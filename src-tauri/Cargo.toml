@@ -27,6 +27,8 @@ tauri-plugin-opener = "2"
 # `process` is needed for `relaunch()` after an update is installed.
 tauri-plugin-updater = "2"
 tauri-plugin-process = "2"
+# Global start/stop-recording hotkey (registered Rust-side; no JS API exposed).
+tauri-plugin-global-shortcut = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 

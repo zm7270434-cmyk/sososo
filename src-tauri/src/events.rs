@@ -3,6 +3,9 @@ use serde::Serialize;
 /// Emitted globally; both windows listen globally (see frontend `lib/events.ts`).
 pub const SESSION_STATE: &str = "session://state";
 pub const TRANSCRIPT_SEGMENT: &str = "transcript://segment";
+/// Global hotkey / tray "toggle recording" press (no payload); the frontend
+/// turns it into start/stop/ignore from its session state.
+pub const RECORDING_TOGGLE: &str = "recording://toggle";
 
 #[derive(Serialize, Clone)]
 #[serde(rename_all = "camelCase")]

@@ -5,7 +5,9 @@ import { useSessionStore } from '../../state/sessionStore';
 import { useTranscriptStore } from '../../state/transcriptStore';
 import { useConfigStore } from '../../state/configStore';
 import { checkOnLaunch } from '../../lib/updater';
-import { setCloseToTray } from '../../lib/ipc';
+import { setCloseToTray, setGlobalShortcutEnabled } from '../../lib/ipc';
+import { onRecordingToggle } from '../../lib/events';
+import { handleRecordingToggle } from '../../lib/recordingToggle';
 import Titlebar from './Titlebar';
 import UpdateBanner from './UpdateBanner';
 import SessionSidebar from './SessionSidebar';
@@ -24,6 +26,7 @@ export default function MainApp() {
   const uiScale = useConfigStore((s) => s.uiScale);
   const glassOpacity = useConfigStore((s) => s.glassOpacity);
   const closeToTray = useConfigStore((s) => s.closeToTray);
+  const globalShortcutEnabled = useConfigStore((s) => s.globalShortcutEnabled);
   const navigate = useNavigate();
   const prev = useRef(state);
   // The transcription-result page (session detail) gets a third shell column:
@@ -69,6 +72,22 @@ export default function MainApp() {
   useEffect(() => {
     setCloseToTray(closeToTray).catch(() => {});
   }, [closeToTray]);
+
+  // (Un)register the global start/stop shortcut to match the pref — on mount
+  // and whenever it changes (the backend registers the default-on state early;
+  // this re-syncs the persisted choice).
+  useEffect(() => {
+    setGlobalShortcutEnabled(globalShortcutEnabled).catch(() => {});
+  }, [globalShortcutEnabled]);
+
+  // Global hotkey / tray toggle → start or stop a session. Mounted once; the
+  // handler reads the live session state itself, so no stale closures.
+  useEffect(() => {
+    const unlisten = onRecordingToggle(() => void handleRecordingToggle());
+    return () => {
+      void unlisten.then((fn) => fn());
+    };
+  }, []);
 
   // Check GitHub Releases for a newer version once, shortly after launch. Silent:
   // failures (offline, or plain `vite dev` outside Tauri) stay invisible; an

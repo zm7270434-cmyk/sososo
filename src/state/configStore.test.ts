@@ -40,4 +40,16 @@ describe('useConfigStore — behavior prefs', () => {
     const persisted = JSON.parse(localStorage.getItem('sososo-config') ?? '{}');
     expect(persisted.state.closeToTray).toBe(false);
   });
+
+  test('globalShortcutEnabled defaults to on', () => {
+    expect(useConfigStore.getState().globalShortcutEnabled).toBe(true);
+  });
+
+  test('setGlobalShortcutEnabled updates and persists the choice', () => {
+    useConfigStore.getState().setGlobalShortcutEnabled(false);
+    expect(useConfigStore.getState().globalShortcutEnabled).toBe(false);
+
+    const persisted = JSON.parse(localStorage.getItem('sososo-config') ?? '{}');
+    expect(persisted.state.globalShortcutEnabled).toBe(false);
+  });
 });

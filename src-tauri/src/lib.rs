@@ -6,6 +6,7 @@ mod commands;
 mod db;
 pub mod error;
 mod events;
+mod hotkey;
 mod keys;
 mod session;
 mod state;
@@ -51,6 +52,7 @@ pub fn run() {
             commands::chat_session,
             commands::clear_chat,
             commands::set_close_to_tray,
+            commands::set_global_shortcut_enabled,
         ])
         // Close-to-tray: intercept the window close and hide instead, so the app
         // (and any running recording) stays alive in the system tray. Quitting
@@ -83,6 +85,9 @@ pub fn run() {
 
             // System tray: open/quit + the way back in while closed-to-tray.
             tray::setup(app)?;
+
+            // Global start/stop-recording hotkey (Ctrl+Alt+R / Ctrl+Cmd+R).
+            hotkey::setup(app)?;
 
             // Transparent glass: the window is `transparent: true` with no native
             // acrylic/vibrancy, so the desktop behind shows through sharply. The tint

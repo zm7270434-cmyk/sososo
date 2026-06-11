@@ -38,6 +38,9 @@ interface ConfigStore {
   /** Closing the window hides the app to the system tray instead of quitting
    *  (recording keeps running in the background). Default on. */
   closeToTray: boolean;
+  /** Global start/stop-recording shortcut (Ctrl+Alt+R / Ctrl+Cmd+R), usable
+   *  while any app has focus. Default on. */
+  globalShortcutEnabled: boolean;
   setLanguage: (l: LanguageCode) => void;
   setSystemOnly: (s: boolean) => void;
   setInputDevice: (id: string | null) => void;
@@ -52,6 +55,7 @@ interface ConfigStore {
   setAutoSummarizeOnFinish: (v: boolean) => void;
   setChatCollapsed: (v: boolean) => void;
   setCloseToTray: (v: boolean) => void;
+  setGlobalShortcutEnabled: (v: boolean) => void;
 }
 
 /** Bounds for the appearance sliders, also used to clamp persisted values. */
@@ -79,6 +83,7 @@ export const useConfigStore = create<ConfigStore>()(
       autoSummarizeOnFinish: true,
       chatCollapsed: false,
       closeToTray: true,
+      globalShortcutEnabled: true,
       setLanguage: (language) => set({ language }),
       setSystemOnly: (systemOnly) => set({ systemOnly }),
       setInputDevice: (inputDevice) => set({ inputDevice }),
@@ -93,6 +98,7 @@ export const useConfigStore = create<ConfigStore>()(
       setAutoSummarizeOnFinish: (autoSummarizeOnFinish) => set({ autoSummarizeOnFinish }),
       setChatCollapsed: (chatCollapsed) => set({ chatCollapsed }),
       setCloseToTray: (closeToTray) => set({ closeToTray }),
+      setGlobalShortcutEnabled: (globalShortcutEnabled) => set({ globalShortcutEnabled }),
     }),
     {
       name: 'sososo-config',
@@ -108,6 +114,7 @@ export const useConfigStore = create<ConfigStore>()(
         chatCollapsed: s.chatCollapsed,
         videoEnabled: s.videoEnabled,
         closeToTray: s.closeToTray,
+        globalShortcutEnabled: s.globalShortcutEnabled,
       }),
     },
   ),

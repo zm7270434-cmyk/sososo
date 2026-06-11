@@ -45,6 +45,11 @@ export const setPaused = (paused: boolean): Promise<void> => invoke('set_paused'
 export const setCloseToTray = (enabled: boolean): Promise<void> =>
   invoke('set_close_to_tray', { enabled });
 
+/** (Un)register the global start/stop-recording shortcut (Ctrl+Alt+R /
+ *  Ctrl+Cmd+R) to match the Settings → Behavior pref. Idempotent. */
+export const setGlobalShortcutEnabled = (enabled: boolean): Promise<void> =>
+  invoke('set_global_shortcut_enabled', { enabled });
+
 // --- Video recording (Windows) ---
 
 /** List capturable windows for the Start-screen video picker. */

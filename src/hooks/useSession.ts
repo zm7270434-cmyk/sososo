@@ -1,7 +1,10 @@
 import { useSessionStore } from '../state/sessionStore';
-import { setPaused as ipcSetPaused, startSession, stopSession } from '../lib/ipc';
+import { setPaused as ipcSetPaused } from '../lib/ipc';
+import { startRecording, stopRecording } from '../lib/recordingToggle';
 
-/** Start/stop/pause controls with optimistic state; backend events refine it. */
+/** Start/stop/pause controls with optimistic state; backend events refine it.
+ *  Start/stop share their implementation with the global hotkey/tray toggle
+ *  (`lib/recordingToggle.ts`). */
 export function useSession() {
   const state = useSessionStore((s) => s.state);
   const error = useSessionStore((s) => s.error);
@@ -10,24 +13,6 @@ export function useSession() {
   const setPausedLocal = useSessionStore((s) => s.setPaused);
 
   const isActive = state === 'recording' || state === 'starting';
-
-  async function start(title?: string) {
-    patch({ state: 'starting', error: null });
-    try {
-      await startSession(title);
-    } catch (e) {
-      patch({ state: 'error', error: String(e) });
-    }
-  }
-
-  async function stop() {
-    patch({ state: 'stopping' });
-    try {
-      await stopSession();
-    } catch (e) {
-      patch({ state: 'error', error: String(e) });
-    }
-  }
 
   async function togglePause() {
     const next = !paused;
@@ -40,5 +25,13 @@ export function useSession() {
     }
   }
 
-  return { state, error, isActive, paused, start, stop, togglePause };
+  return {
+    state,
+    error,
+    isActive,
+    paused,
+    start: startRecording,
+    stop: stopRecording,
+    togglePause,
+  };
 }
