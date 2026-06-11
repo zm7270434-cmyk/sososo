@@ -34,12 +34,17 @@ pub fn detect() -> Option<DetectedMeeting> {
 /// Browsers whose window titles mirror the active tab — only these get the
 /// title-based web-meeting rules, so an editor showing "Google Meet" in a
 /// document name can't match.
+// The pure matcher below stays compiled (and unit-tested) on every OS, but its
+// only production caller is the Windows-gated `detect()` — so off-Windows the
+// lib target sees it as dead code.
+#[cfg_attr(not(target_os = "windows"), allow(dead_code))]
 const BROWSERS: &[&str] = &[
     "chrome", "chromium", "msedge", "edge", "firefox", "brave", "opera", "vivaldi", "arc", "safari",
 ];
 
 /// Pure matcher over `(app, title)` pairs. Native meeting windows win over
 /// browser tabs; within each pass the first matching window wins.
+#[cfg_attr(not(target_os = "windows"), allow(dead_code))]
 pub fn match_meeting<'a>(
     windows: impl IntoIterator<Item = (&'a str, &'a str)>,
 ) -> Option<DetectedMeeting> {
@@ -71,6 +76,7 @@ pub fn match_meeting<'a>(
 /// Native meeting clients. Zoom/Teams run idle in the background all day, so
 /// their match needs a meeting-ish title; the Webex meeting processes only
 /// exist during a meeting, so the app name alone is enough.
+#[cfg_attr(not(target_os = "windows"), allow(dead_code))]
 fn match_native(app: &str, title: &str) -> Option<&'static str> {
     if app.contains("zoom") && (title.contains("meeting") || title.contains("webinar")) {
         return Some("Zoom");
@@ -88,6 +94,7 @@ fn match_native(app: &str, title: &str) -> Option<&'static str> {
 }
 
 /// Web meeting tabs, matched by the browser window's (= active tab's) title.
+#[cfg_attr(not(target_os = "windows"), allow(dead_code))]
 fn match_browser(app: &str, title: &str) -> Option<&'static str> {
     if !BROWSERS.iter().any(|b| app.contains(b)) {
         return None;
@@ -109,6 +116,7 @@ fn match_browser(app: &str, title: &str) -> Option<&'static str> {
 
 /// Whether the (lowercased) title carries a Google Meet code: a `xxx-xxxx-xxx`
 /// token of lowercase letters, as in "Meet – abc-defg-hij".
+#[cfg_attr(not(target_os = "windows"), allow(dead_code))]
 fn has_meet_code(title: &str) -> bool {
     title
         .split(|c: char| !(c.is_ascii_lowercase() || c == '-'))
