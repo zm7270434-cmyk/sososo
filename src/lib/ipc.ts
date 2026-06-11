@@ -3,6 +3,7 @@ import type {
   AiProvider,
   ApiService,
   ChatMessage,
+  DetectedMeeting,
   DeviceLists,
   SearchHit,
   SessionDetail,
@@ -49,6 +50,13 @@ export const setCloseToTray = (enabled: boolean): Promise<void> =>
  *  Ctrl+Cmd+R) to match the Settings → Behavior pref. Idempotent. */
 export const setGlobalShortcutEnabled = (enabled: boolean): Promise<void> =>
   invoke('set_global_shortcut_enabled', { enabled });
+
+/** Poll for an active-looking meeting window/tab (Windows; null elsewhere). */
+export const detectMeeting = (): Promise<DetectedMeeting | null> => invoke('detect_meeting');
+
+/** Show an OS notification (used when the app is unfocused or in the tray). */
+export const notify = (title: string, body: string): Promise<void> =>
+  invoke('notify', { title, body });
 
 // --- Video recording (Windows) ---
 

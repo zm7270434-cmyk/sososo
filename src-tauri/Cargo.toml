@@ -29,6 +29,8 @@ tauri-plugin-updater = "2"
 tauri-plugin-process = "2"
 # Global start/stop-recording hotkey (registered Rust-side; no JS API exposed).
 tauri-plugin-global-shortcut = "2"
+# OS toasts for meeting auto-detection (sent Rust-side via the `notify` command).
+tauri-plugin-notification = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 

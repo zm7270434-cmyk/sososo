@@ -1,5 +1,6 @@
 import { HugeiconsIcon } from '@hugeicons/react';
 
+import { MEETING_DETECTION_SUPPORTED } from '../../../../hooks/useMeetingDetection';
 import { IconSettings } from '../../../../lib/icons';
 import { isMacOS } from '../../../../lib/platform';
 import { useConfigStore } from '../../../../state/configStore';
@@ -17,6 +18,8 @@ export function BehaviorSection() {
   const setCloseToTray = useConfigStore((s) => s.setCloseToTray);
   const globalShortcutEnabled = useConfigStore((s) => s.globalShortcutEnabled);
   const setGlobalShortcutEnabled = useConfigStore((s) => s.setGlobalShortcutEnabled);
+  const meetingDetectionEnabled = useConfigStore((s) => s.meetingDetectionEnabled);
+  const setMeetingDetectionEnabled = useConfigStore((s) => s.setMeetingDetectionEnabled);
 
   return (
     <section className="mb-7">
@@ -61,6 +64,27 @@ export function BehaviorSection() {
           </span>
         </span>
       </label>
+
+      {MEETING_DETECTION_SUPPORTED && (
+        <label className="mb-3.5 flex cursor-pointer items-start gap-2.5">
+          <input
+            type="checkbox"
+            className={CHECKBOX}
+            checked={meetingDetectionEnabled}
+            onChange={(e) => setMeetingDetectionEnabled(e.target.checked)}
+          />
+          <span className="flex flex-col gap-0.5">
+            <span className={FIELD_LABEL}>Offer to record when a meeting is detected</span>
+            <span className="text-[11.5px] leading-[1.4] text-fg-faint">
+              While idle, sososo checks your open windows every few seconds for an active Zoom,
+              Microsoft Teams, Google Meet, or Webex meeting and shows a one-click &quot;Start
+              recording&quot; banner (plus a system notification when the app is in the background).
+              Dismissing it snoozes that meeting. Window titles are checked locally — nothing leaves
+              your device.
+            </span>
+          </span>
+        </label>
+      )}
     </section>
   );
 }

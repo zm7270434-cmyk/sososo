@@ -71,6 +71,13 @@ pub fn list_windows() -> AppResult<Vec<WindowInfo>> {
     platform::list_windows()
 }
 
+/// Like [`list_windows`] but without thumbnails — cheap enough to poll. Only
+/// the Windows meeting auto-detection calls this today, hence the allow.
+#[cfg_attr(not(target_os = "windows"), allow(dead_code))]
+pub fn list_windows_meta() -> AppResult<Vec<WindowInfo>> {
+    platform::list_windows_meta()
+}
+
 /// Start recording `cfg.window_id` to `cfg.out_path` (video + mixed mic/system
 /// audio). Finalize via [`VideoRecorder::stop`].
 pub fn start_window_recording(cfg: VideoStartConfig) -> AppResult<VideoRecorder> {

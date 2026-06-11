@@ -41,6 +41,9 @@ interface ConfigStore {
   /** Global start/stop-recording shortcut (Ctrl+Alt+R / Ctrl+Cmd+R), usable
    *  while any app has focus. Default on. */
   globalShortcutEnabled: boolean;
+  /** Offer to record when an active meeting window is detected (Zoom, Teams,
+   *  Meet, Webex — Windows only for now). Default on. */
+  meetingDetectionEnabled: boolean;
   setLanguage: (l: LanguageCode) => void;
   setSystemOnly: (s: boolean) => void;
   setInputDevice: (id: string | null) => void;
@@ -56,6 +59,7 @@ interface ConfigStore {
   setChatCollapsed: (v: boolean) => void;
   setCloseToTray: (v: boolean) => void;
   setGlobalShortcutEnabled: (v: boolean) => void;
+  setMeetingDetectionEnabled: (v: boolean) => void;
 }
 
 /** Bounds for the appearance sliders, also used to clamp persisted values. */
@@ -84,6 +88,7 @@ export const useConfigStore = create<ConfigStore>()(
       chatCollapsed: false,
       closeToTray: true,
       globalShortcutEnabled: true,
+      meetingDetectionEnabled: true,
       setLanguage: (language) => set({ language }),
       setSystemOnly: (systemOnly) => set({ systemOnly }),
       setInputDevice: (inputDevice) => set({ inputDevice }),
@@ -99,6 +104,7 @@ export const useConfigStore = create<ConfigStore>()(
       setChatCollapsed: (chatCollapsed) => set({ chatCollapsed }),
       setCloseToTray: (closeToTray) => set({ closeToTray }),
       setGlobalShortcutEnabled: (globalShortcutEnabled) => set({ globalShortcutEnabled }),
+      setMeetingDetectionEnabled: (meetingDetectionEnabled) => set({ meetingDetectionEnabled }),
     }),
     {
       name: 'sososo-config',
@@ -115,6 +121,7 @@ export const useConfigStore = create<ConfigStore>()(
         videoEnabled: s.videoEnabled,
         closeToTray: s.closeToTray,
         globalShortcutEnabled: s.globalShortcutEnabled,
+        meetingDetectionEnabled: s.meetingDetectionEnabled,
       }),
     },
   ),

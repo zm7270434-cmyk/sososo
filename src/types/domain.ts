@@ -21,6 +21,14 @@ export interface WindowInfo {
   thumbnail?: string | null;
 }
 
+/** A meeting that looks active right now (meeting auto-detection, Windows). */
+export interface DetectedMeeting {
+  /** Platform display name: "Zoom" | "Google Meet" | "Microsoft Teams" | "Webex". */
+  platform: string;
+  /** The matched window's title (context for the prompt). */
+  title: string;
+}
+
 export type SessionStateName =
   | 'idle'
   | 'starting'

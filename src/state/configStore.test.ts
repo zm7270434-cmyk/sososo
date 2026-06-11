@@ -52,4 +52,16 @@ describe('useConfigStore — behavior prefs', () => {
     const persisted = JSON.parse(localStorage.getItem('sososo-config') ?? '{}');
     expect(persisted.state.globalShortcutEnabled).toBe(false);
   });
+
+  test('meetingDetectionEnabled defaults to on', () => {
+    expect(useConfigStore.getState().meetingDetectionEnabled).toBe(true);
+  });
+
+  test('setMeetingDetectionEnabled updates and persists the choice', () => {
+    useConfigStore.getState().setMeetingDetectionEnabled(false);
+    expect(useConfigStore.getState().meetingDetectionEnabled).toBe(false);
+
+    const persisted = JSON.parse(localStorage.getItem('sososo-config') ?? '{}');
+    expect(persisted.state.meetingDetectionEnabled).toBe(false);
+  });
 });

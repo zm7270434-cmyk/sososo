@@ -8,6 +8,7 @@ pub mod error;
 mod events;
 mod hotkey;
 mod keys;
+mod meeting;
 mod session;
 mod state;
 mod tray;
@@ -24,6 +25,8 @@ pub fn run() {
         // updater JS plugin; `process` provides `relaunch()` after install.
         .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
+        // OS toasts (meeting auto-detection); sent Rust-side via `notify`.
+        .plugin(tauri_plugin_notification::init())
         .manage(state::AppState::default())
         .invoke_handler(tauri::generate_handler![
             commands::list_devices,
@@ -53,6 +56,8 @@ pub fn run() {
             commands::clear_chat,
             commands::set_close_to_tray,
             commands::set_global_shortcut_enabled,
+            commands::detect_meeting,
+            commands::notify,
         ])
         // Close-to-tray: intercept the window close and hide instead, so the app
         // (and any running recording) stays alive in the system tray. Quitting

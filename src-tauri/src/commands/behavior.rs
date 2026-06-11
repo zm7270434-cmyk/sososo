@@ -5,6 +5,7 @@ use tauri::{AppHandle, State};
 
 use crate::error::{AppError, AppResult};
 use crate::hotkey;
+use crate::meeting;
 use crate::state::AppState;
 
 /// When enabled (the default), closing the window hides the app to the system
@@ -21,4 +22,25 @@ pub fn set_close_to_tray(state: State<'_, AppState>, enabled: bool) -> AppResult
 pub fn set_global_shortcut_enabled(app: AppHandle, enabled: bool) -> AppResult<()> {
     hotkey::set_enabled(&app, enabled)
         .map_err(|e| AppError::Config(format!("global shortcut: {e}")))
+}
+
+/// Poll for an active-looking meeting (Zoom/Teams/Webex window or a Meet/web
+/// meeting browser tab). Cheap — no thumbnails. Enumerates on a dedicated
+/// thread (mirrors `list_windows`); `None` on non-Windows platforms.
+#[tauri::command]
+pub fn detect_meeting() -> Option<meeting::DetectedMeeting> {
+    std::thread::spawn(meeting::detect).join().unwrap_or(None)
+}
+
+/// Show an OS notification (used when a meeting is detected while the app is
+/// unfocused/hidden in the tray).
+#[tauri::command]
+pub fn notify(app: AppHandle, title: String, body: String) -> AppResult<()> {
+    use tauri_plugin_notification::NotificationExt;
+    app.notification()
+        .builder()
+        .title(title)
+        .body(body)
+        .show()
+        .map_err(|e| AppError::Config(format!("notification: {e}")))
 }

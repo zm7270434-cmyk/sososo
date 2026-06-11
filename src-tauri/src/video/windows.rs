@@ -71,6 +71,16 @@ type HandlerError = Box<dyn std::error::Error + Send + Sync>;
 /// sense), attach a JPEG thumbnail per window so the picker can show them
 /// visually, and sort by app then title so windows group naturally.
 pub fn list_windows() -> AppResult<Vec<WindowInfo>> {
+    enumerate_windows(true)
+}
+
+/// Same enumeration without the (expensive) per-window thumbnails — cheap
+/// enough to poll, e.g. by the meeting auto-detection.
+pub fn list_windows_meta() -> AppResult<Vec<WindowInfo>> {
+    enumerate_windows(false)
+}
+
+fn enumerate_windows(with_thumbnails: bool) -> AppResult<Vec<WindowInfo>> {
     let windows =
         Window::enumerate().map_err(|e| AppError::Video(format!("enumerate windows: {e}")))?;
     let own_pid = std::process::id();
@@ -92,7 +102,11 @@ pub fn list_windows() -> AppResult<Vec<WindowInfo>> {
             id: (w.as_raw_hwnd() as isize).to_string(),
             title,
             app,
-            thumbnail: capture_thumbnail(hwnd),
+            thumbnail: if with_thumbnails {
+                capture_thumbnail(hwnd)
+            } else {
+                None
+            },
         });
     }
     out.sort_by(|a, b| {

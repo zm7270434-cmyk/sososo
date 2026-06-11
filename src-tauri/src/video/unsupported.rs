@@ -25,6 +25,12 @@ pub fn list_windows() -> AppResult<Vec<WindowInfo>> {
     Ok(Vec::new())
 }
 
+/// No windows to poll either (meeting detection is Windows-only for now).
+#[allow(dead_code)]
+pub fn list_windows_meta() -> AppResult<Vec<WindowInfo>> {
+    Ok(Vec::new())
+}
+
 /// Video recording is unsupported off Windows.
 pub fn start_window_recording(_cfg: VideoStartConfig) -> AppResult<VideoRecorder> {
     Err(AppError::Video(

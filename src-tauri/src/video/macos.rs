@@ -34,6 +34,15 @@ use crate::error::{AppError, AppResult};
 const VIDEO_SAMPLE_RATE: i32 = 48_000;
 const VIDEO_CHANNELS: i32 = 2;
 
+/// Thumbnail-free listing — identical here (macOS has no thumbnails yet). Kept
+/// for API parity with the Windows backend; unused until meeting detection is
+/// enabled on macOS (polling `SCShareableContent` would trigger the
+/// screen-recording permission prompt).
+#[allow(dead_code)]
+pub fn list_windows_meta() -> AppResult<Vec<WindowInfo>> {
+    list_windows()
+}
+
 /// List capturable windows via `SCShareableContent`. Skips untitled windows and
 /// off-screen ones so the picker matches what the user can see.
 pub fn list_windows() -> AppResult<Vec<WindowInfo>> {

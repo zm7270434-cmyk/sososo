@@ -8,6 +8,8 @@ import { checkOnLaunch } from '../../lib/updater';
 import { setCloseToTray, setGlobalShortcutEnabled } from '../../lib/ipc';
 import { onRecordingToggle } from '../../lib/events';
 import { handleRecordingToggle } from '../../lib/recordingToggle';
+import { useMeetingDetection } from '../../hooks/useMeetingDetection';
+import MeetingBanner from './MeetingBanner';
 import Titlebar from './Titlebar';
 import UpdateBanner from './UpdateBanner';
 import SessionSidebar from './SessionSidebar';
@@ -21,6 +23,8 @@ import ChatPanel from './routes/sessionDetail/ChatPanel';
 
 export default function MainApp() {
   useTranscriptStream();
+  // Offer to record a detected meeting (polls only while idle + enabled).
+  useMeetingDetection();
   const state = useSessionStore((s) => s.state);
   const sessionId = useSessionStore((s) => s.sessionId);
   const uiScale = useConfigStore((s) => s.uiScale);
@@ -116,6 +120,7 @@ export default function MainApp() {
     >
       <Titlebar />
       <UpdateBanner />
+      <MeetingBanner />
       <div className="flex min-h-0 flex-1 gap-2">
         <SessionSidebar />
         <main className="liquid-glass min-w-0 flex-1 overflow-y-auto rounded-lg">
