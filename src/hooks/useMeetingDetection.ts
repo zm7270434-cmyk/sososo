@@ -27,7 +27,7 @@ export function useMeetingDetection(): void {
     let cancelled = false;
 
     const tick = async () => {
-      let detected = null;
+      let detected: Awaited<ReturnType<typeof detectMeeting>>;
       try {
         detected = await detectMeeting();
       } catch {
