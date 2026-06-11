@@ -56,6 +56,7 @@ pub fn run() {
             commands::clear_chat,
             commands::set_close_to_tray,
             commands::set_global_shortcut_enabled,
+            commands::get_active_shortcut,
             commands::detect_meeting,
             commands::notify,
         ])

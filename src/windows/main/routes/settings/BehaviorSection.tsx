@@ -1,13 +1,16 @@
+import { useEffect, useState } from 'react';
 import { HugeiconsIcon } from '@hugeicons/react';
 
 import { MEETING_DETECTION_SUPPORTED } from '../../../../hooks/useMeetingDetection';
 import { IconSettings } from '../../../../lib/icons';
+import { getActiveShortcut, setGlobalShortcutEnabled as ipcSetShortcut } from '../../../../lib/ipc';
 import { isMacOS } from '../../../../lib/platform';
 import { useConfigStore } from '../../../../state/configStore';
 
 import { FIELD_LABEL, H3 } from './styles';
 
 const CHECKBOX = 'mt-0.5 h-4 w-4 shrink-0 cursor-pointer accent-[#6ea8fe]';
+/** Static fallback label (shown while loading / outside a Tauri webview). */
 const SHORTCUT_LABEL = isMacOS ? 'Ctrl+Cmd+R' : 'Ctrl+Alt+R';
 
 /** Behavior settings (tray + background-running preferences). Self-contained:
@@ -20,6 +23,28 @@ export function BehaviorSection() {
   const setGlobalShortcutEnabled = useConfigStore((s) => s.setGlobalShortcutEnabled);
   const meetingDetectionEnabled = useConfigStore((s) => s.meetingDetectionEnabled);
   const setMeetingDetectionEnabled = useConfigStore((s) => s.setMeetingDetectionEnabled);
+
+  // The combo the toggle is actually bound to (another app may own the primary,
+  // in which case the backend falls back to the +Shift variant). undefined =
+  // unknown (loading, or outside a Tauri webview) → show the static label.
+  const [activeShortcut, setActiveShortcut] = useState<string | null | undefined>(undefined);
+  useEffect(() => {
+    let alive = true;
+    // Re-apply the pref first (idempotent) so the readback can't race the
+    // MainApp sync, then read which combo actually stuck.
+    ipcSetShortcut(globalShortcutEnabled)
+      .then(() => getActiveShortcut())
+      .then((s) => {
+        if (alive) setActiveShortcut(s);
+      })
+      .catch(() => {
+        if (alive) setActiveShortcut(undefined); // not in Tauri — no live info
+      });
+    return () => {
+      alive = false;
+    };
+  }, [globalShortcutEnabled]);
+  const shortcutUnavailable = globalShortcutEnabled && activeShortcut === null;
 
   return (
     <section className="mb-7">
@@ -55,13 +80,19 @@ export function BehaviorSection() {
           <span className={FIELD_LABEL}>
             Global shortcut to start / stop recording{' '}
             <kbd className="ml-1 rounded-sm border border-glass-border bg-[rgba(255,255,255,0.07)] px-1.5 py-px font-sans text-[11px] text-fg-dim">
-              {SHORTCUT_LABEL}
+              {activeShortcut ?? SHORTCUT_LABEL}
             </kbd>
           </span>
           <span className="text-[11.5px] leading-[1.4] text-fg-faint">
             Works while any app has focus — even with sososo hidden in the tray. Starts a recording
             when idle and finishes the running one; presses during startup/shutdown are ignored.
           </span>
+          {shortcutUnavailable && (
+            <span className="text-[11.5px] leading-[1.4] text-[#ffb454]">
+              Currently unavailable — both {SHORTCUT_LABEL} and its Shift variant are taken by
+              another app. Close the app that owns them, then toggle this off and on.
+            </span>
+          )}
         </span>
       </label>
 

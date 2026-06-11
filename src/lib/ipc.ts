@@ -51,6 +51,10 @@ export const setCloseToTray = (enabled: boolean): Promise<void> =>
 export const setGlobalShortcutEnabled = (enabled: boolean): Promise<void> =>
   invoke('set_global_shortcut_enabled', { enabled });
 
+/** The combo the recording toggle is actually bound to right now ("Ctrl+Alt+R",
+ *  the +Shift fallback, …), or null while disabled / all combos taken. */
+export const getActiveShortcut = (): Promise<string | null> => invoke('get_active_shortcut');
+
 /** Poll for an active-looking meeting window/tab (Windows; null elsewhere). */
 export const detectMeeting = (): Promise<DetectedMeeting | null> => invoke('detect_meeting');
 

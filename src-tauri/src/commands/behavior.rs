@@ -24,6 +24,14 @@ pub fn set_global_shortcut_enabled(app: AppHandle, enabled: bool) -> AppResult<(
         .map_err(|e| AppError::Config(format!("global shortcut: {e}")))
 }
 
+/// The combo label the recording toggle is actually bound to right now
+/// ("Ctrl+Alt+R", the +Shift fallback, …), or `None` while disabled — or when
+/// every candidate is taken by another app. Settings shows this live.
+#[tauri::command]
+pub fn get_active_shortcut(app: AppHandle) -> Option<String> {
+    hotkey::active_label(&app).map(str::to_string)
+}
+
 /// Poll for an active-looking meeting (Zoom/Teams/Webex window or a Meet/web
 /// meeting browser tab). Cheap — no thumbnails. Enumerates on a dedicated
 /// thread (mirrors `list_windows`); `None` on non-Windows platforms.
