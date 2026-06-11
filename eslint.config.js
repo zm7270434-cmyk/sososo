@@ -6,7 +6,7 @@ import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
   // Generated / vendored output — never linted.
-  { ignores: ['dist', 'src-tauri', 'public', 'node_modules'] },
+  { ignores: ['dist', 'src-tauri', 'public', 'node_modules', 'website/dist'] },
 
   // Base + TypeScript recommended rules for all source.
   js.configs.recommended,

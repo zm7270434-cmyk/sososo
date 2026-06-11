@@ -11,6 +11,12 @@
 </p>
 
 <p align="center">
+  <a href="https://yusupsupriyadi.github.io/sososo/"><b>Website</b></a> ·
+  <a href="https://github.com/yusupsupriyadi/sososo/releases/latest"><b>Download</b></a> ·
+  <a href="https://youtu.be/al1_YU_ILXs"><b>Demo video</b></a>
+</p>
+
+<p align="center">
   <a href="./LICENSING.md"><img alt="License: AGPL-3.0 + Commercial" src="https://img.shields.io/badge/License-AGPL--3.0%20%2B%20Commercial-blue.svg" /></a>
   <a href="https://github.com/yusupsupriyadi/sososo/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/yusupsupriyadi/sososo/actions/workflows/ci.yml/badge.svg" /></a>
   <a href="https://tauri.app"><img alt="Built with Tauri 2" src="https://img.shields.io/badge/built%20with-Tauri%202-24C8DB.svg" /></a>

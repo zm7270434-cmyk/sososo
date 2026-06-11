@@ -1,10 +1,18 @@
 name: CI
 
+# website/ changes are covered by the Website workflow (tests + build there),
+# so they skip this expensive 3-OS Rust matrix.
 on:
   push:
     branches: [master]
+    paths-ignore:
+      - 'website/**'
+      - '.github/workflows/website.yml'
   pull_request:
     branches: [master]
+    paths-ignore:
+      - 'website/**'
+      - '.github/workflows/website.yml'
 
 # Only the latest run per ref needs to finish.
 concurrency:

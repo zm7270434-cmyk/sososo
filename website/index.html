@@ -1,0 +1,1107 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>sososo — live captions for every meeting</title>
+    <meta
+      name="description"
+      content="Free, open-source desktop app that captures system audio + microphone and turns them into live, speaker-separated captions with AI summaries. Windows, macOS & Linux. No account, no telemetry."
+    />
+    <link rel="icon" type="image/png" href="./sososo_icon.png" />
+    <link rel="apple-touch-icon" href="./sososo_icon.png" />
+    <link rel="canonical" href="https://yusupsupriyadi.github.io/sososo/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="sososo — live captions for every meeting" />
+    <meta
+      property="og:description"
+      content="Open-source, real-time meeting transcription for Windows, macOS & Linux. System audio + mic, live captions, AI summaries. Bring your own keys — no account, no telemetry."
+    />
+    <meta property="og:url" content="https://yusupsupriyadi.github.io/sososo/" />
+    <meta property="og:image" content="https://yusupsupriyadi.github.io/sososo/og.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="theme-color" content="#0a0a0f" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=Schibsted+Grotesk:wght@400..900&family=Spline+Sans+Mono:wght@400..700&display=swap"
+      rel="stylesheet"
+    />
+    <script type="module" src="/src/main.ts"></script>
+  </head>
+
+  <!-- overflow-x-hidden = fallback for Safari < 16 (no overflow:clip support) -->
+  <body class="overflow-x-hidden">
+    <!-- atmosphere: the "desktop" the glass floats over -->
+    <div class="pointer-events-none fixed inset-0 -z-10" aria-hidden="true">
+      <div
+        class="absolute -top-40 right-[-15%] h-[640px] w-[640px] rounded-full bg-[radial-gradient(circle,rgba(110,168,254,0.16),transparent_62%)]"
+      ></div>
+      <div
+        class="absolute bottom-[-25%] left-[-12%] h-[700px] w-[700px] rounded-full bg-[radial-gradient(circle,rgba(183,148,246,0.11),transparent_62%)]"
+      ></div>
+      <div class="noise-bg absolute inset-0 opacity-[0.05]"></div>
+    </div>
+
+    <!-- ============================ NAV ============================ -->
+    <header class="fixed inset-x-0 top-0 z-50 px-4">
+      <nav
+        class="liquid-glass mx-auto mt-4 flex max-w-[1120px] items-center justify-between rounded-full py-2.5 pr-2.5 pl-5"
+        aria-label="Main"
+      >
+        <a href="#top" class="flex items-center gap-2.5" aria-label="sososo home">
+          <img src="./sososo_icon.png" alt="" class="h-6 w-6 rounded-full" />
+          <img
+            src="./sososo_brand_logo_white-bg-transparent.png"
+            alt="sososo"
+            class="h-[13px] w-auto"
+          />
+        </a>
+
+        <div class="hidden items-center gap-7 text-[13.5px] font-medium text-fg-dim md:flex">
+          <a href="#features" class="transition-colors hover:text-fg">Features</a>
+          <a href="#how" class="transition-colors hover:text-fg">How it works</a>
+          <a href="#privacy" class="transition-colors hover:text-fg">Privacy</a>
+          <a href="#opensource" class="transition-colors hover:text-fg">Open source</a>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <a
+            href="https://github.com/yusupsupriyadi/sososo"
+            target="_blank"
+            rel="noreferrer"
+            class="hidden items-center gap-2 rounded-full border border-glass-border px-3.5 py-2 text-[13px] font-medium transition-colors hover:bg-hover sm:flex"
+          >
+            <svg viewBox="0 0 24 24" class="h-4 w-4 fill-current" aria-hidden="true">
+              <path
+                d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.11.79-.25.79-.56 0-.27-.01-1.17-.02-2.12-3.2.7-3.88-1.36-3.88-1.36-.52-1.33-1.28-1.68-1.28-1.68-1.04-.71.08-.7.08-.7 1.15.08 1.76 1.18 1.76 1.18 1.03 1.76 2.69 1.25 3.34.96.1-.75.4-1.25.72-1.54-2.55-.29-5.24-1.28-5.24-5.68 0-1.26.45-2.28 1.18-3.09-.12-.29-.51-1.46.11-3.05 0 0 .96-.31 3.15 1.18a10.9 10.9 0 0 1 2.87-.39c.97 0 1.95.13 2.87.39 2.19-1.49 3.15-1.18 3.15-1.18.62 1.59.23 2.76.11 3.05.73.81 1.18 1.83 1.18 3.09 0 4.41-2.69 5.38-5.26 5.66.41.36.78 1.06.78 2.14 0 1.54-.02 2.79-.02 3.17 0 .31.21.68.8.56A10.52 10.52 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5z"
+              />
+            </svg>
+            <span class="js-star-count">Star</span>
+          </a>
+          <a
+            href="#download"
+            class="rounded-full bg-accent px-4 py-2 text-[13px] font-semibold text-[#0b0e14] shadow-liquid transition hover:brightness-110"
+          >
+            Download
+          </a>
+        </div>
+      </nav>
+    </header>
+
+    <main id="top">
+      <!-- ============================ HERO ============================ -->
+      <section class="relative px-6 pt-36 pb-20 md:pt-44">
+        <div
+          class="mx-auto grid max-w-[1120px] items-center gap-14 lg:grid-cols-[1.05fr_0.95fr] lg:gap-10"
+        >
+          <div>
+            <p
+              class="flex items-center gap-2.5 font-mono text-[11.5px] tracking-[0.22em] text-accent uppercase"
+            >
+              <span class="h-1.5 w-1.5 rounded-full bg-ok" aria-hidden="true"></span>
+              Open source · Real-time transcription
+            </p>
+            <h1
+              class="font-display font-expanded mt-5 text-[clamp(38px,5.6vw,68px)] leading-[1.02] font-extrabold tracking-[-0.01em]"
+            >
+              Live captions for everything you
+              <span class="text-accent-2">hear</span> — and <span class="text-accent">say</span>.
+            </h1>
+            <p class="mt-6 max-w-[54ch] text-[16.5px] leading-relaxed text-fg-dim">
+              sososo is a free, open-source desktop app that captures your system audio and
+              microphone, streams both to Deepgram for live speaker-separated captions, and ends
+              every session with an AI summary. No account. No backend. Your keys stay on your
+              machine.
+            </p>
+            <div class="mt-9 flex flex-wrap items-center gap-3.5">
+              <a
+                id="cta-primary"
+                href="https://github.com/yusupsupriyadi/sososo/releases/latest/download/sososo_windows_x64-setup.exe"
+                class="inline-flex items-center gap-2.5 rounded-full bg-accent px-6 py-3.5 text-[15px] font-semibold text-[#0b0e14] shadow-liquid transition hover:brightness-110"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  class="h-4.5 w-4.5"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M12 3v12m0 0 5-5m-5 5-5-5M4 21h16" />
+                </svg>
+                <span id="cta-label">Download for Windows</span>
+              </a>
+              <a
+                href="https://github.com/yusupsupriyadi/sososo"
+                target="_blank"
+                rel="noreferrer"
+                class="liquid-glass inline-flex items-center gap-2.5 rounded-full px-6 py-3.5 text-[15px] font-medium transition-colors hover:bg-hover"
+              >
+                <svg viewBox="0 0 24 24" class="h-4.5 w-4.5 fill-current" aria-hidden="true">
+                  <path
+                    d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.11.79-.25.79-.56 0-.27-.01-1.17-.02-2.12-3.2.7-3.88-1.36-3.88-1.36-.52-1.33-1.28-1.68-1.28-1.68-1.04-.71.08-.7.08-.7 1.15.08 1.76 1.18 1.76 1.18 1.03 1.76 2.69 1.25 3.34.96.1-.75.4-1.25.72-1.54-2.55-.29-5.24-1.28-5.24-5.68 0-1.26.45-2.28 1.18-3.09-.12-.29-.51-1.46.11-3.05 0 0 .96-.31 3.15 1.18a10.9 10.9 0 0 1 2.87-.39c.97 0 1.95.13 2.87.39 2.19-1.49 3.15-1.18 3.15-1.18.62 1.59.23 2.76.11 3.05.73.81 1.18 1.83 1.18 3.09 0 4.41-2.69 5.38-5.26 5.66.41.36.78 1.06.78 2.14 0 1.54-.02 2.79-.02 3.17 0 .31.21.68.8.56A10.52 10.52 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5z"
+                  />
+                </svg>
+                View on GitHub
+              </a>
+            </div>
+            <p class="mt-5 font-mono text-[12px] text-fg-faint">
+              Free · AGPL-3.0 · <span id="hero-version">latest release</span> · Windows / macOS /
+              Linux —
+              <a href="#download" class="underline underline-offset-4 hover:text-fg-dim"
+                >all downloads</a
+              >
+            </p>
+          </div>
+
+          <!-- the recording widget, recreated live -->
+          <figure class="relative flex flex-col items-center" aria-hidden="false">
+            <div
+              class="rings-bg animate-ring-drift absolute top-1/2 left-1/2 -z-10 h-[760px] w-[760px] -translate-x-1/2 -translate-y-1/2"
+              aria-hidden="true"
+            ></div>
+
+            <div class="flex w-full max-w-[420px] flex-col items-center gap-3.5">
+              <!-- floating pill -->
+              <div
+                class="liquid-glass flex items-center gap-4 rounded-full py-2.5 pr-2.5 pl-5"
+                aria-hidden="true"
+              >
+                <span class="flex items-center gap-2.5">
+                  <span class="h-2.5 w-2.5 animate-rec-pulse rounded-full bg-rec"></span>
+                  <span id="demo-timer" class="font-mono text-[13px] tabular-nums">00:00</span>
+                </span>
+                <span class="h-5 w-px bg-glass-border"></span>
+                <button
+                  id="demo-pause"
+                  type="button"
+                  aria-label="Pause the demo"
+                  aria-pressed="false"
+                  class="text-pause flex h-9 w-9 items-center justify-center rounded-full border border-[rgba(255,212,121,0.4)] bg-[rgba(255,212,121,0.16)] shadow-liquid transition hover:bg-[rgba(255,212,121,0.28)]"
+                >
+                  <svg
+                    class="js-icon-pause h-3.5 w-3.5 fill-current"
+                    viewBox="0 0 12 12"
+                    aria-hidden="true"
+                  >
+                    <rect x="2" y="1.5" width="2.6" height="9" rx="1" />
+                    <rect x="7.4" y="1.5" width="2.6" height="9" rx="1" />
+                  </svg>
+                  <svg
+                    class="js-icon-play hidden h-3.5 w-3.5 fill-current"
+                    viewBox="0 0 12 12"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="M3 1.6a1 1 0 0 1 1.52-.86l6.3 4.4a1 1 0 0 1 0 1.7l-6.3 4.4A1 1 0 0 1 3 10.4z"
+                    />
+                  </svg>
+                </button>
+                <button
+                  id="demo-stop"
+                  type="button"
+                  aria-label="Restart the demo"
+                  class="flex h-9 w-9 items-center justify-center rounded-full border border-[rgba(255,93,93,0.4)] bg-[rgba(255,93,93,0.16)] text-rec shadow-liquid transition hover:bg-[rgba(255,93,93,0.28)]"
+                >
+                  <svg class="h-3 w-3 fill-current" viewBox="0 0 12 12" aria-hidden="true">
+                    <rect x="1.5" y="1.5" width="9" height="9" rx="2" />
+                  </svg>
+                </button>
+              </div>
+
+              <!-- live transcript panel -->
+              <div class="liquid-glass w-full rounded-lg p-5">
+                <div class="mb-3.5 flex items-center justify-between">
+                  <span class="font-mono text-[10.5px] tracking-[0.2em] text-fg-faint uppercase"
+                    >Live transcript</span
+                  >
+                  <span class="flex h-3.5 items-end gap-[3px]" aria-hidden="true">
+                    <span
+                      class="h-full w-[3px] origin-bottom animate-eq-bar rounded-full bg-accent"
+                    ></span>
+                    <span
+                      class="h-full w-[3px] origin-bottom animate-eq-bar rounded-full bg-accent [animation-delay:-0.6s]"
+                    ></span>
+                    <span
+                      class="h-full w-[3px] origin-bottom animate-eq-bar rounded-full bg-accent [animation-delay:-0.3s]"
+                    ></span>
+                    <span
+                      class="h-full w-[3px] origin-bottom animate-eq-bar rounded-full bg-accent [animation-delay:-0.85s]"
+                    ></span>
+                    <span
+                      class="h-full w-[3px] origin-bottom animate-eq-bar rounded-full bg-accent [animation-delay:-0.15s]"
+                    ></span>
+                  </span>
+                </div>
+                <ul
+                  id="demo-captions"
+                  class="flex min-h-[148px] flex-col gap-2.5"
+                  aria-hidden="true"
+                >
+                  <li class="cap-line flex items-start gap-2.5">
+                    <span
+                      class="mt-0.5 rounded-md border border-[rgba(183,148,246,0.4)] bg-[rgba(183,148,246,0.12)] px-1.5 py-0.5 font-mono text-[10px] text-accent-2"
+                      >Remote</span
+                    >
+                    <p class="cap-text flex-1 text-[13.5px] leading-snug">
+                      Morning! Can everyone see the release dashboard?
+                    </p>
+                  </li>
+                  <li class="cap-line cap-interim flex items-start gap-2.5">
+                    <span
+                      class="mt-0.5 rounded-md border border-[rgba(110,168,254,0.4)] bg-[rgba(110,168,254,0.12)] px-1.5 py-0.5 font-mono text-[10px] text-accent"
+                      >You</span
+                    >
+                    <p class="cap-text flex-1 text-[13.5px] leading-snug">
+                      Yep — build's green and the installer
+                    </p>
+                  </li>
+                </ul>
+                <div
+                  id="demo-summary"
+                  class="mt-3 hidden rounded-md border border-ok/35 bg-ok/8 p-3.5"
+                  aria-hidden="true"
+                >
+                  <p class="font-mono text-[10.5px] tracking-[0.2em] text-ok uppercase">
+                    ✦ AI summary
+                  </p>
+                  <p class="mt-1.5 text-[12.5px] leading-snug text-fg-dim">
+                    Build is green; v0.9 ships Friday. You own the changelog after the call.
+                  </p>
+                </div>
+              </div>
+            </div>
+            <figcaption class="mt-4 text-center font-mono text-[10.5px] text-fg-faint">
+              The recording widget, recreated in CSS — it floats above every app while you record.
+            </figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <!-- ============================ BADGES ============================ -->
+      <section class="px-6" aria-label="Stack">
+        <div class="mx-auto flex max-w-[1120px] flex-wrap justify-center gap-2.5">
+          <span
+            class="liquid-glass rounded-full px-4 py-2 font-mono text-[11px] tracking-[0.14em] text-fg-dim uppercase"
+            >Built with Tauri 2</span
+          >
+          <span
+            class="liquid-glass rounded-full px-4 py-2 font-mono text-[11px] tracking-[0.14em] text-fg-dim uppercase"
+            >STT · Deepgram Nova-3</span
+          >
+          <span
+            class="liquid-glass rounded-full px-4 py-2 font-mono text-[11px] tracking-[0.14em] text-fg-dim uppercase"
+            >Summaries · OpenAI / Gemini</span
+          >
+          <span
+            class="liquid-glass rounded-full px-4 py-2 font-mono text-[11px] tracking-[0.14em] text-fg-dim uppercase"
+            >AGPL-3.0</span
+          >
+          <span
+            class="liquid-glass rounded-full px-4 py-2 font-mono text-[11px] tracking-[0.14em] text-fg-dim uppercase"
+            >No telemetry</span
+          >
+        </div>
+      </section>
+
+      <!-- ============================ FEATURES ============================ -->
+      <section id="features" class="scroll-mt-28 px-6 pt-28">
+        <div class="mx-auto max-w-[1120px]">
+          <p class="font-mono text-[11.5px] tracking-[0.22em] text-accent uppercase" data-reveal>
+            Features
+          </p>
+          <h2
+            class="font-display font-expanded mt-4 max-w-[22ch] text-[clamp(28px,3.8vw,44px)] leading-[1.05] font-extrabold"
+            data-reveal
+          >
+            Built to catch every word in the room.
+          </h2>
+
+          <div class="mt-12 grid gap-4 md:grid-cols-12">
+            <!-- dual capture -->
+            <article class="liquid-glass rounded-lg p-7 md:col-span-7" data-reveal>
+              <h3 class="text-[19px] font-semibold">Two sources, two speakers</h3>
+              <p class="mt-2 max-w-[52ch] text-[14px] leading-relaxed text-fg-dim">
+                System audio (what you hear) and your microphone (what you say) are captured in
+                parallel and diarized into two clean channels — so the transcript always knows who
+                was talking.
+              </p>
+              <div
+                class="mt-6 rounded-md border border-glass-border p-4 font-mono text-[11px]"
+                aria-hidden="true"
+              >
+                <div class="flex items-center gap-3">
+                  <span class="w-24 shrink-0 text-fg-dim">SYSTEM&nbsp;AUDIO</span>
+                  <span class="grow border-t border-dashed border-[rgba(183,148,246,0.5)]"></span>
+                  <span
+                    class="rounded-md border border-[rgba(183,148,246,0.4)] bg-[rgba(183,148,246,0.12)] px-2 py-1 text-accent-2"
+                    >CH 2 · REMOTE</span
+                  >
+                </div>
+                <div class="mt-3 flex items-center gap-3">
+                  <span class="w-24 shrink-0 text-fg-dim">MICROPHONE</span>
+                  <span class="grow border-t border-dashed border-[rgba(110,168,254,0.5)]"></span>
+                  <span
+                    class="rounded-md border border-[rgba(110,168,254,0.4)] bg-[rgba(110,168,254,0.12)] px-2 py-1 text-accent"
+                    >CH 1 · YOU</span
+                  >
+                </div>
+              </div>
+              <p class="mt-4 font-mono text-[11px] text-fg-faint">
+                WASAPI loopback · CoreAudio · PulseAudio/PipeWire
+              </p>
+            </article>
+
+            <!-- live captions -->
+            <article class="liquid-glass rounded-lg p-7 md:col-span-5" data-reveal>
+              <h3 class="text-[19px] font-semibold">Interim words, finalized in place</h3>
+              <p class="mt-2 text-[14px] leading-relaxed text-fg-dim">
+                Captions stream in as you speak and settle into their final form — no flicker, no
+                lost lines.
+              </p>
+              <div
+                class="mt-6 space-y-2.5 rounded-md border border-glass-border p-4"
+                aria-hidden="true"
+              >
+                <p class="text-[13px] text-fg-dim italic">
+                  let's lock the agenda before<span class="text-accent">▍</span>
+                </p>
+                <p class="text-[13px]">Let's lock the agenda before Thursday.</p>
+              </div>
+              <p class="mt-4 font-mono text-[11px] text-fg-faint">
+                Interim → final · smart formatting
+              </p>
+            </article>
+
+            <!-- four small cards -->
+            <article class="liquid-glass rounded-lg p-6 md:col-span-3" data-reveal>
+              <svg
+                viewBox="0 0 24 24"
+                class="h-5 w-5 text-accent"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                aria-hidden="true"
+              >
+                <circle cx="12" cy="12" r="9" />
+                <path d="M3.5 12h17M12 3a14.5 14.5 0 0 1 0 18M12 3a14.5 14.5 0 0 0 0 18" />
+              </svg>
+              <h3 class="mt-4 text-[15.5px] font-semibold">Many languages</h3>
+              <p class="mt-1.5 text-[13px] leading-relaxed text-fg-dim">
+                Nova-3 for multilingual & English, Nova-2 for the rest — with diarization and smart
+                formatting.
+              </p>
+            </article>
+
+            <article class="liquid-glass rounded-lg p-6 md:col-span-3" data-reveal>
+              <svg
+                viewBox="0 0 24 24"
+                class="h-5 w-5 text-accent"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <rect x="3" y="9" width="18" height="6" rx="3" />
+                <circle cx="8" cy="12" r="1" fill="currentColor" stroke="none" />
+              </svg>
+              <h3 class="mt-4 text-[15.5px] font-semibold">Stays out of the way</h3>
+              <p class="mt-1.5 text-[13px] leading-relaxed text-fg-dim">
+                A compact always-on-top pill while recording. Start or stop from any app with
+                <span class="font-mono text-[12px]">Ctrl+Alt+R</span>.
+              </p>
+            </article>
+
+            <article class="liquid-glass rounded-lg p-6 md:col-span-3" data-reveal>
+              <svg
+                viewBox="0 0 24 24"
+                class="h-5 w-5 text-accent"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M12 3l1.7 4.6L18 9.2l-4.3 1.6L12 15.5l-1.7-4.7L6 9.2l4.3-1.6z" />
+                <path d="M18.5 15l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8z" />
+              </svg>
+              <h3 class="mt-4 text-[15.5px] font-semibold">Summaries & translation</h3>
+              <p class="mt-1.5 text-[13px] leading-relaxed text-fg-dim">
+                End-of-session AI summary and live per-line translation — OpenAI or Gemini, your
+                pick.
+              </p>
+            </article>
+
+            <article class="liquid-glass rounded-lg p-6 md:col-span-3" data-reveal>
+              <svg
+                viewBox="0 0 24 24"
+                class="h-5 w-5 text-accent"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <rect x="4" y="10" width="16" height="10" rx="2" />
+                <path d="M8 10V7a4 4 0 0 1 8 0v3" />
+              </svg>
+              <h3 class="mt-4 text-[15.5px] font-semibold">Private by design</h3>
+              <p class="mt-1.5 text-[13px] leading-relaxed text-fg-dim">
+                Keys live in the OS keychain. No server, no account, no telemetry — sessions stay in
+                a local SQLite file.
+              </p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================ HOW IT WORKS ============================ -->
+      <section id="how" class="scroll-mt-28 px-6 pt-28">
+        <div class="mx-auto max-w-[1120px]">
+          <p class="font-mono text-[11.5px] tracking-[0.22em] text-accent uppercase" data-reveal>
+            How it works
+          </p>
+          <h2
+            class="font-display font-expanded mt-4 text-[clamp(28px,3.8vw,44px)] leading-[1.05] font-extrabold"
+            data-reveal
+          >
+            Recording in three steps.
+          </h2>
+
+          <div class="mt-12 grid gap-4 md:grid-cols-3">
+            <div class="liquid-glass rounded-lg p-7" data-reveal>
+              <p class="font-mono text-[12px] tracking-[0.2em] text-accent">01</p>
+              <h3 class="mt-3 text-[17px] font-semibold">Install</h3>
+              <p class="mt-2 text-[14px] leading-relaxed text-fg-dim">
+                Grab the installer for your OS below — free, no account or sign-up. Windows and
+                Linux capture system audio with zero setup; macOS routes it through
+                <a
+                  href="https://github.com/ExistentialAudio/BlackHole"
+                  target="_blank"
+                  rel="noreferrer"
+                  class="underline underline-offset-4 hover:text-fg"
+                  >BlackHole</a
+                >.
+              </p>
+            </div>
+            <div class="liquid-glass rounded-lg p-7" data-reveal>
+              <p class="font-mono text-[12px] tracking-[0.2em] text-accent">02</p>
+              <h3 class="mt-3 text-[17px] font-semibold">Bring your keys</h3>
+              <p class="mt-2 text-[14px] leading-relaxed text-fg-dim">
+                Paste a free
+                <a
+                  href="https://console.deepgram.com/signup"
+                  target="_blank"
+                  rel="noreferrer"
+                  class="underline underline-offset-4 hover:text-fg"
+                  >Deepgram key</a
+                >
+                in Settings (plus an OpenAI or Gemini key if you want summaries). They're stored in
+                your OS keychain and never leave your machine.
+              </p>
+            </div>
+            <div class="liquid-glass rounded-lg p-7" data-reveal>
+              <p class="font-mono text-[12px] tracking-[0.2em] text-accent">03</p>
+              <h3 class="mt-3 text-[17px] font-semibold">Hit record</h3>
+              <p class="mt-2 text-[14px] leading-relaxed text-fg-dim">
+                Press <span class="font-mono text-[12.5px]">Ctrl+Alt+R</span> from anywhere. Live
+                captions float over your meeting; finishing a session writes the transcript and an
+                AI summary to your library.
+              </p>
+            </div>
+          </div>
+          <p class="mt-6 font-mono text-[12px] text-fg-faint" data-reveal>
+            On Windows, sososo also auto-detects Zoom / Teams / Meet / Webex meetings and offers
+            one-click recording.
+          </p>
+        </div>
+      </section>
+
+      <!-- ============================ DEMO ============================ -->
+      <section id="demo" class="scroll-mt-28 px-6 pt-28">
+        <div class="mx-auto max-w-[920px]">
+          <p class="font-mono text-[11.5px] tracking-[0.22em] text-accent uppercase" data-reveal>
+            Demo
+          </p>
+          <h2
+            class="font-display font-expanded mt-4 text-[clamp(28px,3.8vw,44px)] leading-[1.05] font-extrabold"
+            data-reveal
+          >
+            See it run.
+          </h2>
+          <div class="liquid-glass mt-10 rounded-lg p-2" data-reveal>
+            <div
+              id="video-shell"
+              class="group relative aspect-video w-full cursor-pointer overflow-hidden rounded-[12px]"
+            >
+              <img
+                src="https://img.youtube.com/vi/al1_YU_ILXs/maxresdefault.jpg"
+                alt="sososo demo video thumbnail"
+                loading="lazy"
+                class="h-full w-full object-cover opacity-85 transition duration-500 group-hover:scale-[1.02] group-hover:opacity-100"
+              />
+              <button
+                type="button"
+                aria-label="Play the demo video"
+                class="absolute inset-0 flex items-center justify-center"
+              >
+                <span
+                  class="liquid-glass flex h-16 w-16 items-center justify-center rounded-full shadow-liquid transition group-hover:scale-105"
+                >
+                  <svg
+                    class="ml-1 h-5 w-5 fill-current text-fg"
+                    viewBox="0 0 12 12"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="M3 1.6a1 1 0 0 1 1.52-.86l6.3 4.4a1 1 0 0 1 0 1.7l-6.3 4.4A1 1 0 0 1 3 10.4z"
+                    />
+                  </svg>
+                </span>
+              </button>
+              <span
+                class="absolute bottom-3 left-3 rounded-full bg-[rgba(10,10,15,0.7)] px-3 py-1 font-mono text-[11px] text-fg-dim"
+                >▶ Watch on YouTube</span
+              >
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================ PRIVACY ============================ -->
+      <section id="privacy" class="scroll-mt-28 px-6 pt-28">
+        <div class="mx-auto grid max-w-[1120px] items-center gap-12 lg:grid-cols-2">
+          <div>
+            <p class="font-mono text-[11.5px] tracking-[0.22em] text-accent uppercase" data-reveal>
+              Privacy
+            </p>
+            <h2
+              class="font-display font-expanded mt-4 max-w-[18ch] text-[clamp(28px,3.8vw,44px)] leading-[1.05] font-extrabold"
+              data-reveal
+            >
+              Your audio goes only where you send it.
+            </h2>
+            <ul class="mt-8 space-y-4" data-reveal>
+              <li class="flex items-start gap-3">
+                <svg
+                  viewBox="0 0 24 24"
+                  class="mt-0.5 h-4.5 w-4.5 shrink-0 text-ok"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.4"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="m4.5 12.5 5 5 10-11" />
+                </svg>
+                <p class="text-[14.5px] leading-relaxed text-fg-dim">
+                  <span class="font-medium text-fg">Bring your own keys.</span> Audio streams to
+                  Deepgram; transcripts go to OpenAI or Gemini only when you ask for a summary or
+                  translation.
+                </p>
+              </li>
+              <li class="flex items-start gap-3">
+                <svg
+                  viewBox="0 0 24 24"
+                  class="mt-0.5 h-4.5 w-4.5 shrink-0 text-ok"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.4"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="m4.5 12.5 5 5 10-11" />
+                </svg>
+                <p class="text-[14.5px] leading-relaxed text-fg-dim">
+                  <span class="font-medium text-fg">Keys in the OS keychain</span> — Windows
+                  Credential Manager, macOS Keychain, or the Linux Secret Service. Never in a config
+                  file.
+                </p>
+              </li>
+              <li class="flex items-start gap-3">
+                <svg
+                  viewBox="0 0 24 24"
+                  class="mt-0.5 h-4.5 w-4.5 shrink-0 text-ok"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.4"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="m4.5 12.5 5 5 10-11" />
+                </svg>
+                <p class="text-[14.5px] leading-relaxed text-fg-dim">
+                  <span class="font-medium text-fg">No backend, no account, no telemetry.</span>
+                  Sessions live in a local SQLite database on your disk.
+                </p>
+              </li>
+            </ul>
+            <a
+              href="https://github.com/yusupsupriyadi/sososo/blob/master/PRIVACY.md"
+              target="_blank"
+              rel="noreferrer"
+              class="mt-8 inline-block font-mono text-[12.5px] text-fg-dim underline underline-offset-4 hover:text-fg"
+              data-reveal
+              >Read PRIVACY.md ↗</a
+            >
+          </div>
+
+          <div
+            class="liquid-glass rounded-lg p-7 font-mono text-[12px]"
+            data-reveal
+            aria-hidden="true"
+          >
+            <div class="rounded-md border border-glass-border p-4">
+              <p class="tracking-[0.2em] text-fg-faint uppercase">Your machine</p>
+              <div class="mt-3 flex flex-wrap gap-2">
+                <span class="rounded-md border border-glass-border px-2.5 py-1.5 text-fg-dim"
+                  >🎙 mic</span
+                >
+                <span class="rounded-md border border-glass-border px-2.5 py-1.5 text-fg-dim"
+                  >🔊 system audio</span
+                >
+                <span class="rounded-md border border-glass-border px-2.5 py-1.5 text-fg-dim"
+                  >🔑 keys · OS keychain</span
+                >
+                <span class="rounded-md border border-glass-border px-2.5 py-1.5 text-fg-dim"
+                  >🗄 SQLite library</span
+                >
+              </div>
+            </div>
+            <div class="my-3 flex items-center gap-3 pl-6 text-fg-faint">
+              <span class="h-7 w-px bg-glass-border"></span>
+              <span>audio · secure WebSocket</span>
+            </div>
+            <div class="rounded-md border border-glass-border p-4">
+              <p class="tracking-[0.2em] text-accent uppercase">Deepgram</p>
+              <p class="mt-1.5 text-fg-dim">live speech-to-text (Nova-3 / Nova-2)</p>
+            </div>
+            <div class="my-3 flex items-center gap-3 pl-6 text-fg-faint">
+              <span class="h-7 w-px border-l border-dashed border-[rgba(255,255,255,0.25)]"></span>
+              <span>transcript · only when you ask</span>
+            </div>
+            <div class="rounded-md border border-dashed border-glass-border p-4">
+              <p class="tracking-[0.2em] text-accent-2 uppercase">OpenAI / Gemini · optional</p>
+              <p class="mt-1.5 text-fg-dim">end-of-session summary · live translation</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================ DOWNLOAD ============================ -->
+      <section id="download" class="scroll-mt-28 px-6 pt-28">
+        <div class="mx-auto max-w-[1120px]">
+          <div class="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <p
+                class="font-mono text-[11.5px] tracking-[0.22em] text-accent uppercase"
+                data-reveal
+              >
+                Download
+              </p>
+              <h2
+                class="font-display font-expanded mt-4 text-[clamp(28px,3.8vw,44px)] leading-[1.05] font-extrabold"
+                data-reveal
+              >
+                Free on every desktop.
+              </h2>
+            </div>
+            <p class="font-mono text-[12px] text-fg-faint" data-reveal>
+              <span id="dl-version" class="text-fg-dim">latest release</span> ·
+              <a
+                href="https://github.com/yusupsupriyadi/sososo/blob/master/CHANGELOG.md"
+                target="_blank"
+                rel="noreferrer"
+                class="underline underline-offset-4 hover:text-fg-dim"
+                >release notes ↗</a
+              >
+            </p>
+          </div>
+
+          <div class="mt-10 grid gap-4 md:grid-cols-3">
+            <!-- windows -->
+            <article class="liquid-glass relative rounded-lg p-7" data-os="windows" data-reveal>
+              <span
+                class="js-detected absolute top-4 right-4 hidden rounded-full border border-[rgba(110,168,254,0.5)] bg-[rgba(110,168,254,0.14)] px-2.5 py-1 font-mono text-[10px] tracking-[0.14em] text-accent uppercase"
+                >Detected</span
+              >
+              <svg viewBox="0 0 24 24" class="h-6 w-6 fill-current text-fg-dim" aria-hidden="true">
+                <path
+                  d="M3 5.5 10.5 4.4v7.1H3zM12 4.2 21 3v8.5h-9zM3 13h7.5v7.1L3 19zM12 13h9v8L12 19.8z"
+                />
+              </svg>
+              <h3 class="mt-4 text-[17px] font-semibold">Windows 10/11</h3>
+              <p class="mt-1 font-mono text-[11px] text-fg-faint">WASAPI loopback — no setup</p>
+              <a
+                href="https://github.com/yusupsupriyadi/sososo/releases/latest/download/sososo_windows_x64-setup.exe"
+                class="mt-6 flex items-center justify-center gap-2 rounded-[10px] border border-white/20 bg-white/10 px-4 py-3 text-[14px] font-semibold shadow-liquid transition hover:bg-white/16"
+              >
+                Installer (.exe)
+              </a>
+              <p class="mt-3 text-center font-mono text-[12px]">
+                <a
+                  href="https://github.com/yusupsupriyadi/sososo/releases/latest/download/sososo_windows_x64.msi"
+                  class="text-fg-dim underline underline-offset-4 hover:text-fg"
+                  >.msi</a
+                >
+              </p>
+            </article>
+
+            <!-- macos -->
+            <article class="liquid-glass relative rounded-lg p-7" data-os="macos" data-reveal>
+              <span
+                class="js-detected absolute top-4 right-4 hidden rounded-full border border-[rgba(110,168,254,0.5)] bg-[rgba(110,168,254,0.14)] px-2.5 py-1 font-mono text-[10px] tracking-[0.14em] text-accent uppercase"
+                >Detected</span
+              >
+              <svg
+                viewBox="0 0 24 24"
+                class="h-6 w-6 text-fg-dim"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M15 6v12a3 3 0 1 0 3-3H6a3 3 0 1 0 3 3V6a3 3 0 1 0-3 3h12a3 3 0 1 0-3-3" />
+              </svg>
+              <h3 class="mt-4 text-[17px] font-semibold">macOS 11+</h3>
+              <p class="mt-1 font-mono text-[11px] text-fg-faint">
+                system audio via
+                <a
+                  href="https://github.com/ExistentialAudio/BlackHole"
+                  target="_blank"
+                  rel="noreferrer"
+                  class="underline underline-offset-4 hover:text-fg-dim"
+                  >BlackHole</a
+                >
+                (free)
+              </p>
+              <a
+                href="https://github.com/yusupsupriyadi/sososo/releases/latest/download/sososo_macos_universal.dmg"
+                class="mt-6 flex items-center justify-center gap-2 rounded-[10px] border border-white/20 bg-white/10 px-4 py-3 text-[14px] font-semibold shadow-liquid transition hover:bg-white/16"
+              >
+                Universal .dmg
+              </a>
+              <p class="mt-3 text-center font-mono text-[12px] text-fg-faint">
+                Intel & Apple Silicon
+              </p>
+            </article>
+
+            <!-- linux -->
+            <article class="liquid-glass relative rounded-lg p-7" data-os="linux" data-reveal>
+              <span
+                class="js-detected absolute top-4 right-4 hidden rounded-full border border-[rgba(110,168,254,0.5)] bg-[rgba(110,168,254,0.14)] px-2.5 py-1 font-mono text-[10px] tracking-[0.14em] text-accent uppercase"
+                >Detected</span
+              >
+              <svg
+                viewBox="0 0 24 24"
+                class="h-6 w-6 text-fg-dim"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <rect x="3" y="4" width="18" height="16" rx="2.5" />
+                <path d="m7 9 3 3-3 3M12.5 15H17" />
+              </svg>
+              <h3 class="mt-4 text-[17px] font-semibold">Linux</h3>
+              <p class="mt-1 font-mono text-[11px] text-fg-faint">
+                PulseAudio / PipeWire — no setup
+              </p>
+              <a
+                href="https://github.com/yusupsupriyadi/sososo/releases/latest/download/sososo_linux_amd64.deb"
+                class="mt-6 flex items-center justify-center gap-2 rounded-[10px] border border-white/20 bg-white/10 px-4 py-3 text-[14px] font-semibold shadow-liquid transition hover:bg-white/16"
+              >
+                .deb
+              </a>
+              <p class="mt-3 text-center font-mono text-[12px]">
+                <a
+                  href="https://github.com/yusupsupriyadi/sososo/releases/latest/download/sososo_linux_amd64.AppImage"
+                  class="text-fg-dim underline underline-offset-4 hover:text-fg"
+                  >.AppImage</a
+                >
+                <span class="mx-1.5 text-fg-faint">·</span>
+                <a
+                  href="https://github.com/yusupsupriyadi/sososo/releases/latest/download/sososo_linux_x86_64.rpm"
+                  class="text-fg-dim underline underline-offset-4 hover:text-fg"
+                  >.rpm</a
+                >
+              </p>
+            </article>
+          </div>
+
+          <p class="mt-6 max-w-[90ch] text-[12.5px] leading-relaxed text-fg-faint" data-reveal>
+            Builds aren't code-signed yet, so your OS may warn on first run — Windows: "More info" →
+            "Run anyway"; macOS: right-click the app → Open. Browse every version on the
+            <a
+              href="https://github.com/yusupsupriyadi/sososo/releases"
+              target="_blank"
+              rel="noreferrer"
+              class="underline underline-offset-4 hover:text-fg-dim"
+              >Releases page ↗</a
+            >.
+          </p>
+        </div>
+      </section>
+
+      <!-- ============================ OPEN SOURCE ============================ -->
+      <section id="opensource" class="scroll-mt-28 px-6 pt-28 pb-8">
+        <div
+          class="liquid-glass relative mx-auto max-w-[1120px] overflow-hidden rounded-[20px] p-9 md:p-14"
+          data-reveal
+        >
+          <div
+            class="rings-bg animate-ring-drift absolute top-1/2 right-[-260px] -z-10 h-[640px] w-[640px] -translate-y-1/2"
+            aria-hidden="true"
+          ></div>
+          <div class="grid items-center gap-10 lg:grid-cols-[1.15fr_0.85fr]">
+            <div>
+              <p class="font-mono text-[11.5px] tracking-[0.22em] text-accent uppercase">
+                Open source
+              </p>
+              <h2
+                class="font-display font-expanded mt-4 max-w-[20ch] text-[clamp(26px,3.4vw,40px)] leading-[1.05] font-extrabold"
+              >
+                Read the code. Keep your audio yours.
+              </h2>
+              <p class="mt-5 max-w-[58ch] text-[15px] leading-relaxed text-fg-dim">
+                The entire app — Rust audio pipeline, Deepgram streaming, UI — is on GitHub under
+                the AGPL-3.0, with a commercial license for closed-source use. Issues and pull
+                requests are welcome.
+              </p>
+              <div class="mt-8 flex flex-wrap items-center gap-3.5">
+                <a
+                  href="https://github.com/yusupsupriyadi/sososo"
+                  target="_blank"
+                  rel="noreferrer"
+                  class="inline-flex items-center gap-2.5 rounded-full bg-accent px-6 py-3 text-[14.5px] font-semibold text-[#0b0e14] shadow-liquid transition hover:brightness-110"
+                >
+                  <svg viewBox="0 0 24 24" class="h-4.5 w-4.5 fill-current" aria-hidden="true">
+                    <path
+                      d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.11.79-.25.79-.56 0-.27-.01-1.17-.02-2.12-3.2.7-3.88-1.36-3.88-1.36-.52-1.33-1.28-1.68-1.28-1.68-1.04-.71.08-.7.08-.7 1.15.08 1.76 1.18 1.76 1.18 1.03 1.76 2.69 1.25 3.34.96.1-.75.4-1.25.72-1.54-2.55-.29-5.24-1.28-5.24-5.68 0-1.26.45-2.28 1.18-3.09-.12-.29-.51-1.46.11-3.05 0 0 .96-.31 3.15 1.18a10.9 10.9 0 0 1 2.87-.39c.97 0 1.95.13 2.87.39 2.19-1.49 3.15-1.18 3.15-1.18.62 1.59.23 2.76.11 3.05.73.81 1.18 1.83 1.18 3.09 0 4.41-2.69 5.38-5.26 5.66.41.36.78 1.06.78 2.14 0 1.54-.02 2.79-.02 3.17 0 .31.21.68.8.56A10.52 10.52 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5z"
+                    />
+                  </svg>
+                  Star on GitHub
+                  <span
+                    class="js-star-count hidden border-l border-[rgba(11,14,20,0.25)] pl-2.5"
+                  ></span>
+                </a>
+                <a
+                  href="https://github.com/yusupsupriyadi/sososo/blob/master/CONTRIBUTING.md"
+                  target="_blank"
+                  rel="noreferrer"
+                  class="inline-flex items-center rounded-full border border-glass-border px-6 py-3 text-[14.5px] font-medium transition-colors hover:bg-hover"
+                >
+                  Contributing guide
+                </a>
+              </div>
+            </div>
+            <div class="space-y-4">
+              <div class="rounded-md border border-glass-border p-5">
+                <p class="font-mono text-[11px] tracking-[0.18em] text-accent uppercase">
+                  Community · AGPL-3.0
+                </p>
+                <p class="mt-2 text-[13.5px] leading-relaxed text-fg-dim">
+                  Free forever. If you distribute or host a modified version, share your changes
+                  under the AGPL too.
+                </p>
+              </div>
+              <div class="rounded-md border border-glass-border p-5">
+                <p class="font-mono text-[11px] tracking-[0.18em] text-accent-2 uppercase">
+                  Commercial
+                </p>
+                <p class="mt-2 text-[13.5px] leading-relaxed text-fg-dim">
+                  Need it closed-source? A commercial license lifts the copyleft —
+                  <a
+                    href="https://github.com/yusupsupriyadi/sososo/blob/master/LICENSING.md"
+                    target="_blank"
+                    rel="noreferrer"
+                    class="underline underline-offset-4 hover:text-fg"
+                    >see LICENSING.md</a
+                  >.
+                </p>
+              </div>
+              <p class="font-mono text-[11px] leading-relaxed text-fg-faint">
+                The sososo name & logo are trademarks — forks must rebrand.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- ============================ FOOTER ============================ -->
+    <footer class="mt-20 border-t border-glass-border/60 px-6">
+      <div class="mx-auto grid max-w-[1120px] gap-10 py-14 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
+        <div>
+          <img
+            src="./sososo_brand_logo_white-bg-transparent.png"
+            alt="sososo"
+            class="h-[14px] w-auto"
+          />
+          <p class="mt-4 max-w-[34ch] text-[13px] leading-relaxed text-fg-dim">
+            Real-time meeting & audio transcription for Windows, macOS & Linux.
+          </p>
+          <p class="mt-6 font-mono text-[11.5px] text-fg-faint">
+            © <span id="year">2026</span> Yusup Supriyadi
+          </p>
+        </div>
+        <nav aria-label="Project">
+          <p class="font-mono text-[11px] tracking-[0.2em] text-fg-faint uppercase">Project</p>
+          <ul class="mt-4 space-y-2.5 text-[13.5px] text-fg-dim">
+            <li>
+              <a
+                href="https://github.com/yusupsupriyadi/sososo"
+                target="_blank"
+                rel="noreferrer"
+                class="transition-colors hover:text-fg"
+                >GitHub</a
+              >
+            </li>
+            <li>
+              <a
+                href="https://github.com/yusupsupriyadi/sososo/releases"
+                target="_blank"
+                rel="noreferrer"
+                class="transition-colors hover:text-fg"
+                >Releases</a
+              >
+            </li>
+            <li>
+              <a
+                href="https://github.com/yusupsupriyadi/sososo/blob/master/CHANGELOG.md"
+                target="_blank"
+                rel="noreferrer"
+                class="transition-colors hover:text-fg"
+                >Changelog</a
+              >
+            </li>
+            <li>
+              <a
+                href="https://github.com/yusupsupriyadi/sososo/issues"
+                target="_blank"
+                rel="noreferrer"
+                class="transition-colors hover:text-fg"
+                >Issues</a
+              >
+            </li>
+            <li>
+              <a
+                href="https://youtu.be/al1_YU_ILXs"
+                target="_blank"
+                rel="noreferrer"
+                class="transition-colors hover:text-fg"
+                >Demo video</a
+              >
+            </li>
+          </ul>
+        </nav>
+        <nav aria-label="Legal">
+          <p class="font-mono text-[11px] tracking-[0.2em] text-fg-faint uppercase">Legal</p>
+          <ul class="mt-4 space-y-2.5 text-[13.5px] text-fg-dim">
+            <li>
+              <a
+                href="https://github.com/yusupsupriyadi/sososo/blob/master/LICENSE"
+                target="_blank"
+                rel="noreferrer"
+                class="transition-colors hover:text-fg"
+                >License (AGPL-3.0)</a
+              >
+            </li>
+            <li>
+              <a
+                href="https://github.com/yusupsupriyadi/sososo/blob/master/LICENSING.md"
+                target="_blank"
+                rel="noreferrer"
+                class="transition-colors hover:text-fg"
+                >Commercial licensing</a
+              >
+            </li>
+            <li>
+              <a
+                href="https://github.com/yusupsupriyadi/sososo/blob/master/PRIVACY.md"
+                target="_blank"
+                rel="noreferrer"
+                class="transition-colors hover:text-fg"
+                >Privacy</a
+              >
+            </li>
+            <li>
+              <a
+                href="https://github.com/yusupsupriyadi/sososo/blob/master/TRADEMARK.md"
+                target="_blank"
+                rel="noreferrer"
+                class="transition-colors hover:text-fg"
+                >Trademark</a
+              >
+            </li>
+            <li>
+              <a
+                href="https://github.com/yusupsupriyadi/sososo/blob/master/SECURITY.md"
+                target="_blank"
+                rel="noreferrer"
+                class="transition-colors hover:text-fg"
+                >Security</a
+              >
+            </li>
+          </ul>
+        </nav>
+        <nav aria-label="Powered by">
+          <p class="font-mono text-[11px] tracking-[0.2em] text-fg-faint uppercase">Powered by</p>
+          <ul class="mt-4 space-y-2.5 text-[13.5px] text-fg-dim">
+            <li>
+              <a
+                href="https://tauri.app"
+                target="_blank"
+                rel="noreferrer"
+                class="transition-colors hover:text-fg"
+                >Tauri 2</a
+              >
+            </li>
+            <li>
+              <a
+                href="https://deepgram.com"
+                target="_blank"
+                rel="noreferrer"
+                class="transition-colors hover:text-fg"
+                >Deepgram</a
+              >
+            </li>
+            <li>
+              <a
+                href="https://openai.com"
+                target="_blank"
+                rel="noreferrer"
+                class="transition-colors hover:text-fg"
+                >OpenAI</a
+              >
+            </li>
+            <li>
+              <a
+                href="https://ai.google.dev"
+                target="_blank"
+                rel="noreferrer"
+                class="transition-colors hover:text-fg"
+                >Google Gemini</a
+              >
+            </li>
+          </ul>
+        </nav>
+      </div>
+    </footer>
+  </body>
+</html>
